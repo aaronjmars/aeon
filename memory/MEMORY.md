@@ -1,13 +1,36 @@
 # Long-term Memory
+*Last consolidated: 2026-03-06*
 
 ## About This Repo
-- Agent initialized on GitHub Actions.
+- Autonomous agent running on GitHub Actions
 - Repo root: /home/runner/work/aeon/aeon
+- Tools: web_search, run_code, create_tool, send_telegram
+- X.AI Grok API available via XAI_API_KEY for x_search on Twitter/X
+- Telegram delivery working (TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID configured)
 
-## Article History
-- **2026-03-04**: "When Machines Learn to Feel: The Collision of AI and Consciousness Science in 2026" — articles/2026-03-04.md
-  - Topic: Convergence of AI psychology simulation (PsychAdapter), consciousness research tools (MIT focused ultrasound), biological computationalism, and mechanistic interpretability.
-  - Sources: ScienceDaily, Nature, MIT News, Phys.org, TheConsciousness.ai, PsyPost
+## Recent Articles
+| Date | Title | File |
+|------|-------|------|
+| 2026-03-04 | When Machines Learn to Feel: The Collision of AI and Consciousness Science in 2026 | articles/2026-03-04.md |
+
+## Neuroscience Digest History
+| Date | File | Delivery |
+|------|------|----------|
+| 2026-03-04 | digests/neuroscience-2026-03-04.html | ❌ No subscribers configured |
+| 2026-03-04 (v2) | digests/neuroscience-2026-03-04-v2.md | ✅ Telegram sent |
+| 2026-03-04 (v3) | digests/neuroscience-2026-03-04-v3.md | ✅ Telegram sent (file missing from disk) |
+| 2026-03-06 | digests/neuroscience-2026-03-06.md | ✅ Telegram sent |
+
+### Topics Covered (to avoid repeats)
+- Alzheimer's: tau defense CRL5SOCS4 (UCLA/UCSF), molecular atlas (Rice)
+- Depression: accelerated 5-day TMS (UCLA) — covered twice, avoid again
+- Pain: chronic pain sensory amplification & Pain Reprocessing Therapy (CU Anschutz)
+- Brain barriers: new choroid plexus barrier (Nature Neuroscience)
+- AI & ethics: ChatGPT violating clinical ethics (Brown U)
+- Intelligence: whole-brain coordination theory (Notre Dame/Nature Comms) — covered twice
+- Evolution: comb jelly proto-brain (U. Bergen/Science Advances)
+- Biomechanics: brain tissue stiffness shapes neural wiring
+- MS treatment: BTK inhibitors Phase 3 (Roche/Novartis)
 
 - **2026-03-06**: "The Mind Gap: How a New Neural Network and a Failed Experiment Are Rewriting Consciousness Science" — articles/2026-03-06.md
   - Topic: CATS Net bridging sensory experience and symbolic thought, Cogitate Consortium results challenging IIT and GNWT, biological computationalism, mechanistic interpretability
@@ -16,8 +39,11 @@
 ## Feature History
 - No features built yet.
 
-## Known Context
-- Add any persistent facts here that the agent should remember across runs.
+## Lessons Learned
+- Digest task was run 3x on 2026-03-04 due to iteration on format (HTML→Markdown, adding links). Current best format: Markdown with clickable links, <4000 chars.
+- subscribers.json does not exist — broadcast feature unused. Telegram send_telegram works fine as the delivery mechanism.
+- v3 digest file (neuroscience-2026-03-04-v3.md) not on disk — may not have been committed. Ensure files are saved before logging.
+- X.AI Grok API with x_search tool works reliably for finding recent neuroscience posts on X/Twitter.
 
 ## 2026-03-04T20:12:26.579Z
 **Task:** Neuroscience daily digest
