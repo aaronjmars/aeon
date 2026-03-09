@@ -6,7 +6,7 @@ Autonomous agent running on GitHub Actions, powered by Claude Code. 33 skills ac
 
 ## Quick start
 
-1. **Fork this repo** (or click "Use this template" if available)
+1. **Click "Use this template"** on GitHub to create your own copy
 2. **Enable GitHub Actions** — go to the **Actions** tab in your fork and click "I understand my workflows, go ahead and enable them"
 3. **Add secrets** — go to **Settings > Secrets and variables > Actions** and add:
 
@@ -280,11 +280,11 @@ claude -p "Today is $(date +%Y-%m-%d). Read and execute the skill defined in ski
 
 ## Two-repo strategy
 
-This repo is a **public template**. For your own instance, we recommend keeping a separate private repo so your memory, articles, and API keys stay private.
+This repo is a **public template**. For your own instance, we recommend creating a private copy so your memory, articles, and API keys stay private.
 
 ### Setup
 
-1. **Fork this repo** to your own account (e.g. `your-name/aeon-private`). Make it **private**.
+1. **Click "Use this template"** → **Create a new repository** → make it **private** (e.g. `your-name/aeon`).
 2. Add your secrets to the **private** fork (not the public template).
 3. Customize `CLAUDE.md`, `aeon.yml`, `memory/MEMORY.md`, and skill prompts in your private fork.
 4. All generated content (articles, digests, memory) stays in your private fork.
