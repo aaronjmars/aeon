@@ -75,9 +75,42 @@ skills:
     schedule: "0 14 * * *"
 ```
 
-The schedule format is standard cron (`minute hour day-of-month month day-of-week`). All times are UTC.
+The schedule format is standard cron (`minute hour day-of-month month day-of-week`). All times are UTC. The parser supports `*`, `*/N`, exact values, and comma-separated lists (`1,15` for 1st and 15th of the month).
 
 **Order matters** — the scheduler picks the first matching skill. Day-specific skills (e.g. Monday-only) are listed before daily skills so they get priority on their day. Heartbeat is always last as the fallback.
+
+### Changing the check frequency
+
+The workflow cron (`*/5 * * * *`) controls how often the scheduler checks. You can change this in `.github/workflows/run-skill.yml`:
+
+```yaml
+schedule:
+  - cron: '*/5 * * * *'   # Check every 5 min (default)
+  - cron: '*/15 * * * *'  # Check every 15 min (saves Actions minutes)
+  - cron: '0 * * * *'     # Check hourly (most conservative)
+```
+
+The check itself is cheap (~10 seconds of bash) — it only installs Claude Code and calls the API when a skill actually matches.
+
+### GitHub Actions billing
+
+GitHub Actions bills by **minutes used per month**. Only the time a runner is active counts.
+
+| Plan | Free minutes/month | Cost after |
+|------|-------------------|------------|
+| Free | 2,000 | Not available on free plan for private repos |
+| Pro | 3,000 | $0.008/min |
+| Team | 3,000 | $0.008/min |
+
+**What costs what:**
+- **No skill matched** (most 5-min ticks): ~10 seconds. Checkout + bash parse + exit. At `*/5`, that's ~288 checks/day = ~48 minutes/day.
+- **Skill runs**: 2-10 minutes each depending on complexity (Claude thinking + web search + file writes).
+- **Heartbeat (hourly)**: ~2 minutes if nothing found, more if it investigates something.
+
+**To reduce usage:**
+- Change the cron to `*/15` or `0 *` (hourly) — fewer empty checks
+- Disable skills you don't need (`enabled: false`)
+- Keep the repo **public** — public repos get unlimited free Actions minutes
 
 ## Skills
 
@@ -352,7 +385,9 @@ skills/
   skill-health.md        ← audit which skills ran, missed, or errored
   self-review.md         ← review output quality, reliability, suggest improvements
 memory/
-  MEMORY.md              ← long-term persistent memory
+  MEMORY.md              ← index: goals, active topics, pointers to topic files
+  topics/                ← detailed notes by topic (crypto.md, research.md, etc.)
+  logs/                  ← daily activity logs (YYYY-MM-DD.md)
   feeds.yml              ← RSS feed URLs
   watched-repos.md       ← GitHub repos to monitor
   on-chain-watches.yml   ← blockchain addresses to watch

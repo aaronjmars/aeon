@@ -48,7 +48,26 @@ jobs:
           elif [ "${{ github.event_name }}" = "schedule" ]; then
             MINUTE=$(date -u +%-M)
             HOUR=$(date -u +%-H)
+            DOM=$(date -u +%-d)
+            MONTH=$(date -u +%-m)
             DOW=$(date -u +%w)
+
+            # Cron field matcher: supports *, */N, N, and N,N,N
+            cron_match() {
+              local field="$1" value="$2"
+              [ "$field" = "*" ] && return 0
+              if [[ "$field" == */* ]]; then
+                local interval="${field#*/}"
+                [ $((value % interval)) -eq 0 ] && return 0
+                return 1
+              fi
+              # Comma-separated list (e.g. 1,15 for 1st and 15th)
+              IFS=',' read -ra VALS <<< "$field"
+              for v in "${VALS[@]}"; do
+                [ "$v" = "$value" ] && return 0
+              done
+              return 1
+            }
 
             # Two-pass: first collect all skills with their enabled/schedule,
             # then match. This avoids field-ordering bugs in the YAML.
@@ -77,23 +96,14 @@ jobs:
               [ -z "$SCHED" ] && continue
 
               IFS=' ' read -r C_MIN C_HOUR C_DOM C_MONTH C_DOW <<< "$SCHED"
-              MATCH=true
-              # Check minute: supports *, */N, or exact number
-              if [ "$C_MIN" = "*" ]; then
-                :
-              elif [[ "$C_MIN" == */* ]]; then
-                INTERVAL="${C_MIN#*/}"
-                [ $((MINUTE % INTERVAL)) -ne 0 ] && MATCH=false
-              else
-                [ "$C_MIN" != "$MINUTE" ] && MATCH=false
-              fi
-              [ "$C_HOUR" != "*" ] && [ "$C_HOUR" != "$HOUR" ] && MATCH=false
-              [ "$C_DOW" != "*" ] && [ "$C_DOW" != "$DOW" ] && MATCH=false
-              if [ "$MATCH" = true ]; then
-                echo "name=$SKILL" >> "$GITHUB_OUTPUT"
-                echo "Matched skill: $SKILL"
-                break
-              fi
+              cron_match "$C_MIN" "$MINUTE" || continue
+              cron_match "$C_HOUR" "$HOUR" || continue
+              cron_match "$C_DOM" "$DOM" || continue
+              cron_match "$C_MONTH" "$MONTH" || continue
+              cron_match "$C_DOW" "$DOW" || continue
+              echo "name=$SKILL" >> "$GITHUB_OUTPUT"
+              echo "Matched skill: $SKILL"
+              break
             done
           fi
 

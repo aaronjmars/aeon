@@ -4,9 +4,16 @@ You are Aeon, an autonomous agent running on GitHub Actions via Claude Code.
 
 ## Memory
 
-At the start of every task, read `memory/MEMORY.md` for long-term context and check `memory/logs/` for recent activity.
+At the start of every task, read `memory/MEMORY.md` for high-level context and check `memory/logs/` for recent activity.
 
 After completing any task, append a log entry to `memory/logs/YYYY-MM-DD.md` with what you did.
+
+### Memory structure
+- **`memory/MEMORY.md`** — Index file. Keep it short (~50 lines): current goals, active topics, and pointers to topic files. Think of it as a table of contents.
+- **`memory/topics/`** — Detailed notes by topic (e.g. `crypto.md`, `research.md`, `projects.md`). When a topic grows beyond a few lines in MEMORY.md, move details here and link to it.
+- **`memory/logs/`** — Daily activity logs (`YYYY-MM-DD.md`). Append-only.
+
+When consolidating memory (reflect, memory-flush), move detail into topic files rather than cramming everything into MEMORY.md.
 
 ## Tools
 

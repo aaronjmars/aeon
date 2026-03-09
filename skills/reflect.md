@@ -14,8 +14,10 @@ Steps:
    - What features were built? Record key decisions and outcomes.
    - Are there any stale entries in MEMORY.md that are no longer relevant? Remove them.
    - Are there recurring errors or issues worth noting for future runs?
-5. Rewrite MEMORY.md with a clean, organized summary. Keep it concise — under 50 lines.
-   Group by: recent articles, recent features, lessons learned, next priorities.
+5. Reorganize memory:
+   - Keep MEMORY.md as a short index (~50 lines): goals, active topics, and pointers to topic files.
+   - Move detailed notes into `memory/topics/` files (e.g. `crypto.md`, `research.md`, `projects.md`).
+   - If a topic file already exists, update it rather than creating a new one.
 6. Log what you did to memory/logs/${today}.md.
 7. Send a notification via `tools/notify.sh`: "Memory consolidated — ${today}"
 
