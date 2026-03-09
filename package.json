@@ -1,9 +1,0 @@
-{
-  "name": "aeon",
-  "version": "2.0.0",
-  "description": "Aeon — autonomous agent powered by Claude Code",
-  "scripts": {
-    "skill": "node scripts/load-skill.js --prompt",
-    "list": "node scripts/load-skill.js --list"
-  }
-}

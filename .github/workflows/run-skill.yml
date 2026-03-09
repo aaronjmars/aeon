@@ -6,7 +6,7 @@ on:
     - cron: '0 2 * * 1'   # feature
     - cron: '0 6 * * 0'   # reflect
     - cron: '0 4 * * 3'   # build-tool
-    - cron: '0 14 * * *'  # digest (9 AM EST)
+    - cron: '0 14 * * *'  # digest
   workflow_dispatch:
     inputs:
       skill:
@@ -54,13 +54,14 @@ jobs:
           elif [ "${{ github.event_name }}" = "issues" ]; then
             echo "name=feature" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.event_name }}" = "schedule" ]; then
-            CRON="${{ github.event.schedule }}"
-            SKILL=$(node scripts/load-skill.js --find-by-cron "$CRON")
-            if [ -z "$SKILL" ]; then
-              echo "::error::No skill matches cron '$CRON'"
-              exit 1
-            fi
-            echo "name=$SKILL" >> "$GITHUB_OUTPUT"
+            case "${{ github.event.schedule }}" in
+              "0 8 * * *")   echo "name=article" ;;
+              "0 2 * * 1")   echo "name=feature" ;;
+              "0 6 * * 0")   echo "name=reflect" ;;
+              "0 4 * * 3")   echo "name=build-tool" ;;
+              "0 14 * * *")  echo "name=digest" ;;
+              *) echo "::error::No skill matches cron '${{ github.event.schedule }}'"; exit 1 ;;
+            esac >> "$GITHUB_OUTPUT"
           fi
 
       - name: Run skill
@@ -74,17 +75,15 @@ jobs:
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
         run: |
           SKILL_NAME="${{ steps.skill.outputs.name }}"
-          node scripts/load-skill.js --prompt "$SKILL_NAME" | claude -p --dangerously-skip-permissions
+          TODAY=$(date -u +%Y-%m-%d)
+          claude -p "Today is $TODAY. Read and execute the skill defined in skills/${SKILL_NAME}.md" --dangerously-skip-permissions
 
       - name: Commit results
         run: |
           git config user.email "aeon@github-actions"
           git config user.name "Aeon"
           SKILL_NAME="${{ steps.skill.outputs.name }}"
-          COMMIT_PATHS=$(node scripts/load-skill.js --commits "$SKILL_NAME")
-          if [ -n "$COMMIT_PATHS" ]; then
-            git add --ignore-errors $COMMIT_PATHS
-            git diff --staged --quiet || git commit -m "chore($SKILL_NAME): auto-commit $(date +%Y-%m-%d)"
-            git pull --rebase || true
-            git push -u origin HEAD
-          fi
+          git add -A
+          git diff --staged --quiet || git commit -m "chore($SKILL_NAME): auto-commit $(date +%Y-%m-%d)"
+          git pull --rebase || true
+          git push -u origin HEAD

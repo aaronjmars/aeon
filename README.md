@@ -36,39 +36,34 @@ Autonomous agent running on GitHub Actions, powered by Claude Code. Writes daily
 
 ## How it works
 
-GitHub Actions spins up a VM on a schedule (or manual trigger), clones your repo, runs a skill prompt through Claude Code, then commits the results back to your repo. Memory, articles, and digests persist because they're committed to git after each run.
+GitHub Actions spins up a VM on a schedule (or manual trigger), clones your repo, and tells Claude Code to read and execute a skill file. Claude reads the skill's instructions, does the work (searching the web, writing files, etc.), then the workflow commits everything back to your repo.
 
 ```
 Cron / manual trigger
   → GitHub Actions VM boots
     → Clones your repo
-      → Runs: node scripts/load-skill.js --prompt <skill> | claude -p
-        → Claude reads files, searches the web, writes output
-          → Workflow commits changed files back to main
+      → claude -p "Read and execute skills/article.md"
+        → Claude reads the skill, searches the web, writes output
+          → Workflow commits all changes back to main
 ```
 
 ## Adding a new skill
 
-1. Create `skills/your-skill.md` with frontmatter and a prompt:
+1. Create `skills/your-skill.md` with a prompt:
 
 ```markdown
 ---
 name: My Skill
 description: What this skill does
 schedule: "0 12 * * *"
-commits:
-  - output-dir/
-  - memory/
-permissions:
-  - contents:write
 ---
 
-Today is ${today}. Your task is to...
+Your task is to...
 ```
 
-2. If it needs a cron schedule, add the cron to `.github/workflows/run-skill.yml` under `schedule:` and map it in the "Determine skill name" step.
-
-**Template variables:** `${today}` (2026-03-06), `${now}` (full ISO timestamp), `${repo}` (owner/repo-name).
+2. Add the cron schedule to `.github/workflows/run-skill.yml`:
+   - Add the cron under `schedule:`
+   - Add a mapping in the `case` statement in the "Determine skill name" step
 
 ## Trigger feature builds from issues
 
@@ -78,10 +73,10 @@ Add the label `ai-build` to any GitHub issue. The workflow fires automatically a
 
 ```bash
 # Run any skill locally (requires Claude Code CLI)
-node scripts/load-skill.js --prompt article | claude -p --dangerously-skip-permissions
+claude -p "Today is $(date +%Y-%m-%d). Read and execute the skill defined in skills/article.md" --dangerously-skip-permissions
 
 # List available skills
-node scripts/load-skill.js --list
+ls skills/
 ```
 
 ## Two-repo strategy
@@ -112,8 +107,6 @@ This merges template changes without overwriting your personal content, since yo
 
 ```
 CLAUDE.md           ← agent identity (auto-loaded by Claude Code)
-scripts/
-  load-skill.js     ← skill loader (parses frontmatter, interpolates vars)
 skills/
   article.md        ← daily article skill
   digest.md         ← daily digest skill
@@ -124,9 +117,6 @@ skills/
   search-papers.md  ← academic paper search tool
 memory/
   MEMORY.md         ← long-term persistent memory
-  logs/             ← daily run logs (auto-created)
-articles/           ← generated articles (auto-created)
-digests/            ← generated digests (auto-created)
 .github/
   workflows/
     run-skill.yml   ← single workflow dispatches all skills
