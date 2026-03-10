@@ -18,6 +18,7 @@
 
 ## Features Built
 - **reddit-digest** (2026-03-10) — Fetches and summarizes top Reddit posts from tracked subreddits. Config: `memory/subreddits.yml`. No auth required (uses public JSON API).
+- **security-digest** (2026-03-10) — Monitors recent critical/high-severity security advisories from GitHub Advisory Database. Filters by ecosystem (npm, pip, Go, crates.io, etc.) and CVSS score. No auth required.
 
 ## Lessons Learned
 - Digest format: Markdown with clickable links, under 4000 chars
