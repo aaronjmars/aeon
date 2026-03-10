@@ -10,6 +10,7 @@
 | Date | Title | Topic |
 |------|-------|-------|
 | 2026-03-10 | Solana's Quiet Transformation: From Memecoin Casino to Financial Infrastructure | Solana (Alpenglow upgrade, institutional adoption, RWAs) |
+| 2026-03-10 | The Race to Understand Consciousness Before AI Makes It Urgent | Consciousness (MIT tFUS tool, existential risk, biological computationalism) |
 
 ## Recent Digests (avoid repeating items)
 | Date | Key Topics Covered |
