@@ -43,6 +43,7 @@
 | 2026-03-10 | HN: Tony Hoare obituary, age-verification surveillance, FxLifeSheet, Redox OS no-LLM policy, Meta acquires Moltbook, Debian AI contributions, Intel FHE chip |
 | 2026-03-10 (papers) | Landscape of Consciousness taxonomy, serotonin & perception, non-invasive BCI decoding, memristor BCI decoder, agentic LLMs survey |
 | 2026-03-10 (RSS) | GhostPool encrypted mempool, Snap v2 BALs, Nihilium slashable key release, NeuroFlowNet scalp-to-iEEG, Miniature Brain Transformer, AI chatbot vulnerability loops, LVLM-brain alignment |
+| 2026-03-10 (tweets) | brian_armstrong AI agents x crypto, self-evolving agent (200→1500 lines), Jupiter+Chainlink prediction markets, DeFi TVL $90B ETH 56.6%, OpNet BTC smart contracts, locus coeruleus memory chapters, rDLPFC pub bias disaster, NeuroAI continual learning |
 
 ## Features Built
 - **reddit-digest** (2026-03-10) — Fetches and summarizes top Reddit posts from tracked subreddits. Config: `memory/subreddits.yml`. No auth required (uses public JSON API).
