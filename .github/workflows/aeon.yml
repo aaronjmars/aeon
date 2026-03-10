@@ -50,6 +50,10 @@ on:
           - claude-opus-4-6
           - claude-sonnet-4-6
           - claude-haiku-4-5-20251001
+      vars:
+        description: 'Variables (e.g. topic=rust, query=solana NFT)'
+        required: false
+        type: string
   workflow_call:
     inputs:
       skill:
@@ -336,7 +340,15 @@ jobs:
               --model "$MODEL" --allowedTools "$ALLOWED"
           else
             SKILL_NAME="${{ steps.skill.outputs.name }}"
-            claude -p "Today is $TODAY. Read and execute the skill defined in skills/${SKILL_NAME}/SKILL.md" \
+            VARS="${{ inputs.vars }}"
+            PROMPT="Today is $TODAY. Read and execute the skill defined in skills/${SKILL_NAME}/SKILL.md"
+            if [ -n "$VARS" ]; then
+              PROMPT="$PROMPT
+
+            Use these variables (override any defaults in the skill file):
+            $VARS"
+            fi
+            claude -p "$PROMPT" \
               --model "$MODEL" --allowedTools "$ALLOWED"
           fi
 
