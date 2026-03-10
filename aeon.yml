@@ -1,89 +1,101 @@
-# Aeon configuration — TEMPORARY TEST SCHEDULE
-# Revert to normal schedules after testing.
+# Aeon configuration
 #
 # Multiple skills at the same time run in parallel (each gets its own job).
 
 skills:
-  changelog:
-    enabled: true
-    schedule: "15 16 * * *"
-  feature:
-    enabled: true
-    schedule: "20 16 * * *"
-  tweet-digest:
-    enabled: true
-    schedule: "25 16 * * *"
-  build-skill:
-    enabled: true
-    schedule: "30 16 * * *"
-  issue-triage:
-    enabled: true
-    schedule: "35 16 * * *"
-  code-health:
-    enabled: true
-    schedule: "40 16 * * *"
-  substack-draft:
-    enabled: true
-    schedule: "45 16 * * *"
-  skill-health:
-    enabled: true
-    schedule: "50 16 * * *"
-  self-review:
-    enabled: true
-    schedule: "55 16 * * *"
-  reflect:
-    enabled: true
-    schedule: "0 17 * * *"
-  paper-digest:
-    enabled: true
-    schedule: "5 17 * * *"
-  weekly-review:
-    enabled: true
-    schedule: "10 17 * * *"
-  goal-tracker:
-    enabled: true
-    schedule: "15 17 * * *"
-  token-alert:
-    enabled: true
-    schedule: "20 17 * * *"
+  # --- Morning block (6-8 AM UTC) ---
   morning-brief:
     enabled: true
-    schedule: "25 17 * * *"
-  article:
-    enabled: true
-    schedule: "30 17 * * *"
-  github-monitor:
-    enabled: true
-    schedule: "35 17 * * *"
-  hacker-news-digest:
-    enabled: true
-    schedule: "40 17 * * *"
+    schedule: "0 7 * * *"
   rss-digest:
     enabled: true
-    schedule: "45 17 * * *"
-  digest:
+    schedule: "0 7 * * *"
+  hacker-news-digest:
     enabled: true
-    schedule: "50 17 * * *"
+    schedule: "0 7 * * *"
+  paper-digest:
+    enabled: true
+    schedule: "0 7 * * *"
+  tweet-digest:
+    enabled: true
+    schedule: "0 7 * * *"
+
+  # --- Mid-morning (9-10 AM UTC) ---
+  issue-triage:
+    enabled: true
+    schedule: "0 9 * * *"
   pr-review:
     enabled: true
-    schedule: "55 17 * * *"
+    schedule: "0 9 * * *"
+  github-monitor:
+    enabled: true
+    schedule: "0 9 * * *"
+
+  # --- Midday (12 PM UTC) ---
+  token-alert:
+    enabled: true
+    schedule: "0 12 * * *"
   wallet-digest:
     enabled: true
-    schedule: "0 18 * * *"
+    schedule: "0 12 * * *"
   on-chain-monitor:
     enabled: true
-    schedule: "5 18 * * *"
+    schedule: "0 12 * * *"
   defi-monitor:
     enabled: true
-    schedule: "10 18 * * *"
+    schedule: "0 12 * * *"
+
+  # --- Afternoon (2-3 PM UTC) ---
+  article:
+    enabled: true
+    schedule: "0 14 * * *"
+  substack-draft:
+    enabled: true
+    schedule: "0 14 * * *"
+  digest:
+    enabled: true
+    schedule: "0 14 * * *"
+
+  # --- Late afternoon (4-5 PM UTC) ---
+  code-health:
+    enabled: true
+    schedule: "0 16 * * *"
+  changelog:
+    enabled: true
+    schedule: "0 16 * * *"
+  feature:
+    enabled: true
+    schedule: "0 16 * * *"
+  build-skill:
+    enabled: true
+    schedule: "0 16 * * *"
+
+  # --- Evening / meta (6 PM UTC) ---
+  goal-tracker:
+    enabled: true
+    schedule: "0 18 * * *"
+  skill-health:
+    enabled: true
+    schedule: "0 18 * * *"
+  self-review:
+    enabled: true
+    schedule: "0 18 * * *"
+  reflect:
+    enabled: true
+    schedule: "0 18 * * *"
   memory-flush:
     enabled: true
-    schedule: "15 18 * * *"
+    schedule: "0 18 * * *"
+
+  # --- Weekly (Monday only) ---
+  weekly-review:
+    enabled: true
+    schedule: "0 19 * * 1"
 
   # --- Fallback (must be last) ---
   heartbeat:
     enabled: true
-    schedule: "20 18 * * *"
+    schedule: "0 */3 * * *"
 
 # Default model for all skills. Override per-run via workflow_dispatch.
 # Options: claude-opus-4-6, claude-sonnet-4-6, claude-haiku-4-5-20251001

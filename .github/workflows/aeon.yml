@@ -373,7 +373,28 @@ jobs:
           LABEL="${{ steps.work.outputs.label }}"
           git commit -m "chore($LABEL): auto-commit $(date +%Y-%m-%d)"
           for i in 1 2 3; do
-            git pull --rebase && git push -u origin HEAD && exit 0
+            if git pull --rebase origin main; then
+              git push -u origin HEAD && exit 0
+            else
+              echo "Rebase conflict on attempt $i, auto-resolving..."
+              # Auto-resolve conflicts in append-only files (logs, memory)
+              for f in $(git diff --name-only --diff-filter=U); do
+                if [[ "$f" == memory/logs/* ]] || [[ "$f" == memory/topics/* ]] || [[ "$f" == memory/MEMORY.md ]]; then
+                  # Accept both sides for append-only files
+                  sed -i '/^<<<<<<< /d; /^=======/d; /^>>>>>>> /d' "$f"
+                  git add "$f"
+                else
+                  # For other files, accept theirs and re-apply our changes next run
+                  git checkout --theirs "$f"
+                  git add "$f"
+                fi
+              done
+              if git diff --cached --quiet; then
+                git rebase --skip
+              else
+                GIT_EDITOR=true git rebase --continue
+              fi
+            fi
             echo "Push attempt $i failed, retrying..."
           done
           echo "Failed to push after 3 attempts"
