@@ -220,6 +220,7 @@ export default function Dashboard() {
         setAuthStatus({ authenticated: true })
         setShowAuthModal(false)
         setAuthKey('')
+        fetchData()
       } else {
         // Auto-setup failed — show modal so user can paste key manually
         if (!key) {
