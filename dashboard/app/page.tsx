@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
 interface Skill {
   name: string
@@ -36,6 +36,28 @@ const DAYS = [
   { label: 'Sun', value: 0 },
 ]
 
+// Get the user's UTC offset in hours (e.g. UTC-5 → -5, UTC+9 → 9)
+function getUtcOffsetHours(): number {
+  return -(new Date().getTimezoneOffset() / 60)
+}
+
+function getLocalTzAbbr(): string {
+  try {
+    return Intl.DateTimeFormat('en-US', { timeZoneName: 'short' }).formatToParts(new Date())
+      .find(p => p.type === 'timeZoneName')?.value || 'Local'
+  } catch {
+    return 'Local'
+  }
+}
+
+function utcToLocal24(utcH: number): number {
+  return ((utcH + getUtcOffsetHours()) % 24 + 24) % 24
+}
+
+function localToUtc24(localH: number): number {
+  return ((localH - getUtcOffsetHours()) % 24 + 24) % 24
+}
+
 function parseCron(cron: string): { mode: 'interval'; hours: number } | { mode: 'time'; hour12: number; ampm: 'AM' | 'PM'; day: number } {
   const parts = cron.split(' ')
   const h = parts[1]
@@ -43,11 +65,12 @@ function parseCron(cron: string): { mode: 'interval'; hours: number } | { mode: 
   if (h === '*' || h.includes('/')) {
     return { mode: 'interval', hours: h === '*' ? 1 : parseInt(h.split('/')[1]) || 1 }
   }
-  const h24 = parseInt(h)
+  const utcH = parseInt(h)
+  const localH = utcToLocal24(utcH)
   return {
     mode: 'time',
-    hour12: h24 > 12 ? h24 - 12 : h24 === 0 ? 12 : h24,
-    ampm: h24 >= 12 ? 'PM' : 'AM',
+    hour12: localH > 12 ? localH - 12 : localH === 0 ? 12 : localH,
+    ampm: localH >= 12 ? 'PM' : 'AM',
     day: dow === '*' ? -1 : parseInt(dow),
   }
 }
@@ -61,10 +84,11 @@ function cronLabel(cron: string): string {
 
 function buildCron(mode: 'interval' | 'time', hours: number, hour12: number, ampm: 'AM' | 'PM', day: number): string {
   if (mode === 'interval') return `0 */${hours} * * *`
-  let h = hour12
-  if (ampm === 'PM' && h !== 12) h += 12
-  if (ampm === 'AM' && h === 12) h = 0
-  return `0 ${h} * * ${day === -1 ? '*' : day}`
+  let localH = hour12
+  if (ampm === 'PM' && localH !== 12) localH += 12
+  if (ampm === 'AM' && localH === 12) localH = 0
+  const utcH = localToUtc24(localH)
+  return `0 ${utcH} * * ${day === -1 ? '*' : day}`
 }
 
 function ScheduleEditor({ cron, onSave }: { cron: string; onSave: (cron: string) => void }) {
@@ -156,10 +180,14 @@ export default function Dashboard() {
 
   // Import modal
   const [showImport, setShowImport] = useState(false)
+  const [importTab, setImportTab] = useState<'github' | 'upload'>('github')
   const [importRepo, setImportRepo] = useState('')
   const [importSkills, setImportSkills] = useState<Array<{ name: string; description: string; installed: boolean }>>([])
   const [importLoading, setImportLoading] = useState(false)
   const [importSelected, setImportSelected] = useState<Set<string>>(new Set())
+  const [uploadFiles, setUploadFiles] = useState<Array<{ path: string; content: string }>>([])
+  const [uploadDragOver, setUploadDragOver] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const flash = (msg: string) => {
     setToast(msg)
@@ -348,6 +376,52 @@ export default function Dashboard() {
     }
   }
 
+  // --- Upload actions ---
+
+  const readFilesFromInput = async (fileList: FileList) => {
+    const files: Array<{ path: string; content: string }> = []
+    for (let i = 0; i < fileList.length; i++) {
+      const file = fileList[i]
+      // webkitRelativePath is set when uploading a folder, otherwise use file.name
+      const path = (file as { webkitRelativePath?: string }).webkitRelativePath || file.name
+      const content = await file.text()
+      files.push({ path, content })
+    }
+    setUploadFiles(files)
+  }
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault()
+    setUploadDragOver(false)
+    if (e.dataTransfer.files.length > 0) {
+      await readFilesFromInput(e.dataTransfer.files)
+    }
+  }
+
+  const uploadSkill = async () => {
+    if (uploadFiles.length === 0) return
+    setImportLoading(true)
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ files: uploadFiles }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        flash(`Uploaded skill "${data.name}" (${data.filesWritten} files)`)
+        setShowImport(false)
+        setUploadFiles([])
+        fetchData()
+      } else {
+        const data = await res.json()
+        flash(data.error || 'Upload failed')
+      }
+    } finally {
+      setImportLoading(false)
+    }
+  }
+
   // --- Render ---
 
   const enabledCount = skills.filter(s => s.enabled).length
@@ -376,7 +450,7 @@ export default function Dashboard() {
     <div className="h-screen flex flex-col">
       {/* Toast */}
       {toast && (
-        <div className="fixed top-4 right-4 z-50 bg-zinc-800 border border-zinc-700 text-zinc-200 px-4 py-2 rounded-lg text-sm shadow-lg">
+        <div className="fixed bottom-4 right-4 z-50 bg-zinc-800 border border-zinc-700 text-zinc-200 px-4 py-2 rounded-lg text-sm shadow-lg">
           {toast}
         </div>
       )}
@@ -415,7 +489,7 @@ export default function Dashboard() {
               <h2 className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Skills</h2>
               <span className="text-xs text-zinc-600">{enabledCount} / {skills.length} enabled</span>
             </div>
-            <span className="text-[10px] text-zinc-600">UTC</span>
+            <span className="text-[10px] text-zinc-600">{getLocalTzAbbr()}</span>
           </div>
           <div className="flex-1 overflow-y-auto">
             {skills.map(skill => (
@@ -509,22 +583,32 @@ export default function Dashboard() {
                           <div className="text-[10px] text-zinc-600">{secret.description}</div>
                         </div>
                         <div className="flex gap-1 shrink-0">
-                          <button
-                            onClick={() => {
-                              setEditingSecret(editingSecret === secret.name ? null : secret.name)
-                              setSecretValue('')
-                            }}
-                            className="text-[10px] text-zinc-500 hover:text-zinc-300 px-1.5 py-0.5 rounded transition-colors"
-                          >
-                            {editingSecret === secret.name ? 'cancel' : secret.isSet ? 'edit' : 'set'}
-                          </button>
+                          {!secret.isSet && editingSecret !== secret.name && (
+                            <button
+                              onClick={() => {
+                                setEditingSecret(secret.name)
+                                setSecretValue('')
+                              }}
+                              className="text-[10px] text-zinc-500 hover:text-zinc-300 px-1.5 py-0.5 rounded transition-colors"
+                            >
+                              set
+                            </button>
+                          )}
+                          {editingSecret === secret.name && (
+                            <button
+                              onClick={() => { setEditingSecret(null); setSecretValue('') }}
+                              className="text-[10px] text-zinc-500 hover:text-zinc-300 px-1.5 py-0.5 rounded transition-colors"
+                            >
+                              cancel
+                            </button>
+                          )}
                           {secret.isSet && editingSecret !== secret.name && (
                             <button
                               onClick={() => deleteSecret(secret.name)}
                               disabled={!!busy[`sec-${secret.name}`]}
                               className="text-[10px] text-red-400/50 hover:text-red-400 px-1.5 py-0.5 rounded transition-colors disabled:opacity-50"
                             >
-                              rm
+                              delete
                             </button>
                           )}
                         </div>
@@ -602,71 +686,175 @@ export default function Dashboard() {
       {showImport && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-md mx-4 p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center justify-between mb-4">
               <h2 className="font-medium text-sm">Import Skills</h2>
               <button
-                onClick={() => { setShowImport(false); setImportSkills([]); setImportRepo('') }}
+                onClick={() => { setShowImport(false); setImportSkills([]); setImportRepo(''); setUploadFiles([]) }}
                 className="text-zinc-500 hover:text-zinc-300 text-lg leading-none"
               >
                 &times;
               </button>
             </div>
-            <div className="flex gap-2 mb-5">
-              <input
-                type="text"
-                value={importRepo}
-                onChange={(e) => setImportRepo(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && searchImport()}
-                placeholder="owner/repo"
-                className="flex-1 bg-zinc-800 text-zinc-200 text-sm rounded-lg px-3 py-2 border border-zinc-700/50 outline-none placeholder:text-zinc-600"
-              />
+
+            {/* Tabs */}
+            <div className="flex gap-1 mb-5 bg-zinc-800/50 rounded-lg p-0.5">
               <button
-                onClick={searchImport}
-                disabled={importLoading || !importRepo.trim()}
-                className="bg-zinc-700 hover:bg-zinc-600 text-zinc-200 text-sm px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+                onClick={() => setImportTab('github')}
+                className={`flex-1 text-xs py-1.5 rounded-md transition-colors ${
+                  importTab === 'github' ? 'bg-zinc-700 text-zinc-200' : 'text-zinc-500 hover:text-zinc-300'
+                }`}
               >
-                {importLoading && importSkills.length === 0 ? '\u00b7\u00b7\u00b7' : 'Search'}
+                GitHub Repo
+              </button>
+              <button
+                onClick={() => setImportTab('upload')}
+                className={`flex-1 text-xs py-1.5 rounded-md transition-colors ${
+                  importTab === 'upload' ? 'bg-zinc-700 text-zinc-200' : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                Upload Files
               </button>
             </div>
-            {importSkills.length > 0 && (
+
+            {/* GitHub tab */}
+            {importTab === 'github' && (
               <>
-                <div className="max-h-60 overflow-y-auto -mx-2 mb-4">
-                  {importSkills.map(skill => (
-                    <label
-                      key={skill.name}
-                      className={`flex items-start gap-3 px-3 py-2.5 mx-1 rounded-lg cursor-pointer transition-colors ${
-                        importSelected.has(skill.name) ? 'bg-zinc-800' : 'hover:bg-zinc-800/50'
-                      } ${skill.installed ? 'opacity-40' : ''}`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={importSelected.has(skill.name)}
-                        onChange={(e) => {
-                          const next = new Set(importSelected)
-                          e.target.checked ? next.add(skill.name) : next.delete(skill.name)
-                          setImportSelected(next)
-                        }}
-                        className="mt-0.5 rounded border-zinc-600 accent-green-500"
-                      />
-                      <div className="min-w-0">
-                        <div className="text-sm font-mono">
-                          {skill.name}
-                          {skill.installed && <span className="text-zinc-500 text-xs ml-2">(installed)</span>}
-                        </div>
-                        {skill.description && (
-                          <div className="text-xs text-zinc-500 mt-0.5 line-clamp-2">{skill.description}</div>
-                        )}
-                      </div>
-                    </label>
-                  ))}
+                <div className="flex gap-2 mb-5">
+                  <input
+                    type="text"
+                    value={importRepo}
+                    onChange={(e) => setImportRepo(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && searchImport()}
+                    placeholder="owner/repo"
+                    className="flex-1 bg-zinc-800 text-zinc-200 text-sm rounded-lg px-3 py-2 border border-zinc-700/50 outline-none placeholder:text-zinc-600"
+                  />
+                  <button
+                    onClick={searchImport}
+                    disabled={importLoading || !importRepo.trim()}
+                    className="bg-zinc-700 hover:bg-zinc-600 text-zinc-200 text-sm px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {importLoading && importSkills.length === 0 ? '\u00b7\u00b7\u00b7' : 'Search'}
+                  </button>
                 </div>
-                <button
-                  onClick={installSkills}
-                  disabled={importSelected.size === 0 || importLoading}
-                  className="w-full bg-green-600 hover:bg-green-500 text-white text-sm py-2.5 rounded-lg transition-colors disabled:opacity-50"
+                {importSkills.length > 0 && (
+                  <>
+                    <div className="max-h-60 overflow-y-auto -mx-2 mb-4">
+                      {importSkills.map(skill => (
+                        <label
+                          key={skill.name}
+                          className={`flex items-start gap-3 px-3 py-2.5 mx-1 rounded-lg cursor-pointer transition-colors ${
+                            importSelected.has(skill.name) ? 'bg-zinc-800' : 'hover:bg-zinc-800/50'
+                          } ${skill.installed ? 'opacity-40' : ''}`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={importSelected.has(skill.name)}
+                            onChange={(e) => {
+                              const next = new Set(importSelected)
+                              e.target.checked ? next.add(skill.name) : next.delete(skill.name)
+                              setImportSelected(next)
+                            }}
+                            className="mt-0.5 rounded border-zinc-600 accent-green-500"
+                          />
+                          <div className="min-w-0">
+                            <div className="text-sm font-mono">
+                              {skill.name}
+                              {skill.installed && <span className="text-zinc-500 text-xs ml-2">(installed)</span>}
+                            </div>
+                            {skill.description && (
+                              <div className="text-xs text-zinc-500 mt-0.5 line-clamp-2">{skill.description}</div>
+                            )}
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                    <button
+                      onClick={installSkills}
+                      disabled={importSelected.size === 0 || importLoading}
+                      className="w-full bg-green-600 hover:bg-green-500 text-white text-sm py-2.5 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      {importLoading ? 'Installing...' : `Install ${importSelected.size} skill(s)`}
+                    </button>
+                  </>
+                )}
+              </>
+            )}
+
+            {/* Upload tab */}
+            {importTab === 'upload' && (
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => e.target.files && readFilesFromInput(e.target.files)}
+                />
+                {/* @ts-expect-error webkitdirectory is a non-standard attribute */}
+                <input
+                  ref={(el) => { if (el) el.setAttribute('webkitdirectory', '') }}
+                  type="file"
+                  className="hidden"
+                  id="folder-input"
+                  onChange={(e) => e.target.files && readFilesFromInput(e.target.files)}
+                />
+                <div
+                  onDragOver={(e) => { e.preventDefault(); setUploadDragOver(true) }}
+                  onDragLeave={() => setUploadDragOver(false)}
+                  onDrop={handleDrop}
+                  className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
+                    uploadDragOver ? 'border-green-500 bg-green-950/20' : 'border-zinc-700 hover:border-zinc-600'
+                  }`}
                 >
-                  {importLoading ? 'Installing...' : `Install ${importSelected.size} skill(s)`}
-                </button>
+                  {uploadFiles.length === 0 ? (
+                    <>
+                      <div className="text-zinc-500 text-sm mb-3">
+                        Drag & drop a skill folder here, or
+                      </div>
+                      <div className="flex gap-2 justify-center">
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs px-3 py-1.5 rounded-lg border border-zinc-700/50 transition-colors"
+                        >
+                          Choose Files
+                        </button>
+                        <button
+                          onClick={() => document.getElementById('folder-input')?.click()}
+                          className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs px-3 py-1.5 rounded-lg border border-zinc-700/50 transition-colors"
+                        >
+                          Choose Folder
+                        </button>
+                      </div>
+                      <div className="text-zinc-600 text-[10px] mt-3">
+                        Must include a SKILL.md file
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-zinc-300 text-sm mb-1">
+                        {uploadFiles.length} file{uploadFiles.length !== 1 ? 's' : ''} selected
+                      </div>
+                      <div className="text-zinc-500 text-xs mb-3 max-h-24 overflow-y-auto">
+                        {uploadFiles.map(f => f.path).join(', ')}
+                      </div>
+                      <button
+                        onClick={() => { setUploadFiles([]); if (fileInputRef.current) fileInputRef.current.value = '' }}
+                        className="text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors"
+                      >
+                        Clear
+                      </button>
+                    </>
+                  )}
+                </div>
+                {uploadFiles.length > 0 && (
+                  <button
+                    onClick={uploadSkill}
+                    disabled={importLoading}
+                    className="w-full mt-4 bg-green-600 hover:bg-green-500 text-white text-sm py-2.5 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {importLoading ? 'Uploading...' : 'Upload Skill'}
+                  </button>
+                )}
               </>
             )}
           </div>
