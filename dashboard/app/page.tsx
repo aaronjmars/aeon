@@ -214,6 +214,12 @@ export default function Dashboard() {
   const [syncing, setSyncing] = useState(false)
   const [openSchedule, setOpenSchedule] = useState<string | null>(null)
 
+  // Run logs viewer
+  const [selectedRun, setSelectedRun] = useState<Run | null>(null)
+  const [runLogs, setRunLogs] = useState('')
+  const [logsLoading, setLogsLoading] = useState(false)
+  const logsEndRef = useRef<HTMLDivElement>(null)
+
   // Import modal
   const [showImport, setShowImport] = useState(false)
   const [importTab, setImportTab] = useState<'github' | 'upload'>('github')
@@ -361,6 +367,25 @@ export default function Dashboard() {
       if (res.ok) setRuns((await res.json()).runs)
     } catch { /* ignore */ }
   }, [])
+
+  const viewRunLogs = async (run: Run) => {
+    setSelectedRun(run)
+    setRunLogs('')
+    setLogsLoading(true)
+    try {
+      const res = await fetch(`/api/runs/${run.id}/logs`)
+      if (res.ok) {
+        const data = await res.json()
+        setRunLogs(data.logs || '(No logs)')
+      } else {
+        setRunLogs('Failed to fetch logs')
+      }
+    } catch {
+      setRunLogs('Failed to fetch logs')
+    } finally {
+      setLogsLoading(false)
+    }
+  }
 
   // Auto-refresh runs every 10s
   useEffect(() => {
@@ -788,36 +813,83 @@ export default function Dashboard() {
               refresh
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto">
-            {runs.length === 0 ? (
-              <div className="px-4 py-12 text-center text-zinc-600 text-xs">
-                No runs yet
-              </div>
-            ) : (
-              runs.map(run => (
+          {selectedRun ? (
+            /* Log viewer */
+            <div className="flex-1 flex flex-col min-h-0">
+              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-zinc-800/30 shrink-0">
+                <button
+                  onClick={() => { setSelectedRun(null); setRunLogs('') }}
+                  className="text-zinc-500 hover:text-zinc-300 text-xs transition-colors"
+                >
+                  &larr;
+                </button>
+                <span className={`text-xs ${
+                  selectedRun.conclusion === 'success' ? 'text-green-400' :
+                  selectedRun.conclusion === 'failure' ? 'text-red-400' :
+                  selectedRun.status === 'in_progress' ? 'text-yellow-400' :
+                  'text-zinc-600'
+                }`}>
+                  {selectedRun.conclusion === 'success' ? '\u2713' :
+                   selectedRun.conclusion === 'failure' ? '\u2717' :
+                   selectedRun.status === 'in_progress' ? '\u25cc' : '\u00b7'}
+                </span>
+                <span className="font-mono text-xs text-zinc-300 truncate flex-1">{selectedRun.workflow}</span>
                 <a
-                  key={run.id}
-                  href={run.url}
+                  href={selectedRun.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-4 py-2.5 border-b border-zinc-800/20 hover:bg-zinc-900/50 transition-colors"
+                  className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors shrink-0"
                 >
-                  <span className={`text-xs ${
-                    run.conclusion === 'success' ? 'text-green-400' :
-                    run.conclusion === 'failure' ? 'text-red-400' :
-                    run.status === 'in_progress' ? 'text-yellow-400' :
-                    'text-zinc-600'
-                  }`}>
-                    {run.conclusion === 'success' ? '\u2713' :
-                     run.conclusion === 'failure' ? '\u2717' :
-                     run.status === 'in_progress' ? '\u25cc' : '\u00b7'}
-                  </span>
-                  <span className="font-mono text-xs text-zinc-300 truncate flex-1">{run.workflow}</span>
-                  <span className="text-[10px] text-zinc-600 tabular-nums shrink-0">{timeAgo(run.created_at)}</span>
+                  GitHub &rarr;
                 </a>
-              ))
-            )}
-          </div>
+              </div>
+              <div className="flex-1 overflow-y-auto p-3">
+                {logsLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="relative flex items-center justify-center">
+                      <div className="absolute h-8 w-8 rounded-full border border-green-500/20" style={{ animation: 'pulse-ring 2s ease-out infinite' }} />
+                      <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
+                    </div>
+                  </div>
+                ) : (
+                  <pre className="text-[11px] leading-relaxed font-mono text-zinc-400 whitespace-pre-wrap break-words">
+                    {runLogs}
+                    <div ref={logsEndRef} />
+                  </pre>
+                )}
+              </div>
+            </div>
+          ) : (
+            /* Run list */
+            <div className="flex-1 overflow-y-auto">
+              {runs.length === 0 ? (
+                <div className="px-4 py-12 text-center text-zinc-600 text-xs">
+                  No runs yet
+                </div>
+              ) : (
+                runs.map(run => (
+                  <button
+                    key={run.id}
+                    onClick={() => viewRunLogs(run)}
+                    className="w-full flex items-center gap-2 px-4 py-2.5 border-b border-zinc-800/20 hover:bg-zinc-900/50 transition-colors text-left"
+                  >
+                    <span className={`text-xs ${
+                      run.conclusion === 'success' ? 'text-green-400' :
+                      run.conclusion === 'failure' ? 'text-red-400' :
+                      run.status === 'in_progress' ? 'text-yellow-400' :
+                      'text-zinc-600'
+                    }`}>
+                      {run.conclusion === 'success' ? '\u2713' :
+                       run.conclusion === 'failure' ? '\u2717' :
+                       run.status === 'in_progress' ? '\u25cc' : '\u00b7'}
+                    </span>
+                    <span className="font-mono text-xs text-zinc-300 truncate flex-1">{run.workflow}</span>
+                    <span className="text-[10px] text-zinc-600 tabular-nums shrink-0">{timeAgo(run.created_at)}</span>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
         </div>
       </div>
 
