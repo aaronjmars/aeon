@@ -20,8 +20,8 @@ function parseModel(yaml: string): string {
   return match?.[1] || 'claude-sonnet-4-6'
 }
 
-function parseConfig(yaml: string): Record<string, { enabled: boolean; schedule: string; var: string }> {
-  const skills: Record<string, { enabled: boolean; schedule: string; var: string }> = {}
+function parseConfig(yaml: string): Record<string, { enabled: boolean; schedule: string; var: string; model: string }> {
+  const skills: Record<string, { enabled: boolean; schedule: string; var: string; model: string }> = {}
   const regex = / {2}([a-z][a-z0-9-]*):\s*\n((?:\s{4}\S.*\n)*)/g
   let match
   while ((match = regex.exec(yaml)) !== null) {
@@ -31,6 +31,7 @@ function parseConfig(yaml: string): Record<string, { enabled: boolean; schedule:
       enabled: /enabled:\s*true/.test(block),
       schedule: block.match(/schedule:\s*"([^"]*)"/)?.[ 1] || '',
       var: block.match(/var:\s*"([^"]*)"/)?.[ 1] || '',
+      model: block.match(/model:\s*"([^"]*)"/)?.[ 1] || '',
     }
   }
   return skills
@@ -81,6 +82,7 @@ export async function GET() {
       enabled: config[name]?.enabled ?? false,
       schedule: config[name]?.schedule || '0 12 * * *',
       var: config[name]?.var || '',
+      model: config[name]?.model || '',
     }))
 
     const model = parseModel(configResult.content)
@@ -94,7 +96,7 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   try {
-    const { name, enabled, schedule, var: skillVar, model } = await request.json()
+    const { name, enabled, schedule, var: skillVar, model, skillModel } = await request.json()
     const { content, sha } = await getFileContent('aeon.yml')
     let updated = content
 
@@ -130,6 +132,41 @@ export async function PATCH(request: Request) {
           `(  ${escaped}:\\n    enabled: (?:true|false)\\n    schedule: "[^"]*")`,
         )
         updated = updated.replace(re, `$1\n    var: "${skillVar}"`)
+      }
+    }
+
+    // Per-skill model override
+    if (typeof skillModel === 'string') {
+      const escaped = escapeRe(name)
+      const hasModel = new RegExp(`  ${escaped}:[\\s\\S]*?model: "`)
+      if (hasModel.test(updated)) {
+        if (skillModel) {
+          // Update existing model line
+          const re = new RegExp(
+            `(  ${escaped}:\\n(?:    \\S.*\\n)*?    model: ")[^"]*"`,
+          )
+          updated = updated.replace(re, `$1${skillModel}"`)
+        } else {
+          // Remove model line (reset to global default)
+          const re = new RegExp(
+            `(  ${escaped}:\\n(?:    \\S.*\\n)*?)    model: "[^"]*"\\n`,
+          )
+          updated = updated.replace(re, '$1')
+        }
+      } else if (skillModel) {
+        // Add model line after schedule (or after var if present)
+        const hasVar = new RegExp(`  ${escaped}:[\\s\\S]*?var: "`)
+        if (hasVar.test(updated)) {
+          const re = new RegExp(
+            `(  ${escaped}:\\n    enabled: (?:true|false)\\n    schedule: "[^"]*"\\n    var: "[^"]*")`,
+          )
+          updated = updated.replace(re, `$1\n    model: "${skillModel}"`)
+        } else {
+          const re = new RegExp(
+            `(  ${escaped}:\\n    enabled: (?:true|false)\\n    schedule: "[^"]*")`,
+          )
+          updated = updated.replace(re, `$1\n    model: "${skillModel}"`)
+        }
       }
     }
 

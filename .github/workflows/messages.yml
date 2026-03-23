@@ -379,7 +379,7 @@ jobs:
             return 1
           }
 
-          declare -A SKILL_ENABLED SKILL_SCHEDULE SKILL_VAR
+          declare -A SKILL_ENABLED SKILL_SCHEDULE SKILL_VAR SKILL_MODEL
           SKILL_ORDER=()
           CURRENT_SKILL=""
           while IFS= read -r line; do
@@ -389,6 +389,7 @@ jobs:
               SKILL_ENABLED["$CURRENT_SKILL"]="true"
               SKILL_SCHEDULE["$CURRENT_SKILL"]=""
               SKILL_VAR["$CURRENT_SKILL"]=""
+              SKILL_MODEL["$CURRENT_SKILL"]=""
             fi
             if [[ "$line" =~ ^\ \ \ \ enabled:\ *false ]] && [ -n "$CURRENT_SKILL" ]; then
               SKILL_ENABLED["$CURRENT_SKILL"]="false"
@@ -398,6 +399,9 @@ jobs:
             fi
             if [[ "$line" =~ ^\ \ \ \ var:\ *\"([^\"]+)\" ]] && [ -n "$CURRENT_SKILL" ]; then
               SKILL_VAR["$CURRENT_SKILL"]="${BASH_REMATCH[1]}"
+            fi
+            if [[ "$line" =~ ^\ \ \ \ model:\ *\"([^\"]+)\" ]] && [ -n "$CURRENT_SKILL" ]; then
+              SKILL_MODEL["$CURRENT_SKILL"]="${BASH_REMATCH[1]}"
             fi
           done < aeon.yml
 
@@ -437,12 +441,11 @@ jobs:
           # Dispatch all matched skills via the Aeon workflow
           for SKILL in "${MATCHED[@]}"; do
             VAR="${SKILL_VAR[$SKILL]}"
-            if [ -n "$VAR" ]; then
-              echo "Dispatching: $SKILL (var: $VAR)"
-              gh workflow run aeon.yml -f skill="$SKILL" -f var="$VAR"
-            else
-              echo "Dispatching: $SKILL"
-              gh workflow run aeon.yml -f skill="$SKILL"
-            fi
+            SMODEL="${SKILL_MODEL[$SKILL]}"
+            CMD="gh workflow run aeon.yml -f skill=$SKILL"
+            [ -n "$VAR" ] && CMD="$CMD -f var=$VAR"
+            [ -n "$SMODEL" ] && CMD="$CMD -f model=$SMODEL"
+            echo "Dispatching: $SKILL${VAR:+ (var: $VAR)}${SMODEL:+ [model: $SMODEL]}"
+            eval "$CMD"
             sleep 2
           done

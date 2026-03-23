@@ -165,10 +165,15 @@ jobs:
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
         run: |
           TODAY=$(date -u +%Y-%m-%d)
+          SKILL_NAME="${{ steps.skill.outputs.name }}"
           CONFIG_MODEL=$(grep -E '^model:' aeon.yml | sed 's/^model: *//' | tr -d ' ')
+          # Check for per-skill model override in aeon.yml
+          SKILL_MODEL=$(awk "/^  ${SKILL_NAME}:/{found=1} found && /model:/{print; exit}" aeon.yml | sed 's/.*model: *"\?\([^"]*\)"\?/\1/' | tr -d ' ')
           INPUT_MODEL="${{ inputs.model }}"
           if [ -n "$INPUT_MODEL" ] && [ "$INPUT_MODEL" != "(config default)" ]; then
             MODEL="$INPUT_MODEL"
+          elif [ -n "$SKILL_MODEL" ]; then
+            MODEL="$SKILL_MODEL"
           else
             MODEL="${CONFIG_MODEL:-claude-opus-4-6}"
           fi

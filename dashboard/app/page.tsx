@@ -8,6 +8,7 @@ interface Skill {
   enabled: boolean
   schedule: string
   var: string
+  model: string
 }
 
 interface Run {
@@ -479,6 +480,21 @@ export default function Dashboard() {
     } catch { /* ignore */ }
   }
 
+  const updateSkillModel = async (name: string, m: string) => {
+    try {
+      const res = await fetch('/api/skills', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, skillModel: m }),
+      })
+      if (res.ok) {
+        setSkills(s => s.map(sk => sk.name === name ? { ...sk, model: m } : sk))
+        flash(`${name} model ${m ? `set to ${MODELS.find(x => x.id === m)?.label || m}` : 'reset to global default'}`)
+        checkSync()
+      }
+    } catch { /* ignore */ }
+  }
+
   const deleteSkill = async (name: string) => {
     setBusy(b => ({ ...b, [`d-${name}`]: true }))
     try {
@@ -501,13 +517,13 @@ export default function Dashboard() {
     }
   }
 
-  const runSkill = async (name: string, v?: string) => {
+  const runSkill = async (name: string, v?: string, skillModel?: string) => {
     setBusy(b => ({ ...b, [`r-${name}`]: true }))
     try {
       const res = await fetch(`/api/skills/${name}/run`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ var: v || '', model }),
+        body: JSON.stringify({ var: v || '', model: skillModel || model }),
       })
       if (res.ok) {
         flash(`${name} triggered${v ? ` (${v})` : ''}`)
@@ -794,6 +810,13 @@ export default function Dashboard() {
                     {cronLabel(skill.schedule)}
                   </span>
 
+                  {/* Model badge */}
+                  {skill.model && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-900/30 text-purple-400 border border-purple-800/30 truncate font-mono" title={`Model: ${skill.model}`}>
+                      {MODELS.find(m => m.id === skill.model)?.label || skill.model}
+                    </span>
+                  )}
+
                   {/* Vars badge */}
                   {skill.var && (
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800/60 text-zinc-500 border border-zinc-800/50 truncate max-w-[120px] font-mono" title={skill.var}>
@@ -803,7 +826,7 @@ export default function Dashboard() {
 
                   {/* Run */}
                   <button
-                    onClick={(e) => { e.stopPropagation(); runSkill(skill.name, skill.var) }}
+                    onClick={(e) => { e.stopPropagation(); runSkill(skill.name, skill.var, skill.model) }}
                     disabled={!!busy[`r-${skill.name}`] || (authStatus !== null && !authStatus.authenticated)}
                     title={authStatus !== null && !authStatus.authenticated ? 'Authenticate first' : undefined}
                     className="text-zinc-500 hover:text-zinc-300 text-[10px] px-2 py-1 rounded bg-zinc-800/40 hover:bg-zinc-800 border border-zinc-800/50 transition-colors disabled:opacity-50 shrink-0"
@@ -826,6 +849,20 @@ export default function Dashboard() {
                       value={skill.var}
                       onSave={(v) => updateVar(skill.name, v)}
                     />
+                    {/* Per-skill model override */}
+                    <div className="px-4 py-2 bg-zinc-900/60 border-b border-zinc-800/30 flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+                      <span className="text-[10px] text-zinc-500 shrink-0">Model</span>
+                      <select
+                        value={skill.model}
+                        onChange={(e) => updateSkillModel(skill.name, e.target.value)}
+                        className="flex-1 bg-zinc-800 text-zinc-200 text-[10px] rounded px-2 py-1 border border-zinc-700/50 outline-none font-mono appearance-none cursor-pointer"
+                      >
+                        <option value="">Global default ({MODELS.find(m => m.id === model)?.label || model})</option>
+                        {MODELS.map(m => (
+                          <option key={m.id} value={m.id}>{m.label}</option>
+                        ))}
+                      </select>
+                    </div>
                     <div className="px-4 py-2 bg-zinc-900/40 border-b border-zinc-800/30 flex justify-end" onClick={(e) => e.stopPropagation()}>
                       <button
                         type="button"
