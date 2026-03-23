@@ -1,9 +1,9 @@
 ---
 name: Daily Digest
 description: Generate and send a daily digest on a configurable topic
-var: "neuroscience"
+var: ""
 ---
-> **${var}** — Topic for the digest — e.g. "AI agents", "solana", "rust".
+> **${var}** — Topic for the digest (e.g. "AI agents", "solana", "rust"). **Required** — set your topic in aeon.yml.
 
 
 Today is ${today}. Generate and send a daily **${var}** digest.

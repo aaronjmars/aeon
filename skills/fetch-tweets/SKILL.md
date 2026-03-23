@@ -1,9 +1,9 @@
 ---
 name: Fetch Tweets
 description: Search X/Twitter for tweets by keyword, username, or both
-var: "AI agents"
+var: ""
 ---
-> **${var}** — Search query for X/Twitter — keyword, @user, or #hashtag.
+> **${var}** — Search query for X/Twitter — keyword, @user, or #hashtag. **Required** — set your query in aeon.yml.
 
 
 Today is ${today}. Search X for tweets matching **${var}**.
