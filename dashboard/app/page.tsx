@@ -470,7 +470,20 @@ export default function Dashboard() {
 
   // Import modal
   const [col1Tab, setCol1Tab] = useState<'skills' | 'secrets'>('skills')
-  const [col3Tab, setCol3Tab] = useState<'runs' | 'feed'>('feed')
+  const [col3Tab, setCol3Tab] = useState<'runs' | 'feed' | 'analytics'>('feed')
+
+  // Analytics
+  const [analyticsData, setAnalyticsData] = useState<{
+    skills: Array<{
+      name: string; total: number; success: number; failure: number;
+      cancelled: number; inProgress: number; successRate: number;
+      lastRun: string | null; lastConclusion: string | null;
+      avgDurationMin: number | null; streak: number;
+    }>;
+    insights: Array<{ type: 'warning' | 'info' | 'success'; message: string }>;
+    summary: { totalRuns: number; totalSuccess: number; totalFailure: number; overallSuccessRate: number; uniqueSkills: number; periodDays: number };
+  } | null>(null)
+  const [analyticsLoading, setAnalyticsLoading] = useState(false)
   const [jsonrenderEnabled, setJsonrenderEnabled] = useState(false)
   const [pulling, setPulling] = useState(false)
   const [feedKey, setFeedKey] = useState(0)
@@ -697,6 +710,20 @@ export default function Dashboard() {
       setLogsLoading(false)
     }
   }
+
+  const fetchAnalytics = async () => {
+    setAnalyticsLoading(true)
+    try {
+      const res = await fetch('/api/analytics')
+      if (res.ok) setAnalyticsData(await res.json())
+    } catch { /* ignore */ }
+    finally { setAnalyticsLoading(false) }
+  }
+
+  // Fetch analytics when tab is selected
+  useEffect(() => {
+    if (col3Tab === 'analytics' && !analyticsData && !analyticsLoading) fetchAnalytics()
+  }, [col3Tab, analyticsData, analyticsLoading])
 
   // Auto-refresh runs every 10s
   useEffect(() => {
@@ -1313,7 +1340,7 @@ export default function Dashboard() {
         <div className="flex flex-col min-h-0">
           <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800/30">
             <div className="flex gap-1">
-              {(['feed', 'runs'] as const).map(tab => (
+              {(['feed', 'runs', 'analytics'] as const).map(tab => (
                 <button
                   key={tab}
                   onClick={() => setCol3Tab(tab)}
@@ -1325,11 +1352,111 @@ export default function Dashboard() {
                 </button>
               ))}
             </div>
-            <button onClick={() => { fetchData(); setFeedKey(k => k + 1) }} className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors">
+            <button onClick={() => { fetchData(); setFeedKey(k => k + 1); if (col3Tab === 'analytics') { setAnalyticsData(null); fetchAnalytics() } }} className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors">
               refresh
             </button>
           </div>
-          {col3Tab === 'feed' ? (
+          {col3Tab === 'analytics' ? (
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {analyticsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="relative flex items-center justify-center">
+                    <div className="absolute h-8 w-8 rounded-full border border-green-500/20" style={{ animation: 'pulse-ring 2s ease-out infinite' }} />
+                    <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
+                  </div>
+                </div>
+              ) : analyticsData ? (
+                <>
+                  {/* Summary cards */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-zinc-800/40 rounded-lg p-3 border border-zinc-800/50">
+                      <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Total Runs</div>
+                      <div className="text-lg font-mono text-zinc-200">{analyticsData.summary.totalRuns}</div>
+                      <div className="text-[10px] text-zinc-600">{analyticsData.summary.periodDays}d period</div>
+                    </div>
+                    <div className="bg-zinc-800/40 rounded-lg p-3 border border-zinc-800/50">
+                      <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Success Rate</div>
+                      <div className={`text-lg font-mono ${analyticsData.summary.overallSuccessRate >= 80 ? 'text-green-400' : analyticsData.summary.overallSuccessRate >= 50 ? 'text-yellow-400' : 'text-red-400'}`}>
+                        {analyticsData.summary.overallSuccessRate}%
+                      </div>
+                      <div className="text-[10px] text-zinc-600">{analyticsData.summary.totalSuccess} passed</div>
+                    </div>
+                    <div className="bg-zinc-800/40 rounded-lg p-3 border border-zinc-800/50">
+                      <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Skills</div>
+                      <div className="text-lg font-mono text-zinc-200">{analyticsData.summary.uniqueSkills}</div>
+                      <div className="text-[10px] text-zinc-600">{analyticsData.summary.totalFailure} failures</div>
+                    </div>
+                  </div>
+
+                  {/* Insights */}
+                  {analyticsData.insights.length > 0 && (
+                    <div className="space-y-1.5">
+                      <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Insights</div>
+                      {analyticsData.insights.map((insight, i) => (
+                        <div key={i} className={`text-[11px] px-2.5 py-1.5 rounded border ${
+                          insight.type === 'warning' ? 'text-yellow-300 bg-yellow-500/5 border-yellow-500/20' :
+                          insight.type === 'success' ? 'text-green-300 bg-green-500/5 border-green-500/20' :
+                          'text-blue-300 bg-blue-500/5 border-blue-500/20'
+                        }`}>
+                          {insight.type === 'warning' ? '! ' : insight.type === 'success' ? '+ ' : '~ '}{insight.message}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Per-skill breakdown */}
+                  <div className="space-y-1">
+                    <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-2">Per-Skill Breakdown</div>
+                    {analyticsData.skills.map(s => {
+                      const maxRuns = Math.max(...analyticsData.skills.map(sk => sk.total), 1)
+                      return (
+                        <div key={s.name} className="group">
+                          <div className="flex items-center gap-2 py-1.5">
+                            <span className={`text-xs w-3 text-center ${
+                              s.lastConclusion === 'success' ? 'text-green-400' :
+                              s.lastConclusion === 'failure' ? 'text-red-400' : 'text-zinc-600'
+                            }`}>
+                              {s.lastConclusion === 'success' ? '\u2713' : s.lastConclusion === 'failure' ? '\u2717' : '\u00b7'}
+                            </span>
+                            <span className="font-mono text-[11px] text-zinc-300 w-32 truncate">{s.name}</span>
+                            <div className="flex-1 h-3 bg-zinc-800/50 rounded-sm overflow-hidden flex">
+                              {s.success > 0 && (
+                                <div className="bg-green-500/60 h-full" style={{ width: `${(s.success / maxRuns) * 100}%` }} />
+                              )}
+                              {s.failure > 0 && (
+                                <div className="bg-red-500/60 h-full" style={{ width: `${(s.failure / maxRuns) * 100}%` }} />
+                              )}
+                              {s.cancelled > 0 && (
+                                <div className="bg-zinc-600/60 h-full" style={{ width: `${(s.cancelled / maxRuns) * 100}%` }} />
+                              )}
+                            </div>
+                            <span className="text-[10px] text-zinc-500 tabular-nums w-8 text-right">{s.total}</span>
+                            <span className={`text-[10px] tabular-nums w-10 text-right ${
+                              s.successRate >= 80 ? 'text-green-400' : s.successRate >= 50 ? 'text-yellow-400' : 'text-red-400'
+                            }`}>{s.successRate}%</span>
+                          </div>
+                          <div className="hidden group-hover:flex items-center gap-3 pl-5 pb-1.5 text-[10px] text-zinc-600">
+                            {s.avgDurationMin !== null && <span>avg {s.avgDurationMin}m</span>}
+                            {s.streak !== 0 && (
+                              <span className={s.streak > 0 ? 'text-green-500' : 'text-red-500'}>
+                                {s.streak > 0 ? `${s.streak} streak` : `${Math.abs(s.streak)} fails`}
+                              </span>
+                            )}
+                            {s.lastRun && <span>last {timeAgo(s.lastRun)}</span>}
+                          </div>
+                        </div>
+                      )
+                    })}
+                    {analyticsData.skills.length === 0 && (
+                      <div className="text-xs text-zinc-600 text-center py-8">No run data available yet</div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="text-xs text-zinc-600 text-center py-8">Failed to load analytics</div>
+              )}
+            </div>
+          ) : col3Tab === 'feed' ? (
             <div className="flex-1 overflow-y-auto">
               <SkillFeed refreshKey={feedKey} />
             </div>
