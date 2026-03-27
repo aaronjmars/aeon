@@ -313,6 +313,29 @@ Label any GitHub issue `ai-build` → workflow fires → Claude reads the issue,
 
 ---
 
+## Use as GitHub Agentic Workflow
+
+Don't need the full agent? Grab individual workflow templates and drop them into any repo. These work with [GitHub Agentic Workflows](https://github.blog/changelog/2026-02-13-github-agentic-workflows-are-now-in-technical-preview/) — plain Markdown files in `.github/workflows/` that run with any supported agent engine.
+
+| Template | What it does | Trigger |
+|----------|-------------|---------|
+| [issue-triage.md](workflows/issue-triage.md) | Auto-label and prioritize new issues | On issue opened |
+| [pr-review.md](workflows/pr-review.md) | Review PRs for bugs, security, and quality | On PR opened/updated |
+| [changelog.md](workflows/changelog.md) | Categorized changelog from recent commits | Weekly |
+| [security-digest.md](workflows/security-digest.md) | Monitor advisories for your dependencies | Daily |
+| [code-health.md](workflows/code-health.md) | Audit TODOs, dead code, test gaps | Weekly |
+
+```bash
+# Copy a template into your repo
+curl -O https://raw.githubusercontent.com/aaronjmars/aeon/main/workflows/pr-review.md
+mv pr-review.md .github/workflows/
+git add .github/workflows/pr-review.md && git commit -m "Add PR review workflow"
+```
+
+Each template is self-contained Markdown — edit the trigger, criteria, or format to fit your project. See [`workflows/README.md`](workflows/README.md) for details.
+
+---
+
 ## Soul (optional)
 
 By default Aeon has no personality. To make it write and respond like you, add a soul:
@@ -354,6 +377,7 @@ skills/                  ← each skill is SKILL.md (Agent Skills format)
   digest/
   heartbeat/
   ...                    ← 47 skills total
+workflows/               ← GitHub Agentic Workflow templates (.md)
 memory/
   MEMORY.md              ← goals, active topics, pointers
   topics/                ← detailed notes by topic
