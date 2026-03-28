@@ -307,6 +307,34 @@ npx skills find "crypto trading"
 
 Installed skills land in `skills/` and are added to `aeon.yml` disabled. Flip `enabled: true` to activate.
 
+### Install individual skills from Aeon
+
+Every skill in this repo is independently installable. Browse the full catalog in [`skills.json`](skills.json) or use the CLI:
+
+```bash
+# Install a single skill
+./add-skill aaronjmars/aeon token-alert
+
+# Install multiple skills
+./add-skill aaronjmars/aeon token-alert polymarket hn-digest
+
+# Install everything
+./add-skill aaronjmars/aeon --all
+
+# Browse available skills
+./add-skill aaronjmars/aeon --list
+```
+
+### Export a skill for distribution
+
+Package any skill as a standalone directory (with a generated README) for sharing:
+
+```bash
+./export-skill token-alert              # exports to ./exports/token-alert/
+./export-skill token-alert --tar        # also creates a .tar.gz archive
+./export-skill --list                   # list all exportable skills
+```
+
 ### Trigger feature builds from issues
 
 Label any GitHub issue `ai-build` → workflow fires → Claude reads the issue, implements it, opens a PR.
@@ -346,14 +374,17 @@ Every skill reads `CLAUDE.md`, so identity propagates automatically.
 ```
 CLAUDE.md                ← agent identity (auto-loaded by Claude Code)
 aeon.yml                 ← skill schedules + enabled flags
+skills.json              ← machine-readable skill catalog (50 skills)
 ./notify                 ← multi-channel notifications
 ./add-skill              ← import skills from GitHub repos
+./export-skill           ← package skills for standalone distribution
+./generate-skills-json   ← regenerate skills.json from SKILL.md files
 soul/                    ← optional identity files
 skills/                  ← each skill is SKILL.md (Agent Skills format)
   article/
   digest/
   heartbeat/
-  ...                    ← 47 skills total
+  ...                    ← 50 skills total
 memory/
   MEMORY.md              ← goals, active topics, pointers
   topics/                ← detailed notes by topic

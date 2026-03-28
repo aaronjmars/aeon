@@ -1,0 +1,517 @@
+{
+  "version": "1.0",
+  "generated": "2026-03-28T00:00:00Z",
+  "repo": "aaronjmars/aeon",
+  "total": 50,
+  "categories": {
+    "research": "Research & Content",
+    "dev": "Dev & Code",
+    "crypto": "Crypto & Markets",
+    "social": "Social",
+    "productivity": "Productivity & Meta"
+  },
+  "skills": [
+    {
+      "slug": "article",
+      "name": "Daily Article",
+      "description": "Research trending topics and write a publication-ready article",
+      "category": "research",
+      "schedule": "0 14 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon article"
+    },
+    {
+      "slug": "digest",
+      "name": "Daily Digest",
+      "description": "Generate and send a daily digest on a configurable topic",
+      "category": "research",
+      "schedule": "0 14 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon digest"
+    },
+    {
+      "slug": "rss-digest",
+      "name": "RSS Digest",
+      "description": "Fetch, summarize, and deliver RSS feed highlights",
+      "category": "research",
+      "schedule": "0 7 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon rss-digest"
+    },
+    {
+      "slug": "hacker-news-digest",
+      "name": "Hacker News Digest",
+      "description": "Top HN stories filtered by keywords relevant to your interests",
+      "category": "research",
+      "schedule": "0 7 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon hacker-news-digest"
+    },
+    {
+      "slug": "hn-digest",
+      "name": "HN Digest",
+      "description": "Top Hacker News stories filtered by interests",
+      "category": "research",
+      "schedule": "0 7 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon hn-digest"
+    },
+    {
+      "slug": "paper-digest",
+      "name": "Paper Digest",
+      "description": "Find and summarize new papers matching tracked research interests",
+      "category": "research",
+      "schedule": "0 7 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon paper-digest"
+    },
+    {
+      "slug": "paper-pick",
+      "name": "Paper Pick",
+      "description": "Find the one paper you should read today from arXiv and Semantic Scholar",
+      "category": "research",
+      "schedule": "0 14 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon paper-pick"
+    },
+    {
+      "slug": "tweet-digest",
+      "name": "Tweet Digest",
+      "description": "Aggregate and summarize tweets from tracked accounts",
+      "category": "research",
+      "schedule": "0 7 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon tweet-digest"
+    },
+    {
+      "slug": "list-digest",
+      "name": "List Digest",
+      "description": "Top tweets from tracked X lists in the past 24 hours",
+      "category": "research",
+      "schedule": "0 17 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon list-digest"
+    },
+    {
+      "slug": "research-brief",
+      "name": "Research Brief",
+      "description": "Deep dive on a topic combining web search, papers, and synthesis",
+      "category": "research",
+      "schedule": "0 14 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon research-brief"
+    },
+    {
+      "slug": "fetch-tweets",
+      "name": "Fetch Tweets",
+      "description": "Search X/Twitter for tweets by keyword, username, or both",
+      "category": "research",
+      "schedule": "0 17 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon fetch-tweets"
+    },
+    {
+      "slug": "search-papers",
+      "name": "Search Academic Papers",
+      "description": "Search for recent academic papers on topics of interest and save a summary",
+      "category": "research",
+      "schedule": "0 14 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon search-papers"
+    },
+    {
+      "slug": "reddit-digest",
+      "name": "Reddit Digest",
+      "description": "Fetch and summarize top Reddit posts from tracked subreddits",
+      "category": "research",
+      "schedule": "0 7 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon reddit-digest"
+    },
+    {
+      "slug": "security-digest",
+      "name": "Security Digest",
+      "description": "Monitor recent security advisories from the GitHub Advisory Database for tracked ecosystems",
+      "category": "research",
+      "schedule": "0 14 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon security-digest"
+    },
+    {
+      "slug": "pr-review",
+      "name": "PR Review",
+      "description": "Auto-review open PRs on watched repos and post summary comments",
+      "category": "dev",
+      "schedule": "0 9 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon pr-review"
+    },
+    {
+      "slug": "github-monitor",
+      "name": "GitHub Monitor",
+      "description": "Watch repos for stale PRs, new issues, and new releases",
+      "category": "dev",
+      "schedule": "0 9 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon github-monitor"
+    },
+    {
+      "slug": "github-issues",
+      "name": "GitHub Issues",
+      "description": "Check all your repos for new open issues in the last 24 hours",
+      "category": "dev",
+      "schedule": "0 9 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon github-issues"
+    },
+    {
+      "slug": "github-trending",
+      "name": "GitHub Trending",
+      "description": "Top 10 trending repos on GitHub right now",
+      "category": "dev",
+      "schedule": "0 9 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon github-trending"
+    },
+    {
+      "slug": "issue-triage",
+      "name": "Issue Triage",
+      "description": "Label and prioritize new GitHub issues on watched repos",
+      "category": "dev",
+      "schedule": "0 9 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon issue-triage"
+    },
+    {
+      "slug": "changelog",
+      "name": "Changelog",
+      "description": "Generate a changelog from recent commits across watched repos",
+      "category": "dev",
+      "schedule": "0 16 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon changelog"
+    },
+    {
+      "slug": "code-health",
+      "name": "Code Health",
+      "description": "Weekly report on TODOs, dead code, and test coverage gaps",
+      "category": "dev",
+      "schedule": "0 16 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon code-health"
+    },
+    {
+      "slug": "feature",
+      "name": "Feature Builder",
+      "description": "Build new features from GitHub issues or improve the agent",
+      "category": "dev",
+      "schedule": "0 16 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon feature"
+    },
+    {
+      "slug": "build-skill",
+      "name": "Build Skill",
+      "description": "Design and build a new reusable skill",
+      "category": "dev",
+      "schedule": "0 16 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon build-skill"
+    },
+    {
+      "slug": "search-skill",
+      "name": "Search Skills",
+      "description": "Search the open agent skills ecosystem for useful skills to install",
+      "category": "dev",
+      "schedule": "0 14 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon search-skill"
+    },
+    {
+      "slug": "token-alert",
+      "name": "Token Alert",
+      "description": "Notify on price or volume anomalies for tracked tokens",
+      "category": "crypto",
+      "schedule": "0 12 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon token-alert"
+    },
+    {
+      "slug": "token-movers",
+      "name": "Token Movers",
+      "description": "Top movers, losers, and trending coins from CoinGecko",
+      "category": "crypto",
+      "schedule": "0 12 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon token-movers"
+    },
+    {
+      "slug": "trending-coins",
+      "name": "Trending Coins",
+      "description": "Top trending and most searched coins on CoinGecko in the last 24 hours",
+      "category": "crypto",
+      "schedule": "0 12 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon trending-coins"
+    },
+    {
+      "slug": "wallet-digest",
+      "name": "Wallet Digest",
+      "description": "Summarize recent wallet activity across tracked addresses",
+      "category": "crypto",
+      "schedule": "0 12 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon wallet-digest"
+    },
+    {
+      "slug": "on-chain-monitor",
+      "name": "On-Chain Monitor",
+      "description": "Monitor blockchain addresses and contracts for notable activity",
+      "category": "crypto",
+      "schedule": "0 12 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon on-chain-monitor"
+    },
+    {
+      "slug": "defi-monitor",
+      "name": "DeFi Monitor",
+      "description": "Check pool health, positions, and yield rates for tracked protocols",
+      "category": "crypto",
+      "schedule": "0 12 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon defi-monitor"
+    },
+    {
+      "slug": "defi-overview",
+      "name": "DeFi Overview",
+      "description": "Daily overview of DeFi activity from DeFiLlama — TVL changes, top chains, top protocols",
+      "category": "crypto",
+      "schedule": "0 12 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon defi-overview"
+    },
+    {
+      "slug": "polymarket",
+      "name": "Polymarket",
+      "description": "Trending and top markets on Polymarket — volume, new markets, biggest movers",
+      "category": "crypto",
+      "schedule": "0 12 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon polymarket"
+    },
+    {
+      "slug": "polymarket-comments",
+      "name": "Polymarket Comments",
+      "description": "Top trending Polymarket markets and the most interesting comments from them",
+      "category": "crypto",
+      "schedule": "0 12 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon polymarket-comments"
+    },
+    {
+      "slug": "monitor-runners",
+      "name": "Monitor Runners",
+      "description": "Find the top 5 tokens that ran hardest in the past 24h across major chains using GeckoTerminal",
+      "category": "crypto",
+      "schedule": "0 12 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon monitor-runners"
+    },
+    {
+      "slug": "token-pick",
+      "name": "Token Pick",
+      "description": "One token recommendation and one prediction market pick based on live data",
+      "category": "crypto",
+      "schedule": "0 12 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon token-pick"
+    },
+    {
+      "slug": "write-tweet",
+      "name": "Write Tweet",
+      "description": "Generate 10 tweet drafts across 5 size tiers (2 variations each) on a topic from today's outputs",
+      "category": "social",
+      "schedule": "0 17 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon write-tweet"
+    },
+    {
+      "slug": "reply-maker",
+      "name": "Reply Maker",
+      "description": "Generate two reply options for 5 tweets from tracked X accounts or topics",
+      "category": "social",
+      "schedule": "0 17 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon reply-maker"
+    },
+    {
+      "slug": "refresh-x",
+      "name": "Refresh X",
+      "description": "Fetch a tracked X/Twitter account's latest tweets and save the gist to memory",
+      "category": "social",
+      "schedule": "0 17 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon refresh-x"
+    },
+    {
+      "slug": "morning-brief",
+      "name": "Morning Brief",
+      "description": "Aggregated daily briefing — digests, priorities, and what's ahead",
+      "category": "productivity",
+      "schedule": "0 7 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon morning-brief"
+    },
+    {
+      "slug": "daily-routine",
+      "name": "Daily Routine",
+      "description": "Morning briefing combining token movers, tweet roundup, paper pick, GitHub issues, and HN digest",
+      "category": "productivity",
+      "schedule": "0 7 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon daily-routine"
+    },
+    {
+      "slug": "heartbeat",
+      "name": "Heartbeat",
+      "description": "Proactive ambient check — surface anything worth attention",
+      "category": "productivity",
+      "schedule": "0 12 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon heartbeat"
+    },
+    {
+      "slug": "memory-flush",
+      "name": "Memory Flush",
+      "description": "Promote important recent log entries into MEMORY.md",
+      "category": "productivity",
+      "schedule": "0 18 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon memory-flush"
+    },
+    {
+      "slug": "reflect",
+      "name": "Weekly Reflect",
+      "description": "Review recent activity, consolidate memory, and prune stale entries",
+      "category": "productivity",
+      "schedule": "0 18 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon reflect"
+    },
+    {
+      "slug": "weekly-review",
+      "name": "Weekly Review",
+      "description": "Synthesize the week's logs into a structured retrospective",
+      "category": "productivity",
+      "schedule": "0 19 * * 1",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon weekly-review"
+    },
+    {
+      "slug": "self-review",
+      "name": "Self Review",
+      "description": "Weekly audit of what Aeon did, what failed, and what to improve",
+      "category": "productivity",
+      "schedule": "0 18 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon self-review"
+    },
+    {
+      "slug": "skill-health",
+      "name": "Skill Health",
+      "description": "Check which scheduled skills haven't run recently",
+      "category": "productivity",
+      "schedule": "0 18 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon skill-health"
+    },
+    {
+      "slug": "goal-tracker",
+      "name": "Goal Tracker",
+      "description": "Compare current progress against goals stored in MEMORY.md",
+      "category": "productivity",
+      "schedule": "0 18 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon goal-tracker"
+    },
+    {
+      "slug": "action-converter",
+      "name": "Action Converter",
+      "description": "5 concrete real-life actions for today based on recent signals and memory",
+      "category": "productivity",
+      "schedule": "0 18 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon action-converter"
+    },
+    {
+      "slug": "idea-capture",
+      "name": "Idea Capture",
+      "description": "Quick note capture triggered via Telegram — stores to memory",
+      "category": "productivity",
+      "schedule": "0 14 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon idea-capture"
+    },
+    {
+      "slug": "startup-idea",
+      "name": "Startup Idea",
+      "description": "2 startup ideas tailored to the user's skills, interests, and context",
+      "category": "productivity",
+      "schedule": "0 18 * * *",
+      "var": "",
+      "files": 0,
+      "install": "./add-skill aaronjmars/aeon startup-idea"
+    }
+  ],
+  "install_all": "./add-skill aaronjmars/aeon --all",
+  "install_one": "./add-skill aaronjmars/aeon <skill-name>"
+}

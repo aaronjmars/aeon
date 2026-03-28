@@ -1,0 +1,148 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# export-skill — Package a single skill for standalone use
+#
+# Usage:
+#   ./export-skill <skill-name>                    Package to ./exports/<skill-name>/
+#   ./export-skill <skill-name> --output /path     Package to custom directory
+#   ./export-skill <skill-name> --tar              Create a .tar.gz archive
+#   ./export-skill --list                          List all exportable skills
+#
+# The exported package includes:
+#   - SKILL.md (the skill definition)
+#   - Any helper scripts or config files in the skill directory
+#   - A generated README.md with install instructions
+#
+# Recipients can install the exported skill with:
+#   ./add-skill <path-or-repo> <skill-name>
+
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+SKILLS_DIR="$ROOT/skills"
+EXPORTS_DIR="$ROOT/exports"
+
+usage() {
+  cat <<'EOF'
+Usage: ./export-skill <skill-name> [options]
+
+Package a single Aeon skill for standalone distribution.
+
+Arguments:
+  <skill-name>        Name of the skill to export (directory name under skills/)
+
+Options:
+  --output <path>     Custom output directory (default: ./exports/<skill-name>/)
+  --tar               Also create a .tar.gz archive
+  --list              List all exportable skills
+  --help              Show this help
+
+Examples:
+  ./export-skill token-alert
+  ./export-skill token-alert --tar
+  ./export-skill token-alert --output ~/my-skills/token-alert
+  ./export-skill --list
+EOF
+  exit 0
+}
+
+# List mode
+if [[ "${1:-}" == "--list" ]]; then
+  echo "Exportable skills:"
+  echo ""
+  for skill_dir in "$SKILLS_DIR"/*/; do
+    [[ -f "$skill_dir/SKILL.md" ]] || continue
+    slug=$(basename "$skill_dir")
+    desc=$(sed -n '/^---$/,/^---$/{ /^description:/s/^description: *//p }' "$skill_dir/SKILL.md")
+    file_count=$(find "$skill_dir" -type f | wc -l | tr -d ' ')
+    printf "  %-24s %s (%s files)\n" "$slug" "$desc" "$file_count"
+  done
+  echo ""
+  echo "Export with: ./export-skill <skill-name>"
+  exit 0
+fi
+
+if [[ $# -lt 1 ]] || [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]]; then
+  usage
+fi
+
+SKILL_NAME="$1"
+shift
+
+# Parse flags
+OUTPUT_DIR=""
+CREATE_TAR=false
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --output) OUTPUT_DIR="$2"; shift 2 ;;
+    --tar) CREATE_TAR=true; shift ;;
+    --help|-h) usage ;;
+    -*) echo "Unknown option: $1" >&2; exit 1 ;;
+    *) echo "Unexpected argument: $1" >&2; exit 1 ;;
+  esac
+done
+
+# Validate skill exists
+SKILL_SRC="$SKILLS_DIR/$SKILL_NAME"
+if [[ ! -d "$SKILL_SRC" ]] || [[ ! -f "$SKILL_SRC/SKILL.md" ]]; then
+  echo "Error: skill '$SKILL_NAME' not found in $SKILLS_DIR" >&2
+  echo "Run './export-skill --list' to see available skills." >&2
+  exit 1
+fi
+
+# Set output directory
+if [[ -z "$OUTPUT_DIR" ]]; then
+  OUTPUT_DIR="$EXPORTS_DIR/$SKILL_NAME"
+fi
+
+# Parse skill metadata
+SKILL_DISPLAY=$(sed -n '/^---$/,/^---$/{ /^name:/s/^name: *//p }' "$SKILL_SRC/SKILL.md")
+SKILL_DESC=$(sed -n '/^---$/,/^---$/{ /^description:/s/^description: *//p }' "$SKILL_SRC/SKILL.md")
+
+# Create output directory
+mkdir -p "$OUTPUT_DIR"
+
+# Copy all skill files
+cp -r "$SKILL_SRC"/* "$OUTPUT_DIR/"
+
+# Generate a README for the exported skill
+cat > "$OUTPUT_DIR/README.md" << READMEEOF
+# ${SKILL_DISPLAY}
+
+${SKILL_DESC}
+
+## Install
+
+If you have an Aeon-compatible agent, install this skill with:
+
+\`\`\`bash
+# From a GitHub repo
+./add-skill aaronjmars/aeon ${SKILL_NAME}
+
+# Or copy the SKILL.md into your skills directory
+cp SKILL.md /path/to/your/agent/skills/${SKILL_NAME}/SKILL.md
+\`\`\`
+
+## Manual use
+
+You can also use this skill directly with Claude Code:
+
+\`\`\`
+Read skills/${SKILL_NAME}/SKILL.md and execute its steps.
+\`\`\`
+
+## Source
+
+Exported from [aaronjmars/aeon](https://github.com/aaronjmars/aeon) — an autonomous agent on GitHub Actions powered by Claude Code.
+READMEEOF
+
+echo "Exported '$SKILL_NAME' to $OUTPUT_DIR/"
+ls -la "$OUTPUT_DIR/"
+
+# Create tar archive if requested
+if [[ "$CREATE_TAR" == "true" ]]; then
+  TAR_FILE="${OUTPUT_DIR}.tar.gz"
+  tar -czf "$TAR_FILE" -C "$(dirname "$OUTPUT_DIR")" "$(basename "$OUTPUT_DIR")"
+  echo ""
+  echo "Archive: $TAR_FILE"
+fi

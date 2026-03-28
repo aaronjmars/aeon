@@ -1,0 +1,157 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# generate-skills-json — Build skills.json manifest from all skills/*/SKILL.md files
+#
+# Usage:
+#   ./generate-skills-json              Generate skills.json at repo root
+#   ./generate-skills-json --pretty     Pretty-print the output
+#
+# The manifest enables one-command skill installation and marketplace discovery.
+# Each entry includes: name, slug, description, category, default var, schedule,
+# required secrets, and install command.
+
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+SKILLS_DIR="$ROOT/skills"
+AEON_YML="$ROOT/aeon.yml"
+OUTPUT="$ROOT/skills.json"
+
+PRETTY=false
+if [[ "${1:-}" == "--pretty" ]]; then
+  PRETTY=true
+fi
+
+# Map skill slugs to categories based on aeon.yml schedule groups
+declare -A CATEGORIES=(
+  # Research & Content
+  [article]="research"
+  [digest]="research"
+  [rss-digest]="research"
+  [hacker-news-digest]="research"
+  [hn-digest]="research"
+  [paper-digest]="research"
+  [paper-pick]="research"
+  [tweet-digest]="research"
+  [list-digest]="research"
+  [research-brief]="research"
+  [fetch-tweets]="research"
+  [search-papers]="research"
+  [reddit-digest]="research"
+  [security-digest]="research"
+  # Dev & Code
+  [pr-review]="dev"
+  [github-monitor]="dev"
+  [github-issues]="dev"
+  [github-trending]="dev"
+  [issue-triage]="dev"
+  [changelog]="dev"
+  [code-health]="dev"
+  [feature]="dev"
+  [build-skill]="dev"
+  [search-skill]="dev"
+  # Crypto & Markets
+  [token-alert]="crypto"
+  [token-movers]="crypto"
+  [trending-coins]="crypto"
+  [wallet-digest]="crypto"
+  [on-chain-monitor]="crypto"
+  [defi-monitor]="crypto"
+  [defi-overview]="crypto"
+  [polymarket]="crypto"
+  [polymarket-comments]="crypto"
+  [monitor-runners]="crypto"
+  [token-pick]="crypto"
+  # Social
+  [write-tweet]="social"
+  [reply-maker]="social"
+  [refresh-x]="social"
+  # Productivity & Meta
+  [morning-brief]="productivity"
+  [daily-routine]="productivity"
+  [heartbeat]="productivity"
+  [memory-flush]="productivity"
+  [reflect]="productivity"
+  [weekly-review]="productivity"
+  [self-review]="productivity"
+  [skill-health]="productivity"
+  [goal-tracker]="productivity"
+  [action-converter]="productivity"
+  [idea-capture]="productivity"
+  [startup-idea]="productivity"
+)
+
+# Extract schedule for a skill from aeon.yml
+get_schedule() {
+  local slug="$1"
+  grep -E "^\s+${slug}:" "$AEON_YML" 2>/dev/null \
+    | grep -oP 'schedule:\s*"\K[^"]+' \
+    || echo ""
+}
+
+# Extract required secrets by scanning SKILL.md for secret/env references
+get_secrets() {
+  local skill_file="$1"
+  grep -oP '(?:SECRET|TOKEN|KEY|WEBHOOK|API_KEY|BOT_TOKEN)[A-Z_]*' "$skill_file" 2>/dev/null \
+    | sort -u \
+    | paste -sd ',' - \
+    || echo ""
+}
+
+# Count files in skill directory (excluding SKILL.md)
+count_files() {
+  local skill_dir="$1"
+  find "$skill_dir" -type f ! -name "SKILL.md" 2>/dev/null | wc -l | tr -d ' '
+}
+
+# Start JSON output
+echo -n '{"version":"1.0","generated":"' > "$OUTPUT"
+echo -n "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$OUTPUT"
+echo -n '","repo":"aaronjmars/aeon","total":0,"categories":{"research":"Research & Content","dev":"Dev & Code","crypto":"Crypto & Markets","social":"Social","productivity":"Productivity & Meta"},"skills":[' >> "$OUTPUT"
+
+TOTAL=0
+FIRST=true
+
+for skill_dir in "$SKILLS_DIR"/*/; do
+  skill_file="$skill_dir/SKILL.md"
+  [[ -f "$skill_file" ]] || continue
+
+  slug=$(basename "$skill_dir")
+
+  # Parse frontmatter
+  name=$(sed -n '/^---$/,/^---$/{ /^name:/s/^name: *//p }' "$skill_file")
+  description=$(sed -n '/^---$/,/^---$/{ /^description:/s/^description: *//p }' "$skill_file")
+  var=$(sed -n '/^---$/,/^---$/{ /^var:/s/^var: *//p }' "$skill_file" | tr -d '"')
+
+  # Get metadata
+  schedule=$(get_schedule "$slug")
+  category="${CATEGORIES[$slug]:-other}"
+  extra_files=$(count_files "$skill_dir")
+
+  # Escape JSON strings
+  name="${name//\\/\\\\}"
+  name="${name//\"/\\\"}"
+  description="${description//\\/\\\\}"
+  description="${description//\"/\\\"}"
+
+  if [[ "$FIRST" == "true" ]]; then
+    FIRST=false
+  else
+    echo -n ',' >> "$OUTPUT"
+  fi
+
+  echo -n "{\"slug\":\"$slug\",\"name\":\"$name\",\"description\":\"$description\",\"category\":\"$category\",\"schedule\":\"$schedule\",\"var\":\"$var\",\"files\":$extra_files,\"install\":\"./add-skill aaronjmars/aeon $slug\"}" >> "$OUTPUT"
+
+  TOTAL=$((TOTAL + 1))
+done
+
+echo -n '],"install_all":"./add-skill aaronjmars/aeon --all","install_one":"./add-skill aaronjmars/aeon <skill-name>"}' >> "$OUTPUT"
+
+# Patch total count
+sed -i "s/\"total\":0/\"total\":$TOTAL/" "$OUTPUT"
+
+# Pretty-print if requested and python3 is available
+if [[ "$PRETTY" == "true" ]] && command -v python3 &>/dev/null; then
+  python3 -m json.tool "$OUTPUT" > "${OUTPUT}.tmp" && mv "${OUTPUT}.tmp" "$OUTPUT"
+fi
+
+echo "Generated $OUTPUT with $TOTAL skills"
