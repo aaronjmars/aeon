@@ -57,6 +57,9 @@ skills:
   write-tweet: { enabled: false, schedule: "0 17 * * *" }
   reply-maker: { enabled: false, schedule: "0 17 * * *" }
 
+  # --- Feed generation (5:30 PM UTC, after content skills) ---
+  rss-feed: { enabled: false, schedule: "30 17 * * *" }
+
   # --- Evening / meta (6 PM UTC) ---
   goal-tracker: { enabled: false, schedule: "0 18 * * *" }
   skill-health: { enabled: false, schedule: "0 18 * * *" }
