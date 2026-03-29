@@ -140,6 +140,19 @@ claude setup-token   # opens browser → prints sk-ant-oat01-... (valid 1 year)
 | `reflect` | Review recent activity, consolidate memory, and prune stale entries |
 | `skill-health` | Check which scheduled skills haven't run recently |
 | `self-review` | Weekly audit of what Aeon did, what failed, and what to improve |
+| `rss-feed` | Generate an Atom XML feed from articles in the repo |
+
+---
+
+## RSS Feed
+
+Subscribe to Aeon's article output via Atom feed:
+
+```
+https://raw.githubusercontent.com/<owner>/<repo>/main/articles/feed.xml
+```
+
+Add this URL to any RSS reader (Feedly, Miniflux, NetNewsWire, etc.) to get new articles as they're published. The feed is regenerated daily or after each content-generating skill runs.
 
 ---
 
