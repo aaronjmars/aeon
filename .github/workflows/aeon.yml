@@ -220,6 +220,10 @@ jobs:
           MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           ANTHROPIC_OAUTH_TOKEN: ${{ secrets.ANTHROPIC_OAUTH_TOKEN }}
+          # grok's native auth (X-account OAuth capture > xAI key), so its AUTH_MODE
+          # is detected like the other harnesses instead of defaulting to openrouter.
+          GROK_CREDENTIALS: ${{ secrets.GROK_CREDENTIALS }}
+          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
         run: |
           # `|| true` on both greps: a repo with no top-level `harness:` key, or a
           # skill absent from aeon.yml's skills map, makes grep exit 1, and under
@@ -266,6 +270,7 @@ jobs:
           # so we forward NO model and let the harness use its own default.
           AUTH_MODE="openrouter"
           case "$HARNESS" in
+            grok)  if [ -n "${GROK_CREDENTIALS:-}" ]; then AUTH_MODE="native-oauth"; elif [ -n "${XAI_API_KEY:-}" ]; then AUTH_MODE="native-key"; fi ;;
             codex) if [ -n "${CODEX_AUTH:-}" ]; then AUTH_MODE="native-oauth"; elif [ -n "${OPENAI_API_KEY:-}" ]; then AUTH_MODE="native-key"; fi ;;
             kimi)  if [ -n "${KIMI_AUTH:-}" ]; then AUTH_MODE="native-oauth"; elif [ -n "${MOONSHOT_API_KEY:-}" ]; then AUTH_MODE="native-key"; fi ;;
             vibe)  if [ -n "${MISTRAL_API_KEY:-}" ]; then AUTH_MODE="native-key"; fi ;;
@@ -352,6 +357,14 @@ jobs:
           # grok auth (staged via run-grok.sh setup): captured X-account OAuth or key.
           GROK_CREDENTIALS: ${{ secrets.GROK_CREDENTIALS }}
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+          # secrets-write PAT so run-grok.sh setup can PERSIST a rotated grok refresh
+          # token back to GROK_CREDENTIALS - the durable-OAuth-past-6h fix (run-grok.sh §2b).
+          MCP_SECRETS_PAT: ${{ secrets.MCP_SECRETS_PAT }}
+          GH_GLOBAL: ${{ secrets.GH_GLOBAL }}
+          # Optional: seconds-before-expiry that triggers the grok OAuth refresh
+          # (run-grok.sh §2b, default 1800). Set a large value as a repo variable to
+          # force a refresh + persist every run (handy to verify durability in CI).
+          GROK_OAUTH_SKEW: ${{ vars.GROK_OAUTH_SKEW }}
           # Provider credentials. Whichever is set decided AUTH_MODE in "Resolve
           # harness"; here we either RESTORE it (the ChatGPT/Moonshot OAuth
           # captures, which a local `aeon auth --harness …` stored) or write it

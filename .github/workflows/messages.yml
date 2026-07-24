@@ -435,6 +435,9 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
           GROK_CREDENTIALS: ${{ secrets.GROK_CREDENTIALS }}   # grok harness: X-account OAuth (restored by run-grok.sh)
+          MCP_SECRETS_PAT: ${{ secrets.MCP_SECRETS_PAT }}   # persist rotated grok refresh token → GROK_CREDENTIALS (run-grok.sh §2b)
+          GH_GLOBAL: ${{ secrets.GH_GLOBAL }}
+          GROK_OAUTH_SKEW: ${{ vars.GROK_OAUTH_SKEW }}   # force grok OAuth refresh + persist every run when set large (durability check)
           COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
           _MSG_SOURCE: ${{ steps.msg.outputs.source }}

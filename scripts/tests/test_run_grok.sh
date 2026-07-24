@@ -185,6 +185,72 @@ TMPD="$(mktemp -d)"
 if grep -q "MCPTool(" "$ARGS_FILE"; then bad "no MCPTool rules without .mcp.json"; else pass "no MCPTool rules without .mcp.json"; fi
 rm -rf "$TMPD"
 
+# --- 10. OAuth durable refresh + persist (§2b) --------------------------------
+# The captured GROK_CREDENTIALS rotates its refresh token on refresh; run-grok.sh
+# must refresh from it AND persist the rotated auth.json back to the secret, or auth
+# breaks ~6h after capture. Fake curl (token endpoint) + fake gh (secret persist),
+# a temp HOME seeded with an EXPIRED grok auth.json, driven through `run-grok.sh setup`.
+OBIN="$(mktemp -d)"; OHOME="$(mktemp -d)"
+cat > "$OBIN/curl" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >> "${CURL_LOG:-/dev/null}"
+if [ -n "${CURL_FAKE_OUT:-}" ]; then printf '%s' "$CURL_FAKE_OUT"
+else printf '%s' '{"access_token":"NEWACCESS","refresh_token":"RT1","expires_in":21600}'; fi
+EOF
+cat > "$OBIN/gh" <<'EOF'
+#!/usr/bin/env bash
+cat >/dev/null                        # consume the piped base64 secret
+printf '%s\n' "$*" >> "${GH_LOG:-/dev/null}"
+exit 0
+EOF
+chmod +x "$OBIN/curl" "$OBIN/gh"
+
+seed_auth() {  # $1 = expires_at → prints a GROK_CREDENTIALS (base64 tar of .grok/auth.json)
+  mkdir -p "$OHOME/.grok"
+  cat > "$OHOME/.grok/auth.json" <<EOF
+{"https://auth.x.ai::CID":{"key":"OLDACCESS","auth_mode":"oidc","refresh_token":"RT0","expires_at":"$1","oidc_issuer":"https://auth.x.ai","oidc_client_id":"CID"}}
+EOF
+  tar czf - -C "$OHOME" .grok/auth.json | base64
+}
+authf() { jq -r ".[\"https://auth.x.ai::CID\"].$1" "$OHOME/.grok/auth.json"; }
+
+# 10a. expired token + PAT → refresh happens AND the rotated secret is persisted
+CREDS="$(seed_auth "2000-01-01T00:00:00.000000Z")"; GH_LOG="$OHOME/gh.log"; : >"$GH_LOG"
+HOME="$OHOME" PATH="$OBIN:$PATH" GROK_CREDENTIALS="$CREDS" MCP_SECRETS_PAT="pat-test" GH_LOG="$GH_LOG" \
+  bash "$RABS" setup >/dev/null 2>"$OHOME/e1"
+{ [ "$(authf key)" = "NEWACCESS" ] && [ "$(authf refresh_token)" = "RT1" ]; } \
+  && pass "oauth: expired token refreshed in auth.json" || bad "oauth refresh (key=$(authf key) rt=$(authf refresh_token); err=$(cat "$OHOME/e1"))"
+grep -q "secret set GROK_CREDENTIALS" "$GH_LOG" \
+  && pass "oauth: rotated refresh token persisted via gh secret set" || bad "oauth persist not called (gh.log: $(cat "$GH_LOG"))"
+
+# 10b. expired token, NO PAT → still refreshes on disk, must NOT persist, warns loudly
+CREDS="$(seed_auth "2000-01-01T00:00:00.000000Z")"; GH_LOG="$OHOME/gh2.log"; : >"$GH_LOG"
+HOME="$OHOME" PATH="$OBIN:$PATH" GROK_CREDENTIALS="$CREDS" GH_LOG="$GH_LOG" \
+  bash "$RABS" setup >/dev/null 2>"$OHOME/e2"
+{ [ "$(authf key)" = "NEWACCESS" ] && ! grep -q "secret set" "$GH_LOG" && grep -q "no secrets-write PAT" "$OHOME/e2"; } \
+  && pass "oauth: no PAT → refreshes but does not persist (warns)" || bad "oauth no-PAT (key=$(authf key); gh=$(cat "$GH_LOG"); err=$(cat "$OHOME/e2"))"
+
+# 10c. token still valid (far-future expiry) → skip refresh, no token-endpoint call
+CREDS="$(seed_auth "2099-01-01T00:00:00.000000Z")"; CURL_LOG="$OHOME/curl.log"; : >"$CURL_LOG"
+HOME="$OHOME" PATH="$OBIN:$PATH" GROK_CREDENTIALS="$CREDS" MCP_SECRETS_PAT="pat-test" CURL_LOG="$CURL_LOG" \
+  bash "$RABS" setup >/dev/null 2>"$OHOME/e3"
+{ [ "$(authf key)" = "OLDACCESS" ] && [ ! -s "$CURL_LOG" ]; } \
+  && pass "oauth: valid token → skips refresh" || bad "oauth skip-when-valid (key=$(authf key); curl=$(cat "$CURL_LOG"))"
+
+# 10d. token endpoint returns invalid_grant → warn, keep on-disk token, exit 0
+CREDS="$(seed_auth "2000-01-01T00:00:00.000000Z")"
+HOME="$OHOME" PATH="$OBIN:$PATH" GROK_CREDENTIALS="$CREDS" MCP_SECRETS_PAT="pat-test" \
+  CURL_FAKE_OUT='{"error":"invalid_grant","error_description":"Refresh token has been revoked"}' \
+  bash "$RABS" setup >/dev/null 2>"$OHOME/e4"; rc=$?
+{ [ "$rc" = 0 ] && [ "$(authf key)" = "OLDACCESS" ] && grep -q "invalid_grant" "$OHOME/e4"; } \
+  && pass "oauth: invalid_grant → warns, keeps token, rc 0" || bad "oauth invalid_grant (rc=$rc key=$(authf key) err=$(cat "$OHOME/e4"))"
+
+# 10e. XAI_API_KEY path (no GROK_CREDENTIALS) → the OAuth refresh never runs
+CURL_LOG="$OHOME/curl2.log"; : >"$CURL_LOG"
+echo p | HOME="$OHOME" PATH="$OBIN:$PATH" XAI_API_KEY=xai-test GROK_FAKE_OUT='{"text":"x"}' MODEL="" SKILL_MODE=write CURL_LOG="$CURL_LOG" bash "$RABS" >/dev/null 2>&1
+[ ! -s "$CURL_LOG" ] && pass "oauth: API-key path does not run the OAuth refresh" || bad "oauth refresh wrongly ran on API-key path"
+rm -rf "$OBIN" "$OHOME"
+
 echo "---"
 [ "$fail" = "0" ] && echo "ALL PASS" || echo "SOME FAILED"
 exit "$fail"

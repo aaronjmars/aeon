@@ -38,6 +38,20 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 - **Dashboard: per-skill model picker tracks the active harness** — a skill's
   detail panel now offers the selected harness's model ids. (#766)
 
+### Fixed
+
+- **Grok OAuth (`GROK_CREDENTIALS`) now survives past 6h.** The captured
+  X-account session holds a 6h access token plus a refresh token that xAI
+  **rotates and revokes on every refresh**, so a static secret used to break
+  ~6h after Connect (headless runs failed `Not signed in`). `scripts/run-grok.sh`
+  (§2b) now refreshes the access token before each run and **persists the rotated
+  `auth.json` back to the `GROK_CREDENTIALS` secret** - the same durable-refresh
+  contract as MCP OAuth. Persisting reuses the secrets-write PAT
+  (`MCP_SECRETS_PAT` / `GH_GLOBAL`); without it grok warns loudly. Also adds a
+  `grok)` case to the harness AUTH_MODE detection so a Connected X account is
+  labelled `native-oauth` instead of defaulting to `openrouter`. See
+  [docs/harnesses.md](docs/harnesses.md) and [docs/mcp-oauth.md](docs/mcp-oauth.md).
+
 ### Security
 
 - Patched two high-severity CVE classes in the dashboard — `sharp`/`libvips`,

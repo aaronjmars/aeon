@@ -121,9 +121,24 @@ exposes differs:
   transparent `char/4` **estimate** of the assembled input + result rather than a
   misleading `0/0/0`; real counts always win if a future build emits them.
 
-The captured OAuth sessions (grok's `GROK_CREDENTIALS`, codex's `CODEX_AUTH`) can
-expire — if unattended runs start failing on auth, re-capture via the dashboard
-(**Connect X account** / **Connect ChatGPT**) or switch to the API-key path.
+The captured OAuth sessions (grok's `GROK_CREDENTIALS`, codex's `CODEX_AUTH`) rotate
+their refresh tokens. **grok's session is kept durable automatically** (mirroring the
+[MCP OAuth](mcp-oauth.md#limits-read-before-relying-on-it) contract): the access token
+in `GROK_CREDENTIALS` lasts only 6h, and xAI **rotates + revokes the refresh token on
+every refresh** (confirmed live - `auth.x.ai` returns `invalid_grant` "Refresh token
+has been revoked"), so a *static* capture self-destructs ~6h after Connect. To fix
+that, `scripts/run-grok.sh` (§2b) refreshes the access token from the refresh token
+before each run and **persists the rotated `auth.json` back to the `GROK_CREDENTIALS`
+secret**. Persisting a secret needs a secrets-write credential - the default
+`GITHUB_TOKEN` cannot - so set a fine-grained PAT with **Secrets: read/write** as
+`MCP_SECRETS_PAT` (or `GH_GLOBAL`). Without the PAT, grok
+warns loudly and auth breaks one run after the first post-expiry refresh. **After
+adding the PAT, re-connect the X account once** to seed a valid refresh token (a token
+already consumed by a prior run can't be revived by the PAT alone). Concurrent grok
+runs that each hit an expired token still race - each refresh revokes the other's
+token - so for high parallelism refresh centrally on a schedule so exactly one run
+mints and persists per interval. codex's `CODEX_AUTH` just expires (no auto-persist
+yet) - re-capture via **Connect ChatGPT** or use the OpenAI key.
 
 ## Capability mode carries over unchanged
 

@@ -285,7 +285,9 @@ export default function Dashboard() {
 
       {showImport && <ImportModal onClose={() => setShowImport(false)} onImport={importSkill} />}
       {showAuthModal && (harness === 'grok'
-        ? <GrokAuthModal loading={grokLoading} onClose={() => setShowAuthModal(false)} onGrokAuth={(p) => setupGrokAuth(p)} />
+        ? <GrokAuthModal loading={grokLoading} onClose={() => setShowAuthModal(false)} onGrokAuth={(p) => setupGrokAuth(p)}
+            patSet={secrets.some(s => s.isSet && (s.name === 'MCP_SECRETS_PAT' || s.name === 'GH_GLOBAL'))}
+            onGoToSecret={(n) => { setShowAuthModal(false); goToSecret(n) }} />
         : HARNESS_AUTH[harness]
         ? <HarnessAuthModal harness={harness} loading={harnessAuthLoading} onClose={() => setShowAuthModal(false)} onHarnessAuth={(p) => setupHarnessAuth(harness, p)} />
         : <AuthModal loading={authLoading} onClose={() => setShowAuthModal(false)} onAuth={(auth) => setupAuth(auth)} />)}

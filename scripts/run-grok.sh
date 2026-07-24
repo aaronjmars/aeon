@@ -26,6 +26,11 @@
 #   GROK_CREDENTIALS      base64 of the X-account OAuth session captured by the
 #                         dashboard (a tar rooted at $HOME, or a single cred file)
 #   GROK_CREDENTIALS_PATH single-file restore target (default ~/.grok/credentials.json)
+#   MCP_SECRETS_PAT       secrets-write PAT (or GH_GLOBAL as the repo-wide fallback)
+#                         used to PERSIST a rotated refresh token back to the
+#                         GROK_CREDENTIALS secret so OAuth auth survives past 6h (§2b);
+#                         without it a rotating provider breaks one run after expiry.
+#   GROK_OAUTH_SKEW       seconds-before-expiry to trigger a refresh (default 1800)
 #   GROK_CLI_VERSION      npm pin override (default below)
 #   Run-shaping knobs (all optional; aeon.yml maps a skill's frontmatter to them):
 #   GROK_MAX_TURNS        agentic-turn cap (default 60; 0/off = uncapped)
@@ -106,6 +111,96 @@ else
   log "::error::grok harness needs auth: set GROK_CREDENTIALS (X-account login via the dashboard) or XAI_API_KEY, or run 'grok login'"
   exit 1
 fi
+
+# --- 2b. keep the OAuth session durable (refresh + persist rotated token) ----
+# The captured GROK_CREDENTIALS holds ~/.grok/auth.json = a 6h access JWT + an
+# offline_access refresh token. xAI ROTATES the refresh token on every refresh and
+# revokes the prior one (confirmed live: auth.x.ai returns invalid_grant "Refresh
+# token has been revoked"), so a STATIC secret self-destructs ~6h after capture: the
+# first post-expiry run refreshes and rotates the token, but grok writes the new one
+# only to the ephemeral runner $HOME - the secret still holds the now-revoked token,
+# and every later run dies "Not signed in". Fix (mirrors scripts/mcp-oauth-refresh.sh):
+# refresh HERE from the refresh token, rewrite auth.json, then PERSIST the rotated
+# file back to the GROK_CREDENTIALS secret via a secrets-write PAT (MCP_SECRETS_PAT /
+# GH_GLOBAL - the default GITHUB_TOKEN cannot write secrets). Only
+# refreshes when the access token is within GROK_OAUTH_SKEW seconds of expiry, so runs
+# inside the window reuse the on-disk token and do not needlessly rotate (fewer
+# concurrent-run races; for high parallelism refresh centrally on a schedule so exactly
+# one run mints per interval - see docs/harnesses.md). Runs on the GitHub runner in
+# plain bash (no Claude bash analyzer), so a normal curl with the token in
+# --data-urlencode is fine; nothing is echoed. This is a no-op unless we authed via
+# GROK_CREDENTIALS (the CI OAuth path) - a local `grok login` session is left untouched.
+grok_oauth_refresh() {
+  local auth="$GROK_HOME/auth.json"
+  [ -f "$auth" ] || return 0
+  command -v jq >/dev/null 2>&1 || { log "::debug::grok oauth: jq missing - skipping refresh"; return 0; }
+  # The credential is a map keyed by "<issuer>::<client_id>"; operate on the first entry.
+  local k iss cid rt exp
+  k=$(jq -r 'keys_unsorted[0] // empty' "$auth" 2>/dev/null)
+  [ -z "$k" ] && return 0
+  iss=$(jq -r --arg k "$k" '.[$k].oidc_issuer   // empty' "$auth" 2>/dev/null)
+  cid=$(jq -r --arg k "$k" '.[$k].oidc_client_id // empty' "$auth" 2>/dev/null)
+  rt=$(jq  -r --arg k "$k" '.[$k].refresh_token  // empty' "$auth" 2>/dev/null)
+  exp=$(jq -r --arg k "$k" '.[$k].expires_at     // empty' "$auth" 2>/dev/null)
+  # No refresh token (API-key path or a stripped file) or no issuer → nothing to keep alive.
+  [ -z "$rt" ] || [ -z "$iss" ] && return 0
+  # Only refresh when the access token is expired or within the skew window.
+  local skew="${GROK_OAUTH_SKEW:-1800}" now_epoch exp_epoch
+  now_epoch=$(jq -rn 'now|floor' 2>/dev/null)
+  exp_epoch=$(jq -rn --arg t "$exp" '($t|sub("\\.[0-9]+Z$";"Z")|fromdateiso8601?) // 0' 2>/dev/null)
+  if [ "${exp_epoch:-0}" -gt 0 ] 2>/dev/null && [ $((exp_epoch - now_epoch)) -gt "$skew" ]; then
+    log "::debug::grok oauth: access token still valid ($((exp_epoch - now_epoch))s left) - skipping refresh"
+    return 0
+  fi
+  local ep="${iss%/}/oauth2/token"
+  log "::debug::grok oauth: refreshing access token via $ep"
+  local resp access new_rt expires_in
+  resp=$(curl -s --max-time 30 -X POST "$ep" \
+    -H 'Accept: application/json' -H 'Content-Type: application/x-www-form-urlencoded' \
+    --data-urlencode 'grant_type=refresh_token' \
+    --data-urlencode "client_id=$cid" \
+    --data-urlencode "refresh_token=$rt" 2>/dev/null)
+  if [ -z "$resp" ]; then
+    log "::warning::grok oauth: refresh request to $ep failed (empty/timeout) - falling through to the on-disk token"; return 0
+  fi
+  access=$(jq -r '.access_token // empty' <<<"$resp" 2>/dev/null)
+  if [ -z "$access" ]; then
+    local oerr; oerr=$(jq -r '[.error,.error_description]|map(select(.!=null and .!=""))|join(": ")' <<<"$resp" 2>/dev/null)
+    log "::warning::grok oauth: refresh failed${oerr:+ ($oerr)} - the stored refresh token was likely rotated/consumed by an earlier run and not saved. Re-connect the X account in the dashboard, and set a secrets-write PAT (MCP_SECRETS_PAT / GH_GLOBAL) so future rotations persist. See docs/harnesses.md."
+    return 0
+  fi
+  new_rt=$(jq -r '.refresh_token // empty' <<<"$resp" 2>/dev/null)
+  expires_in=$(jq -r '.expires_in // 21600' <<<"$resp" 2>/dev/null)   # default 6h
+  # Rewrite auth.json in place: fresh access token, rotated refresh token, new expiry.
+  local new_exp tmp
+  new_exp=$(jq -rn --argjson n "${expires_in:-21600}" '(now + $n)|todate' 2>/dev/null)
+  tmp=$(mktemp)
+  if jq --arg k "$k" --arg a "$access" --arg r "${new_rt:-$rt}" --arg e "$new_exp" \
+        '.[$k].key=$a | .[$k].refresh_token=$r | .[$k].expires_at=$e' "$auth" >"$tmp" 2>/dev/null && [ -s "$tmp" ]; then
+    mv "$tmp" "$auth"; chmod 600 "$auth" 2>/dev/null || true
+    log "::debug::grok oauth: refreshed access token (expires $new_exp)"
+  else
+    rm -f "$tmp"; log "::warning::grok oauth: could not rewrite auth.json after refresh - using the on-disk token"; return 0
+  fi
+  # Persist the rotated refresh token so the NEXT run stays valid. Needs a
+  # secrets-write PAT (the default GITHUB_TOKEN cannot). LOUD on failure - an
+  # unpersisted rotation is exactly what breaks auth one run later.
+  if [ -n "$new_rt" ] && [ "$new_rt" != "$rt" ]; then
+    local pat="${MCP_SECRETS_PAT:-${GH_GLOBAL:-}}"
+    if [ -z "$pat" ]; then
+      log "::warning::grok oauth: refresh token ROTATED but no secrets-write PAT is set, so the rotated token cannot be saved and the NEXT run's refresh WILL fail. Add a fine-grained PAT (Secrets: read/write) as repo secret MCP_SECRETS_PAT (or GH_GLOBAL), then re-connect the X account once."
+    elif ! command -v gh >/dev/null 2>&1; then
+      log "::warning::grok oauth: refresh token rotated but 'gh' is unavailable to persist GROK_CREDENTIALS."
+    elif tar czf - -C "$HOME" .grok/auth.json 2>/dev/null | base64 | GH_TOKEN="$pat" gh secret set GROK_CREDENTIALS >/dev/null 2>&1; then
+      log "grok oauth: persisted rotated GROK_CREDENTIALS (durable refresh active)"
+    else
+      log "::warning::grok oauth: refresh token rotated but persisting GROK_CREDENTIALS FAILED - MCP_SECRETS_PAT/GH_GLOBAL needs 'Secrets: read/write' on this repo. Re-connect the X account once fixed."
+    fi
+  fi
+}
+# Only meaningful on the CI OAuth path (a GROK_CREDENTIALS secret was restored above);
+# a local `grok login` session (no GROK_CREDENTIALS) is deliberately left untouched.
+[ -n "${GROK_CREDENTIALS:-}" ] && grok_oauth_refresh
 
 if [ "$SETUP_ONLY" = 1 ]; then
   log "::debug::grok setup complete (CLI + auth staged); the run itself goes through run-harness grok"
