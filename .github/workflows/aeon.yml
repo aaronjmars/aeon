@@ -733,6 +733,7 @@ jobs:
           INPUT_MODEL: ${{ inputs.model }}
           RESOLVED_HARNESS: ${{ steps.harness.outputs.HARNESS }}
           RH_MODEL_ARG: ${{ steps.harness.outputs.MODEL_ARG }}
+          RH_HARNESS_MODEL: ${{ steps.harness.outputs.HARNESS_MODEL }}
           INPUT_CHAIN_CTX: ${{ inputs.chain_context_file }}
         run: |
           TODAY=$(date -u +%Y-%m-%d)
@@ -758,7 +759,16 @@ jobs:
           if [ "$HARNESS" = "grok" ]; then
             case "$MODEL" in claude-*|"") MODEL="grok-4.5" ;; esac
           fi
-          echo "Using harness: $HARNESS  |  model: $MODEL"
+          # Banner must name the model that ACTUALLY runs. For claude/grok that is
+          # $MODEL (their native id). For the adapter harnesses (codex/pi/vibe/kimi)
+          # $MODEL still carries the config-default claude id, which never runs —
+          # the real model is the resolved harness model (HARNESS_MODEL from
+          # "Resolve harness"). Fall back to $MODEL if that output is somehow empty.
+          case "$HARNESS" in
+            claude|grok) BANNER_MODEL="$MODEL" ;;
+            *)           BANNER_MODEL="${RH_HARNESS_MODEL:-$MODEL}" ;;
+          esac
+          echo "Using harness: $HARNESS  |  model: $BANNER_MODEL"
           echo "SKILL_MODEL=$MODEL" >> "$GITHUB_OUTPUT"
           echo "HARNESS=$HARNESS" >> "$GITHUB_OUTPUT"   # read by the post-run scorer / feed-convert steps
 
