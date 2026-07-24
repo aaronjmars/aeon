@@ -1,14 +1,13 @@
-# harness-adapter — vendored subset
+# harness-adapter
 
 **One Claude Code-shaped contract, six coding-agent harnesses.**
 
-This is a **vendored copy** inside `aeon-openrouter`, trimmed to exactly what the
-workflow runs: the `run-harness` dispatcher and the six adapters aeon can dispatch
-to — **claude, grok, codex, pi, vibe, kimi**. The full project — three more
-harnesses (`opencode`, `copilot`, `agy`), the live test suite, and the
-harness-by-harness research — lives upstream at
-[aaronjmars/harness-adapter](https://github.com/aaronjmars/harness-adapter). Fixes
-land there first and are re-vendored here.
+This directory is exactly what the workflow runs: the `run-harness` dispatcher and
+the six adapters aeon can dispatch to — **claude, grok, codex, pi, vibe, kimi**.
+It is self-contained, so fixes land here directly. Three further harnesses
+(`opencode`, `copilot`, `agy`) were evaluated and deliberately left out; the
+per-harness reasons are recorded in the allowlist comment in
+`.github/workflows/aeon.yml`.
 
 `run-harness` wraps each CLI behind one headless interface — Claude Code's: prompt
 on stdin, flags mirroring `claude -p`, one JSON envelope on stdout. Swap the first
@@ -174,7 +173,6 @@ docs/aeon-integration.md  deployment runbook: wiring the swap into a live aeon
 
 The normalize-to-Claude's-envelope pattern, the grok permission stance, and the
 thought-firewall come from [aeonfun/aeon](https://github.com/aeonfun/aeon)'s
-`run-grok.sh`. The full nine-harness research, sources, and live test suite are in
-the upstream [aaronjmars/harness-adapter](https://github.com/aaronjmars/harness-adapter).
+`run-grok.sh`.
 
 MIT — see [LICENSE](LICENSE).

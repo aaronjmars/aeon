@@ -3,12 +3,10 @@
 A deployment runbook for putting `run-harness` into [aeonfun/aeon](https://github.com/aeonfun/aeon)
 so a skill can run on **codex, pi, vibe, or kimi** instead of only claude/grok.
 
-The reference implementation is `aaronjmars/aeon-harness@harness-swap-4` — a full
-aeon fork with every change below applied and verified on a real GitHub runner
-(6-harness × 3-scenario matrix, verified in the upstream
-[harness-adapter](https://github.com/aaronjmars/harness-adapter) test suite, Tier 4).
-This document is how to reproduce it on a fresh aeon instance, and what each
-change is for so you can review rather than copy blind.
+Every change below was applied to a full aeon fork and verified on a real GitHub
+runner (6-harness × 3-scenario matrix, Tier 4). This document is how to reproduce
+it on a fresh aeon instance, and what each change is for so you can review rather
+than copy blind.
 
 ---
 
@@ -148,8 +146,7 @@ skills are overwhelmingly **research** skills.
 Getting this wrong is silent: three harnesses each lost the network a different
 way, and every failed run was **green** — valid envelope, exit 0, scorer 3–4/5 —
 while committing fabricated or empty output. The fixes are in the adapters
-(pi/vibe/codex) and one compat clause; see the upstream
-[harness-adapter](https://github.com/aaronjmars/harness-adapter) test suite for the full account.
+(pi/vibe/codex) and one compat clause.
 The takeaway for operating an instance: **a green run is not proof the skill did
 its job.** Spot-check committed `output/` content, especially for research skills.
 
@@ -254,9 +251,8 @@ output**:
 - `memory/token-usage.csv` — non-zero tokens, and the model that actually ran
 - `memory/skill-health/<skill>.json` — a real score, not an empty no-op
 
-The reference fork's final grid (all four × three scenarios, verified by output)
-is the "FINAL verified grid" in the upstream
-[harness-adapter](https://github.com/aaronjmars/harness-adapter) test suite.
+The reference fork's final grid covered all four harnesses × three scenarios, each
+verified by committed output rather than by exit code.
 
 ---
 

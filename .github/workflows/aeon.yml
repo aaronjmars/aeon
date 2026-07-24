@@ -243,7 +243,7 @@ jobs:
 
           # Allowlist. Upstream had a claude/grok binary, so ANY other value was
           # silently rewritten to claude. These four are the ones measured end to
-          # end on a real runner (aaronjmars/harness-adapter, Tier 4).
+          # end on a real runner (Tier 4).
           # Deliberately NOT here, each for a measured reason:
           #   opencode — its .result carried the agent's narration instead of the
           #              deliverable (fixed in the adapter, but it still loops to
