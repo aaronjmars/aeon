@@ -650,6 +650,29 @@ jobs:
         if: steps.work.outputs.mode != '' && steps.skill.outputs.name == 'vuln-scanner'
         run: bash scripts/stage-vuln-scanner.sh "${{ steps.skill.outputs.name }}"
 
+      # Single-source standing instructions. AGENTS.md is the full, self-contained
+      # mirror of CLAUDE.md (operating manual + @STRATEGY.md inlined) that the
+      # non-claude harnesses read — they load instruction files verbatim and don't
+      # expand Claude Code @imports. A run must load EXACTLY ONE of the two: claude
+      # reads CLAUDE.md natively, every other harness reads AGENTS.md. Some harnesses
+      # (grok) natively discover BOTH files in the checkout, and codex's native doc
+      # IS AGENTS.md — so hide the file this run must not use. The move goes to
+      # $RUNNER_TEMP (outside the tree, so git never sees it) and is undone by
+      # "Restore standing instructions" before any later step commits.
+      - name: Single-source standing instructions
+        id: singlesrc
+        if: steps.work.outputs.mode != ''
+        env:
+          HARNESS: ${{ steps.harness.outputs.HARNESS }}
+        run: |
+          [ -n "$HARNESS" ] || { echo "no harness resolved — leaving both files"; exit 0; }
+          if [ "$HARNESS" = "claude" ]; then HIDE="AGENTS.md"; KEPT="CLAUDE.md"; else HIDE="CLAUDE.md"; KEPT="AGENTS.md"; fi
+          if [ -f "$HIDE" ]; then
+            mv "$HIDE" "$RUNNER_TEMP/$HIDE.singlesrc"
+            echo "hidden=$HIDE" >> "$GITHUB_OUTPUT"
+            echo "::notice::single-source: $HARNESS reads $KEPT; hid $HIDE for this run"
+          fi
+
       - name: Run
         id: run
         if: steps.work.outputs.mode != ''
@@ -1043,6 +1066,20 @@ jobs:
           echo "SESSION_ID=$(echo "$CLAUDE_OUTPUT" | jq -r '.session_id // empty')" >> "$GITHUB_OUTPUT"
 
           echo "::notice::Token usage — input: $INPUT_TOKENS, output: $OUTPUT_TOKENS, cache_read: $CACHE_READ, cache_creation: $CACHE_CREATION, total: $TOTAL_TOKENS"
+
+      # Undo "Single-source standing instructions" so the working tree matches HEAD
+      # before any capture/guard/commit step runs. always(): the file must come back
+      # even if Run failed or timed out. The move is a plain rename back — it touches
+      # only the one file that was hidden, so it can't clobber skill outputs.
+      - name: Restore standing instructions
+        if: always()
+        env:
+          HIDDEN: ${{ steps.singlesrc.outputs.hidden }}
+        run: |
+          if [ -n "$HIDDEN" ] && [ -f "$RUNNER_TEMP/$HIDDEN.singlesrc" ]; then
+            mv "$RUNNER_TEMP/$HIDDEN.singlesrc" "$HIDDEN"
+            echo "restored $HIDDEN"
+          fi
 
       # ──────────────────────────────────────────────────────────────────────
       # Fleet Watcher postflight (opt-in, always-runs)

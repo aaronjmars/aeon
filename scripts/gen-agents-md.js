@@ -1,22 +1,29 @@
 #!/usr/bin/env node
-// gen-agents-md.js — generate a MINIMAL AGENTS.md carrying STRATEGY.md for grok.
+// gen-agents-md.js — generate AGENTS.md as a FULL, self-contained mirror of
+// CLAUDE.md for every non-claude harness (grok / codex / pi / vibe / kimi).
 //
-// Why this file is tiny (and used to be a full copy of CLAUDE.md):
+// Why a full mirror (it used to carry ONLY STRATEGY.md):
 //
-// The Grok Build (`grok`) harness reads BOTH `AGENTS.md` and `CLAUDE.md` as
-// standing instructions — a directory that holds both contributes both (verified
-// with `grok inspect`). Grok reads `CLAUDE.md` natively via its Claude-compat
-// discovery, so duplicating the whole operating manual into AGENTS.md just
-// double-loaded ~2.5k tokens of near-identical text on every grok run.
+// The non-claude harnesses load instruction files VERBATIM — they do not expand
+// Claude Code's `@import` directives. Claude reads `CLAUDE.md` and expands its
+// `@STRATEGY.md` import itself; the others cannot, so a strategy-only AGENTS.md
+// left them with the north-star but WITHOUT the operating manual. Worse, codex's
+// native project doc IS `AGENTS.md`, and its `project_doc_fallback_filenames`
+// only fires when AGENTS.md is ABSENT — so with a committed AGENTS.md, codex read
+// the strategy-only file and never fell back to CLAUDE.md, running under-briefed.
 //
-// The ONE thing CLAUDE.md can't deliver to grok is STRATEGY.md: CLAUDE.md pulls
-// it via the Claude-Code-specific `@STRATEGY.md` import, and grok does not expand
-// `@`-imports (it loads each instruction file verbatim). So AGENTS.md now carries
-// ONLY the strategy — the delta — and lets grok read the rest of the manual from
-// CLAUDE.md. This keeps both harnesses behaviour-identical at ~1/12th the tokens.
+// So AGENTS.md is now `CLAUDE.md` with every whole-line `@import` (e.g.
+// `@STRATEGY.md`) expanded inline — the same EFFECTIVE instructions Claude Code
+// sees after expansion. A harness reading ONLY AGENTS.md now gets the entire
+// manual AND the strategy.
 //
-// AGENTS.md is committed (grok reads it from the checkout), so regenerate it
-// whenever STRATEGY.md changes:
+// Each skill run loads EXACTLY ONE of the two files: `claude` reads CLAUDE.md
+// natively; every other harness reads AGENTS.md. `.github/workflows/aeon.yml`
+// hides the other file for the run ("Single-source standing instructions"), so a
+// harness that natively discovers both (grok) never double-loads them.
+//
+// AGENTS.md is committed (harnesses read it from the checkout), so regenerate it
+// whenever CLAUDE.md or any file it imports (STRATEGY.md) changes:
 //
 //   node scripts/gen-agents-md.js          # write AGENTS.md
 //   node scripts/gen-agents-md.js --check  # verify it's up to date (CI/parity)
@@ -27,29 +34,50 @@ const fs = require('fs')
 const path = require('path')
 
 const root = path.resolve(__dirname, '..')
-const strategyPath = path.join(root, 'STRATEGY.md')
+const claudePath = path.join(root, 'CLAUDE.md')
 const outPath = path.join(root, 'AGENTS.md')
 
-const BANNER = `<!-- AUTO-GENERATED from STRATEGY.md by scripts/gen-agents-md.js. Do not edit by hand.
-     Grok (the grok harness) loads BOTH this file and CLAUDE.md as standing
-     instructions and reads CLAUDE.md natively, so the full operating manual lives
-     in CLAUDE.md — NOT duplicated here. This file carries only STRATEGY.md, which
-     CLAUDE.md delivers to Claude Code via the \`@STRATEGY.md\` import that grok does
-     not expand. Edit STRATEGY.md and re-run the generator to update it. -->
+const BANNER = `<!-- AUTO-GENERATED from CLAUDE.md by scripts/gen-agents-md.js. Do not edit by hand.
+     This is the non-claude harnesses' copy of the operating manual: CLAUDE.md with
+     its @imports (e.g. @STRATEGY.md) expanded inline, because those harnesses load
+     instruction files verbatim and do NOT expand Claude Code @imports. Claude reads
+     CLAUDE.md directly; every other harness reads THIS file (aeon.yml hides the
+     other one per run so exactly one is loaded). Regenerate after editing CLAUDE.md
+     or any file it imports: node scripts/gen-agents-md.js -->
 `
 
-const PREAMBLE = `# Strategy (Grok harness)
-
-Grok already loads Aeon's full operating manual from \`CLAUDE.md\` (how Aeon works,
-memory, tools, capability mode, security, output). This file adds only the
-operator's strategy below — the north-star \`CLAUDE.md\` references as \`@STRATEGY.md\`,
-which grok does not expand. Read it at the start of every task and let it break
-ties; absorb it, don't quote it.
-`
+// Expand whole-line @imports, mirroring harness-adapter/lib/imports.sh:
+// whole-line `@path` only, skip fenced code blocks, resolve ~ / absolute /
+// relative paths, fall back to `<path>.md`, up to 4 hops (then inline verbatim).
+function expandImports(file, depth) {
+  const text = fs.readFileSync(file, 'utf8')
+  if (depth >= 4) return text
+  const dir = path.dirname(file)
+  const out = []
+  let inFence = false
+  for (const line of text.split('\n')) {
+    if (/^```/.test(line)) inFence = !inFence
+    const m = inFence ? null : line.match(/^@([^\s]+)\s*$/)
+    if (m) {
+      let target = m[1]
+      if (target.startsWith('~/')) target = path.join(process.env.HOME || '', target.slice(2))
+      else if (!path.isAbsolute(target)) target = path.join(dir, target)
+      let resolved = null
+      if (fs.existsSync(target) && fs.statSync(target).isFile()) resolved = target
+      else if (fs.existsSync(`${target}.md`)) resolved = `${target}.md`
+      if (resolved) {
+        out.push(expandImports(resolved, depth + 1).replace(/\n+$/, ''))
+        continue
+      }
+    }
+    out.push(line) // non-import line, or an unresolvable @import (kept literal)
+  }
+  return out.join('\n')
+}
 
 function build() {
-  const strategy = fs.readFileSync(strategyPath, 'utf8').trim()
-  return `${BANNER}\n${PREAMBLE}\n${strategy}\n`
+  const expanded = expandImports(claudePath, 0).replace(/\s+$/, '')
+  return `${BANNER}\n${expanded}\n`
 }
 
 const generated = build()
