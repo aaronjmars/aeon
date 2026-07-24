@@ -2,7 +2,7 @@
 #
 # Enable skills by setting enabled: true. Multiple skills at the same time run in parallel.
 # Set var: "value" to pass a default parameter to the skill.
-# Set model: "claude-sonnet-4-6" per skill to override the default model (cost optimization).
+# Set model: "claude-haiku-4-5-20251001" per skill to override the default model (cost optimization).
 # Set harness: "grok" per skill to run it through the Grok Build CLI instead of the
 # default Claude Code harness (see the top-level `harness:` key below).
 
@@ -177,14 +177,16 @@ chains:
   #     - skill: routine, consume: [token-movers, hn-digest, issue-triage, github-trending]
 
 # Default model for all skills. Override per-run via workflow_dispatch.
-# Options: claude-opus-4-8, claude-fable-5, claude-sonnet-5, claude-sonnet-4-6, claude-haiku-4-5-20251001
-# (Grok harness models: grok-4.5 — flagship reasoning model & grok's current default,
-#  run with --no-subagents in CI; grok-composer-2.5-fast — fast/cheap single-agent.
-#  The older grok-build-0.1 is gateway-only, via XAI_API_KEY + the GROK_MODEL var.)
+# Options: claude-sonnet-5, claude-opus-5, claude-haiku-4-5-20251001
+# (Grok harness model: grok-4.5, the flagship reasoning model and grok's current
+#  default, run with --no-subagents in CI. It's the only id the grok CLI accepts on an
+#  X-account login, and it's the gateway default too. The older coding ids
+#  (grok-build-0.1, grok-composer-2.5-fast, grok-4.3) are gateway-only, reachable via
+#  XAI_API_KEY + the GROK_MODEL var.)
 # The non-claude harnesses use their OWN model ids (codex openai/*, kimi moonshotai/*,
 # vibe mistralai/*, pi deepseek/*) — surfaced in the dashboard picker per harness; see
 # docs/harnesses.md. The value below only applies to the claude/grok harnesses.
-model: claude-sonnet-4-6
+model: claude-sonnet-5
 
 # Agent harness — which coding-agent CLI runs your skills.
 #   claude (default)  — Claude Code (`claude -p`); uses the AI Gateway below.

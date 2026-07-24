@@ -47,7 +47,7 @@ export function parseConfig(raw: string): AeonConfig {
     }
   }
 
-  const model = String(doc.get('model') ?? 'claude-sonnet-4-6')
+  const model = String(doc.get('model') ?? 'claude-sonnet-5')
   const harnessRaw = String(doc.get('harness') ?? 'claude')
   const harness: Harness = HARNESSES.find(h => h === harnessRaw) ?? 'claude'
 

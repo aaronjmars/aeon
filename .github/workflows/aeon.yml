@@ -23,11 +23,8 @@ on:
         # "Resolve harness" forwards them verbatim as the harness model.
         options:
           - '(config default)'
-          - claude-opus-4-8
-          - claude-opus-4-7
-          - claude-fable-5
           - claude-sonnet-5
-          - claude-sonnet-4-6
+          - claude-opus-5
           - claude-haiku-4-5-20251001
           - grok-4.5
           - openai/gpt-5-mini
@@ -287,7 +284,7 @@ jobs:
           #   3. a per-harness cheap default.
           # aeon-native ids (claude-*/grok-*) mean nothing to an OpenRouter CLI, so
           # they're treated as "unset" and fall through to the default — a repo that
-          # never touched the model picker (still `model: claude-sonnet-4-6`) still
+          # never touched the model picker (still `model: claude-sonnet-5`) still
           # gets a working default instead of a dead id. The greps carry `|| true`
           # for the same reason as the harness greps above (no key ≠ fatal).
           # Each harness defaults to its own native family (the dashboard's
@@ -782,7 +779,7 @@ jobs:
           elif [ -n "$SKILL_MODEL" ]; then
             MODEL="$SKILL_MODEL"
           else
-            MODEL="${CONFIG_MODEL:-claude-sonnet-4-6}"
+            MODEL="${CONFIG_MODEL:-claude-sonnet-5}"
           fi
 
           # --- Harness resolution (which agent CLI runs the skill) ---

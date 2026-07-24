@@ -86,7 +86,7 @@ grep -qx -- "--permission-mode" "$ARGS_FILE" && grep -qx "bypassPermissions" "$A
 grep -qx -- "--rules" "$ARGS_FILE" && pass "passes --rules compat preamble" || bad "passes --rules compat preamble"
 
 # 4b. --model is OMITTED for a leftover claude-* id or empty (grok uses its default)
-echo "p" | GROK_FAKE_OUT='{"text":"x"}' MODEL=claude-sonnet-4-6 SKILL_MODE=write XAI_API_KEY=xai-test bash "$R" >/dev/null 2>&1
+echo "p" | GROK_FAKE_OUT='{"text":"x"}' MODEL=claude-sonnet-5 SKILL_MODE=write XAI_API_KEY=xai-test bash "$R" >/dev/null 2>&1
 if grep -qx -- "--model" "$ARGS_FILE"; then bad "omits --model for claude-* id"; else pass "omits --model for claude-* id"; fi
 echo "p" | GROK_FAKE_OUT='{"text":"x"}' MODEL="" SKILL_MODE=write XAI_API_KEY=xai-test bash "$R" >/dev/null 2>&1
 if grep -qx -- "--model" "$ARGS_FILE"; then bad "omits --model for empty model"; else pass "omits --model for empty model"; fi

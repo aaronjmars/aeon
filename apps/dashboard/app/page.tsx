@@ -42,7 +42,7 @@ export default function Dashboard() {
   const [skills, setSkills] = useState<Skill[]>([])
   const [runs, setRuns] = useState<Run[]>([])
   const [secrets, setSecrets] = useState<Secret[]>([])
-  const [model, setModel] = useState('claude-sonnet-4-6')
+  const [model, setModel] = useState('claude-sonnet-5')
   const [harness, setHarness] = useState<Harness>('claude')
   const [gateway, setGateway] = useState<GatewayProvider>('auto')
   const [repo, setRepo] = useState('')

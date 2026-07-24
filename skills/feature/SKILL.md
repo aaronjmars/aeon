@@ -71,8 +71,8 @@ All branches read operator-controlled files under `memory/` (runtime config — 
   - text-davinci
 
   ## Current models (suggest these as replacements)
-  - claude-sonnet-4-6
-  - claude-opus-4-7
+  - claude-sonnet-5
+  - claude-opus-5
   - gpt-4o
   - gemini-2.0
   ```

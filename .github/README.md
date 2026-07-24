@@ -235,14 +235,14 @@ Empty `var` = the skill's default behavior (scan everything, auto-pick topics). 
 The default model for all skills is set in `aeon.yml` (or from the dashboard header dropdown):
 
 ```yaml
-model: claude-sonnet-4-6
+model: claude-sonnet-5
 ```
 
-Options: `claude-sonnet-4-6` (default), `claude-opus-4-8`, `claude-fable-5`, `claude-opus-4-7`, `claude-sonnet-5`, `claude-haiku-4-5-20251001`. Per-run overrides are available via workflow dispatch, and individual skills can override to optimize cost:
+Options: `claude-sonnet-5` (default), `claude-opus-5`, `claude-haiku-4-5-20251001`. Per-run overrides are available via workflow dispatch, and individual skills can override to optimize cost:
 
 ```yaml
 skills:
-  token-movers: { enabled: true, schedule: "30 12 * * *", model: "claude-sonnet-4-6" }
+  token-movers: { enabled: true, schedule: "30 12 * * *", model: "claude-haiku-4-5-20251001" }
 ```
 
 > These ids apply to the **claude** harness. Each other [harness](../docs/harnesses.md) carries its own model list (Codex `openai/*`, Kimi `moonshotai/*`, Vibe `mistralai/*`, Pi `deepseek/*`), which the dashboard picker swaps in when you select that harness.

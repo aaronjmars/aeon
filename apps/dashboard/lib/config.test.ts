@@ -26,16 +26,16 @@ import {
 const MINIMAL_YAML = `skills:
   heartbeat: { enabled: true, schedule: "0 12 * * *" }
 
-model: claude-sonnet-4-6
+model: claude-sonnet-5
 `;
 
 const FULL_YAML = `# Aeon configuration
 skills:
   morning-brief: { enabled: false, schedule: "0 7 * * *" }
-  market-pulse: { enabled: true, schedule: "0 12 * * *", model: "claude-sonnet-4-6" }
+  market-pulse: { enabled: true, schedule: "0 12 * * *", model: "claude-sonnet-5" }
   heartbeat: { enabled: true, schedule: "0 12 * * *" }
 
-model: claude-opus-4-8
+model: claude-opus-5
 
 gateway:
   provider: direct
@@ -55,7 +55,7 @@ describe("parseConfig", () => {
     assert.equal(config.skills["heartbeat"].schedule, "0 12 * * *");
     assert.equal(config.skills["heartbeat"].var, "");
     assert.equal(config.skills["heartbeat"].model, "");
-    assert.equal(config.model, "claude-sonnet-4-6");
+    assert.equal(config.model, "claude-sonnet-5");
   });
 
   it("parses a full config with all fields", () => {
@@ -64,16 +64,16 @@ describe("parseConfig", () => {
     assert.equal(config.skills["morning-brief"].enabled, false);
     assert.equal(config.skills["morning-brief"].schedule, "0 7 * * *");
     assert.equal(config.skills["market-pulse"].enabled, true);
-    assert.equal(config.skills["market-pulse"].model, "claude-sonnet-4-6");
-    assert.equal(config.model, "claude-opus-4-8");
+    assert.equal(config.skills["market-pulse"].model, "claude-sonnet-5");
+    assert.equal(config.model, "claude-opus-5");
     assert.equal(config.gateway.provider, "direct");
     assert.equal(config.jsonrenderEnabled, true);
   });
 
-  it("defaults model to claude-sonnet-4-6 when absent", () => {
+  it("defaults model to claude-sonnet-5 when absent", () => {
     const yaml = `skills:\n  test: { enabled: false, schedule: "0 0 * * *" }\n`;
     const config = parseConfig(yaml);
-    assert.equal(config.model, "claude-sonnet-4-6");
+    assert.equal(config.model, "claude-sonnet-5");
   });
 
   it("defaults gateway to auto when absent", () => {
@@ -106,7 +106,7 @@ describe("parseConfig", () => {
 
   it("handles empty skills section", () => {
     // yaml library parses `skills:` with no entries as null, not an empty map
-    const yaml = `skills:\n\nmodel: claude-sonnet-4-6\n`;
+    const yaml = `skills:\n\nmodel: claude-sonnet-5\n`;
     const config = parseConfig(yaml);
     assert.equal(Object.keys(config.skills).length, 0);
   });
@@ -138,8 +138,8 @@ describe("updateSkillInConfig", () => {
   });
 
   it("sets a model override on a skill", () => {
-    const updated = updateSkillInConfig(MINIMAL_YAML, "heartbeat", { model: "claude-sonnet-4-6" });
-    assert.ok(updated.includes("model: claude-sonnet-4-6") || updated.includes("model: 'claude-sonnet-4-6'"));
+    const updated = updateSkillInConfig(MINIMAL_YAML, "heartbeat", { model: "claude-sonnet-5" });
+    assert.ok(updated.includes("model: claude-sonnet-5") || updated.includes("model: 'claude-sonnet-5'"));
   });
 
   it("returns original yaml for non-existent skill", () => {
@@ -164,9 +164,9 @@ describe("updateSkillInConfig", () => {
 
 describe("updateModelInConfig", () => {
   it("updates the top-level model", () => {
-    const updated = updateModelInConfig(MINIMAL_YAML, "claude-opus-4-8");
+    const updated = updateModelInConfig(MINIMAL_YAML, "claude-opus-5");
     const config = parseConfig(updated);
-    assert.equal(config.model, "claude-opus-4-8");
+    assert.equal(config.model, "claude-opus-5");
   });
 
   it("replaces an existing model", () => {
@@ -321,7 +321,7 @@ describe("addSkillToConfig", () => {
   });
 
   it("inserts at end when heartbeat is absent", () => {
-    const yaml = `skills:\n  alpha: { enabled: false, schedule: "0 0 * * *" }\n\nmodel: claude-sonnet-4-6\n`;
+    const yaml = `skills:\n  alpha: { enabled: false, schedule: "0 0 * * *" }\n\nmodel: claude-sonnet-5\n`;
     const updated = addSkillToConfig(yaml, "beta");
     const config = parseConfig(updated);
     assert.ok(config.skills["beta"]);
@@ -353,9 +353,9 @@ describe("round-trip config mutations", () => {
   });
 
   it("update model and gateway independently", () => {
-    let yaml = updateModelInConfig(MINIMAL_YAML, "claude-opus-4-8");
+    let yaml = updateModelInConfig(MINIMAL_YAML, "claude-opus-5");
     const config1 = parseConfig(yaml);
-    assert.equal(config1.model, "claude-opus-4-8");
+    assert.equal(config1.model, "claude-opus-5");
 
     // Model change should not affect skills
     assert.equal(config1.skills["heartbeat"].enabled, true);
@@ -390,7 +390,7 @@ describe("upsertSkillInConfig", () => {
     const config = parseConfig(yaml);
     assert.equal(config.skills["market-pulse"].schedule, "0 6 * * *");
     // Pre-existing fields survive, and the key appears exactly once.
-    assert.equal(config.skills["market-pulse"].model, "claude-sonnet-4-6");
+    assert.equal(config.skills["market-pulse"].model, "claude-sonnet-5");
     assert.equal(yaml.match(/^\s*market-pulse:/gm)?.length, 1);
   });
 

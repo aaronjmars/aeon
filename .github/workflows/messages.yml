@@ -445,7 +445,7 @@ jobs:
         run: |
           TODAY=$(date -u +%Y-%m-%d)
           CONFIG_MODEL=$(grep -E '^model:' aeon.yml | sed 's/^model: *//' | tr -d ' ')
-          MODEL="${CONFIG_MODEL:-claude-sonnet-4-6}"
+          MODEL="${CONFIG_MODEL:-claude-sonnet-5}"
 
           # Harness resolution — inbound messaging isn't a per-skill run, so it
           # follows the repo's global `harness:` in aeon.yml (same default/guard as
