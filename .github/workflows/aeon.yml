@@ -359,7 +359,7 @@ jobs:
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
           # secrets-write PAT so run-grok.sh setup can PERSIST a rotated grok refresh
           # token back to GROK_CREDENTIALS - the durable-OAuth-past-6h fix (run-grok.sh §2b).
-          MCP_SECRETS_PAT: ${{ secrets.MCP_SECRETS_PAT }}
+          GH_SECRETS_PAT: ${{ secrets.GH_SECRETS_PAT }}
           GH_GLOBAL: ${{ secrets.GH_GLOBAL }}
           # Optional: seconds-before-expiry that triggers the grok OAuth refresh
           # (run-grok.sh §2b, default 1800). Set a large value as a repo variable to

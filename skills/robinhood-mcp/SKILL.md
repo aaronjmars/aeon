@@ -18,7 +18,7 @@ Access the operator's **Robinhood Agentic Trading** account through the Robinhoo
 The server is wired by the dashboard MCP panel's one-click **Connect** (OAuth; tokens stored as `MCP_ROBINHOOD_TRADING_TOKEN` + `MCP_ROBINHOOD_TRADING_OAUTH`, refreshed each run by `scripts/mcp-oauth-refresh.sh`). Its tools surface as `mcp__robinhood-trading__*` — discover them from the server; the tool descriptions are the source of truth, don't assume a fixed list.
 
 - **No `mcp__robinhood-trading__*` tool callable** → the server isn't connected (or its secrets are missing, in which case the workflow logged a `::warning::` and skipped MCP). Log `RH_MCP_NOT_CONNECTED`, notify once pointing the operator at the dashboard → MCP → Connect Robinhood Trading, and exit. Don't try to reach the API with curl — there is no static key.
-- **Tools exist but return 401/invalid-token** → the OAuth refresh failed (rotating refresh tokens need `MCP_SECRETS_PAT` — see `docs/mcp-oauth.md`). Log `RH_MCP_AUTH_STALE`, notify the operator to re-connect the server once in the dashboard, and exit. Don't retry the same call more than twice.
+- **Tools exist but return 401/invalid-token** → the OAuth refresh failed (rotating refresh tokens need `GH_SECRETS_PAT` — see `docs/mcp-oauth.md`). Log `RH_MCP_AUTH_STALE`, notify the operator to re-connect the server once in the dashboard, and exit. Don't retry the same call more than twice.
 
 ## Steps
 

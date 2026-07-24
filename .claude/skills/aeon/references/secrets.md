@@ -69,9 +69,9 @@ Telegram is the fastest to set up and the only one with inline buttons and slash
 | `GITHUB_TOKEN` | Built in — nothing to set. Scoped to this repo only |
 | `GH_GLOBAL` | github.com/settings/tokens → Fine-grained → select repos → Contents, Pull requests, Issues (read/write). Needed for anything cross-repo (`github-monitor`, `pr-review`, `feature`, `changelog push-to`). Auto-promoted to the run's `GITHUB_TOKEN` |
 | `GH_READ_PAT` | Same page, read-only. Optional — enriches cross-repo/private reads (`bd-radar`) without granting write |
-| `MCP_SECRETS_PAT` | github.com/settings/personal-access-tokens → **add this repo under Repository access** (a PAT without it 404s) → Repository permissions → Secrets: Read and write. Only needed if you use OAuth-connected MCP servers |
+| `GH_SECRETS_PAT` | github.com/settings/personal-access-tokens → **add this repo under Repository access** (a PAT without it 404s) → Repository permissions → Secrets: Read and write. Only needed for OAuth-connected MCP servers or the Grok X-account harness |
 
-`MCP_SECRETS_PAT` gotcha: providers rotate the refresh token every run, and the runner needs this PAT to save each rotation back. Without it, auth breaks exactly one run after you connect. After adding it, re-connect any already-connected server once.
+`GH_SECRETS_PAT` gotcha: providers rotate the refresh token every run, and the runner needs this PAT to save each rotation back. Without it, auth breaks exactly one run after you connect. After adding it, re-connect any already-connected server once.
 
 ## 4. Skill API keys — all optional
 

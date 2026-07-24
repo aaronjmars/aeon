@@ -52,7 +52,7 @@ discovery notes) and their companion skills:
 
 The glim and Executor loops were verified end-to-end on a live instance
 (Connect → per-run refresh → PAT-persisted rotation → refresh off the persisted
-token, no re-connect): every catalog provider rotates, so treat `MCP_SECRETS_PAT`
+token, no re-connect): every catalog provider rotates, so treat `GH_SECRETS_PAT`
 as **required** in practice, not optional.
 
 ## Code map
@@ -80,7 +80,7 @@ as **required** in practice, not optional.
   and auth breaks one run later. Persisting a secret needs a **secrets-write
   credential** — the default `GITHUB_TOKEN` cannot write secrets. To make refresh
   durable for rotating providers, add a fine-grained PAT with **Secrets: read/write**
-  on this repo as the secret **`MCP_SECRETS_PAT`** (or a repo-wide `GH_GLOBAL`);
+  on this repo as the secret **`GH_SECRETS_PAT`** (or a repo-wide `GH_GLOBAL`);
   `scripts/mcp-oauth-refresh.sh` then saves each rotated refresh token back to its
   `MCP_<SLUG>_OAUTH` secret and warns loudly when it can't. **After adding the PAT,
   re-connect the affected server once** to seed a valid refresh token — a refresh

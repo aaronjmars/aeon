@@ -58,7 +58,7 @@ echo "$out" | grep -qx 'ERREXIT_ON' && pass "errexit restored after sourcing" ||
 
 # 7. Rotated refresh token + a secrets-write PAT + stubbed gh → token still
 #    exported AND `gh secret set` invoked to persist the new refresh token.
-ROT_SECRET='{"MCP_SECRETS_PAT":"pat-xyz","MCP_FOO_OAUTH":"{\"token_endpoint\":\"https://as.example/token\",\"client_id\":\"cid\",\"refresh_token\":\"rt-1\"}"}'
+ROT_SECRET='{"GH_SECRETS_PAT":"pat-xyz","MCP_FOO_OAUTH":"{\"token_endpoint\":\"https://as.example/token\",\"client_id\":\"cid\",\"refresh_token\":\"rt-1\"}"}'
 out=$(ALL_SECRETS="$ROT_SECRET" CURL_OUT='{"access_token":"fresh-9","refresh_token":"rt-2"}' GHMARK="$(mktemp)" bash -c '
   curl() { printf "%s" "$CURL_OUT"; }
   gh() { [ "$1" = "secret" ] && [ "$2" = "set" ] && { echo "GH_TOKEN=$GH_TOKEN NAME=$3" > "$GHMARK"; cat >/dev/null; }; return 0; }

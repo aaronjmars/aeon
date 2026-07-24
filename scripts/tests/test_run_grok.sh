@@ -216,7 +216,7 @@ authf() { jq -r ".[\"https://auth.x.ai::CID\"].$1" "$OHOME/.grok/auth.json"; }
 
 # 10a. expired token + PAT → refresh happens AND the rotated secret is persisted
 CREDS="$(seed_auth "2000-01-01T00:00:00.000000Z")"; GH_LOG="$OHOME/gh.log"; : >"$GH_LOG"
-HOME="$OHOME" PATH="$OBIN:$PATH" GROK_CREDENTIALS="$CREDS" MCP_SECRETS_PAT="pat-test" GH_LOG="$GH_LOG" \
+HOME="$OHOME" PATH="$OBIN:$PATH" GROK_CREDENTIALS="$CREDS" GH_SECRETS_PAT="pat-test" GH_LOG="$GH_LOG" \
   bash "$RABS" setup >/dev/null 2>"$OHOME/e1"
 { [ "$(authf key)" = "NEWACCESS" ] && [ "$(authf refresh_token)" = "RT1" ]; } \
   && pass "oauth: expired token refreshed in auth.json" || bad "oauth refresh (key=$(authf key) rt=$(authf refresh_token); err=$(cat "$OHOME/e1"))"
@@ -232,14 +232,14 @@ HOME="$OHOME" PATH="$OBIN:$PATH" GROK_CREDENTIALS="$CREDS" GH_LOG="$GH_LOG" \
 
 # 10c. token still valid (far-future expiry) → skip refresh, no token-endpoint call
 CREDS="$(seed_auth "2099-01-01T00:00:00.000000Z")"; CURL_LOG="$OHOME/curl.log"; : >"$CURL_LOG"
-HOME="$OHOME" PATH="$OBIN:$PATH" GROK_CREDENTIALS="$CREDS" MCP_SECRETS_PAT="pat-test" CURL_LOG="$CURL_LOG" \
+HOME="$OHOME" PATH="$OBIN:$PATH" GROK_CREDENTIALS="$CREDS" GH_SECRETS_PAT="pat-test" CURL_LOG="$CURL_LOG" \
   bash "$RABS" setup >/dev/null 2>"$OHOME/e3"
 { [ "$(authf key)" = "OLDACCESS" ] && [ ! -s "$CURL_LOG" ]; } \
   && pass "oauth: valid token → skips refresh" || bad "oauth skip-when-valid (key=$(authf key); curl=$(cat "$CURL_LOG"))"
 
 # 10d. token endpoint returns invalid_grant → warn, keep on-disk token, exit 0
 CREDS="$(seed_auth "2000-01-01T00:00:00.000000Z")"
-HOME="$OHOME" PATH="$OBIN:$PATH" GROK_CREDENTIALS="$CREDS" MCP_SECRETS_PAT="pat-test" \
+HOME="$OHOME" PATH="$OBIN:$PATH" GROK_CREDENTIALS="$CREDS" GH_SECRETS_PAT="pat-test" \
   CURL_FAKE_OUT='{"error":"invalid_grant","error_description":"Refresh token has been revoked"}' \
   bash "$RABS" setup >/dev/null 2>"$OHOME/e4"; rc=$?
 { [ "$rc" = 0 ] && [ "$(authf key)" = "OLDACCESS" ] && grep -q "invalid_grant" "$OHOME/e4"; } \

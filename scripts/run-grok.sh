@@ -26,7 +26,7 @@
 #   GROK_CREDENTIALS      base64 of the X-account OAuth session captured by the
 #                         dashboard (a tar rooted at $HOME, or a single cred file)
 #   GROK_CREDENTIALS_PATH single-file restore target (default ~/.grok/credentials.json)
-#   MCP_SECRETS_PAT       secrets-write PAT (or GH_GLOBAL as the repo-wide fallback)
+#   GH_SECRETS_PAT       secrets-write PAT (or GH_GLOBAL as the repo-wide fallback)
 #                         used to PERSIST a rotated refresh token back to the
 #                         GROK_CREDENTIALS secret so OAuth auth survives past 6h (§2b);
 #                         without it a rotating provider breaks one run after expiry.
@@ -121,7 +121,7 @@ fi
 # only to the ephemeral runner $HOME - the secret still holds the now-revoked token,
 # and every later run dies "Not signed in". Fix (mirrors scripts/mcp-oauth-refresh.sh):
 # refresh HERE from the refresh token, rewrite auth.json, then PERSIST the rotated
-# file back to the GROK_CREDENTIALS secret via a secrets-write PAT (MCP_SECRETS_PAT /
+# file back to the GROK_CREDENTIALS secret via a secrets-write PAT (GH_SECRETS_PAT /
 # GH_GLOBAL - the default GITHUB_TOKEN cannot write secrets). Only
 # refreshes when the access token is within GROK_OAUTH_SKEW seconds of expiry, so runs
 # inside the window reuse the on-disk token and do not needlessly rotate (fewer
@@ -166,7 +166,7 @@ grok_oauth_refresh() {
   access=$(jq -r '.access_token // empty' <<<"$resp" 2>/dev/null)
   if [ -z "$access" ]; then
     local oerr; oerr=$(jq -r '[.error,.error_description]|map(select(.!=null and .!=""))|join(": ")' <<<"$resp" 2>/dev/null)
-    log "::warning::grok oauth: refresh failed${oerr:+ ($oerr)} - the stored refresh token was likely rotated/consumed by an earlier run and not saved. Re-connect the X account in the dashboard, and set a secrets-write PAT (MCP_SECRETS_PAT / GH_GLOBAL) so future rotations persist. See docs/harnesses.md."
+    log "::warning::grok oauth: refresh failed${oerr:+ ($oerr)} - the stored refresh token was likely rotated/consumed by an earlier run and not saved. Re-connect the X account in the dashboard, and set a secrets-write PAT (GH_SECRETS_PAT / GH_GLOBAL) so future rotations persist. See docs/harnesses.md."
     return 0
   fi
   new_rt=$(jq -r '.refresh_token // empty' <<<"$resp" 2>/dev/null)
@@ -186,15 +186,15 @@ grok_oauth_refresh() {
   # secrets-write PAT (the default GITHUB_TOKEN cannot). LOUD on failure - an
   # unpersisted rotation is exactly what breaks auth one run later.
   if [ -n "$new_rt" ] && [ "$new_rt" != "$rt" ]; then
-    local pat="${MCP_SECRETS_PAT:-${GH_GLOBAL:-}}"
+    local pat="${GH_SECRETS_PAT:-${GH_GLOBAL:-}}"
     if [ -z "$pat" ]; then
-      log "::warning::grok oauth: refresh token ROTATED but no secrets-write PAT is set, so the rotated token cannot be saved and the NEXT run's refresh WILL fail. Add a fine-grained PAT (Secrets: read/write) as repo secret MCP_SECRETS_PAT (or GH_GLOBAL), then re-connect the X account once."
+      log "::warning::grok oauth: refresh token ROTATED but no secrets-write PAT is set, so the rotated token cannot be saved and the NEXT run's refresh WILL fail. Add a fine-grained PAT (Secrets: read/write) as repo secret GH_SECRETS_PAT (or GH_GLOBAL), then re-connect the X account once."
     elif ! command -v gh >/dev/null 2>&1; then
       log "::warning::grok oauth: refresh token rotated but 'gh' is unavailable to persist GROK_CREDENTIALS."
     elif tar czf - -C "$HOME" .grok/auth.json 2>/dev/null | base64 | GH_TOKEN="$pat" gh secret set GROK_CREDENTIALS >/dev/null 2>&1; then
       log "grok oauth: persisted rotated GROK_CREDENTIALS (durable refresh active)"
     else
-      log "::warning::grok oauth: refresh token rotated but persisting GROK_CREDENTIALS FAILED - MCP_SECRETS_PAT/GH_GLOBAL needs 'Secrets: read/write' on this repo. Re-connect the X account once fixed."
+      log "::warning::grok oauth: refresh token rotated but persisting GROK_CREDENTIALS FAILED - GH_SECRETS_PAT/GH_GLOBAL needs 'Secrets: read/write' on this repo. Re-connect the X account once fixed."
     fi
   fi
 }

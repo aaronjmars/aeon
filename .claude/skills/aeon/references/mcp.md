@@ -108,7 +108,7 @@ The script is **sourced, never executed**: it can't abort the run, guards every 
 
 If a provider rotates the refresh token on each use, the old one dies immediately. Unless the replacement is **saved back**, the *next* run fails with `invalid_grant` — auth breaks one run later, not now.
 
-Writing a secret needs a secrets-write credential, and **the default `GITHUB_TOKEN` cannot do it.** Add a fine-grained PAT with **Secrets: read/write** as **`MCP_SECRETS_PAT`** (or repo-wide `GH_GLOBAL`).
+Writing a secret needs a secrets-write credential, and **the default `GITHUB_TOKEN` cannot do it.** Add a fine-grained PAT with **Secrets: read/write** as **`GH_SECRETS_PAT`** (or repo-wide `GH_GLOBAL`).
 
 **All four catalog providers rotate — treat the PAT as required, not optional.**
 

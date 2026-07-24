@@ -55,7 +55,7 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     // (auth method "none"). Its ONLY advertised scope is "internal" — do NOT request
     // offline_access here (glim needs it, Robinhood doesn't have it and would reject
     // it); refresh tokens come from the refresh_token grant by default. Durable
-    // refresh (rotated-token persistence via MCP_SECRETS_PAT) is handled generically
+    // refresh (rotated-token persistence via GH_SECRETS_PAT) is handled generically
     // by scripts/mcp-oauth-refresh.sh — see docs/mcp-oauth.md.
     oauth: true,
   },

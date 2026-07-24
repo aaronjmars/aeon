@@ -13,7 +13,7 @@ interface GrokAuthModalProps {
   loading: boolean
   onClose: () => void
   onGrokAuth: (payload?: { key: string }) => void
-  // Whether a secrets-write PAT (MCP_SECRETS_PAT / GH_GLOBAL) is
+  // Whether a secrets-write PAT (GH_SECRETS_PAT / GH_GLOBAL) is
   // set - the OAuth session rotates its refresh token and only survives past 6h if
   // the runner can persist each rotation back to GROK_CREDENTIALS. Hides the note once set.
   patSet: boolean
@@ -38,14 +38,14 @@ export function GrokAuthModal({ loading, onClose, onGrokAuth, patSet, onGoToSecr
         {/* Secrets-PAT setup note (parallels McpPanel's). The X-account session
             rotates its refresh token on every run; the runner can only save each
             rotation back with a secrets-write PAT. Without one, a Connected account
-            works ~6h and then its auth breaks. Hidden once MCP_SECRETS_PAT / GH_GLOBAL
+            works ~6h and then its auth breaks. Hidden once GH_SECRETS_PAT / GH_GLOBAL
             is set. */}
         {!patSet && (
           <div className="mt-3 border border-[rgba(250,250,250,0.10)] bg-aeon-panel px-[var(--space-md)] py-[var(--space-sm)]">
             <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-aeon-red mb-1.5">⚠ The X-account session won&apos;t keep working without a secrets PAT</p>
             <p className="text-[11px] text-primary-40 leading-relaxed">
               Grok rotates its refresh token on every run, and the runner needs a secrets-write credential to save each rotation - without it a Connected account works once (~6h), then its auth breaks. To set it up: create a fine-grained PAT at <a href="https://github.com/settings/personal-access-tokens" target="_blank" rel="noopener noreferrer" className="text-primary-70 underline decoration-dotted underline-offset-2 hover:text-aeon-fg transition-colors">github.com/settings/personal-access-tokens</a>, add this repo under <span className="text-primary-70">Repository access</span>, grant <span className="text-primary-70">Secrets: Read and write</span>, and save it as{' '}
-              <button onClick={() => onGoToSecret('MCP_SECRETS_PAT')} title="Open in Settings to set this key" className="text-aeon-red-alert underline decoration-dotted underline-offset-2 hover:text-aeon-fg transition-colors">MCP_SECRETS_PAT</button>
+              <button onClick={() => onGoToSecret('GH_SECRETS_PAT')} title="Open in Settings to set this key" className="text-aeon-red-alert underline decoration-dotted underline-offset-2 hover:text-aeon-fg transition-colors">GH_SECRETS_PAT</button>
               {' '}in Settings. Already Connected? Re-connect once after adding the PAT.
             </p>
           </div>

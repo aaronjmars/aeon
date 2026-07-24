@@ -131,7 +131,7 @@ that, `scripts/run-grok.sh` (§2b) refreshes the access token from the refresh t
 before each run and **persists the rotated `auth.json` back to the `GROK_CREDENTIALS`
 secret**. Persisting a secret needs a secrets-write credential - the default
 `GITHUB_TOKEN` cannot - so set a fine-grained PAT with **Secrets: read/write** as
-`MCP_SECRETS_PAT` (or `GH_GLOBAL`). Without the PAT, grok
+`GH_SECRETS_PAT` (or `GH_GLOBAL`). Without the PAT, grok
 warns loudly and auth breaks one run after the first post-expiry refresh. **After
 adding the PAT, re-connect the X account once** to seed a valid refresh token (a token
 already consumed by a prior run can't be revived by the PAT alone). Concurrent grok

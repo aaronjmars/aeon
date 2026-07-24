@@ -37,6 +37,10 @@ from or pin to; the template keeps serving the latest `main` to new forks.
   on `ETHERSCAN_API_KEY`, the same Etherscan v2 key). (#760)
 - **Dashboard: per-skill model picker tracks the active harness** — a skill's
   detail panel now offers the selected harness's model ids. (#766)
+- **Secret rename: `MCP_SECRETS_PAT` -> `GH_SECRETS_PAT`.** One standardized
+  secrets-write PAT now serves both the OAuth MCP refresh and the Grok X-account
+  refresh (still falling back to `GH_GLOBAL`). Operators using the old name
+  should re-add the PAT as `GH_SECRETS_PAT`; `GH_GLOBAL` users are unaffected.
 
 ### Fixed
 
@@ -47,7 +51,7 @@ from or pin to; the template keeps serving the latest `main` to new forks.
   (§2b) now refreshes the access token before each run and **persists the rotated
   `auth.json` back to the `GROK_CREDENTIALS` secret** - the same durable-refresh
   contract as MCP OAuth. Persisting reuses the secrets-write PAT
-  (`MCP_SECRETS_PAT` / `GH_GLOBAL`); without it grok warns loudly. Also adds a
+  (`GH_SECRETS_PAT` / `GH_GLOBAL`); without it grok warns loudly. Also adds a
   `grok)` case to the harness AUTH_MODE detection so a Connected X account is
   labelled `native-oauth` instead of defaulting to `openrouter`. See
   [docs/harnesses.md](docs/harnesses.md) and [docs/mcp-oauth.md](docs/mcp-oauth.md).
