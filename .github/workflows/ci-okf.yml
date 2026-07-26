@@ -11,14 +11,22 @@ name: ci-okf
 # over-conformance would fight Aeon's own agents. See docs/OKF.md.
 #
 # Same shape/permissions as ci-skills-json.yml.
-
+#
+# The root globs are '<root>/**.md', not '<root>/**', on purpose. okf-validate
+# walks ONLY markdown (scripts/lib/okf.mjs: `e.name.endsWith('.md')`), so a
+# change to a JSON/CSV/image file under a root cannot alter the result. On a
+# live agent instance those non-markdown writes dominate: the agent rewrites
+# memory/cron-state.json, memory/*.json and memory/token-usage.csv on nearly
+# every run. Measured on aeon-vuln, 63% of this workflow's push triggers
+# touched no .md in scope at all - pure no-op jobs, each billed a full minute
+# on a private fork. Narrowing to .md drops those with zero loss of coverage.
 on:
   pull_request:
     paths:
-      - 'memory/**'
-      - 'output/articles/**'
-      - 'skills/**'
-      - 'docs/**'
+      - 'memory/**.md'
+      - 'output/articles/**.md'
+      - 'skills/**.md'
+      - 'docs/**.md'
       - 'scripts/okf-validate.mjs'
       - 'scripts/okf-index.mjs'
       - 'scripts/okf-config.json'
@@ -26,10 +34,10 @@ on:
   push:
     branches: [main]
     paths:
-      - 'memory/**'
-      - 'output/articles/**'
-      - 'skills/**'
-      - 'docs/**'
+      - 'memory/**.md'
+      - 'output/articles/**.md'
+      - 'skills/**.md'
+      - 'docs/**.md'
       - 'scripts/okf-validate.mjs'
       - 'scripts/okf-index.mjs'
       - 'scripts/okf-config.json'
