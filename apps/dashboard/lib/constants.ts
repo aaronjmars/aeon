@@ -13,7 +13,7 @@ export const MODELS = [
 // Models offered when the Grok (`grok`) harness is selected — only grok-4.5, the
 // one model the X-account (GROK_CREDENTIALS) login exposes to the grok CLI's
 // --model flag. grok-4.5 is grok's current default: the flagship reasoning model
-// that powers Grok Build, multi-agent-capable (run-grok.sh passes --no-subagents
+// that powers Grok Build, multi-agent-capable (the grok adapter passes --no-subagents
 // in CI).
 // Everything else xAI documents — grok-composer-2.5-fast, grok-build, grok-build-0.1,
 // grok-4.3 — is an api.x.ai model *string*, NOT a valid CLI --model value on the
@@ -136,7 +136,7 @@ export function authSecretsForHarness(harness: string): string[] {
 // web-search quality, NOT the premium xAI x_search feed. So on the grok harness
 // XAI_API_KEY is not required to get output; we drop the dashboard's "needs key" gate
 // there (only there — claude skills still declare it). The runtime half lives in
-// scripts/run-grok.sh, whose compat `--rules` tell the model to fetch X via WebSearch
+// harness-adapter/lib/compat-rules.md, whose `--rules` tell the model to fetch X via WebSearch
 // when the key is absent instead of hard-exiting. The key stays fully settable either
 // way — it powers the premium xAI x_search on BOTH harnesses and the grok gateway.
 export const HARNESS_NATIVE_KEYS: Record<string, string[]> = {

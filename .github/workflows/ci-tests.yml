@@ -48,8 +48,10 @@ jobs:
         run: bash scripts/tests/test_validate_skill_packs.sh
       - name: community skill install catalog tests
         run: bash scripts/tests/test_community_skill_install.sh
-      - name: grok harness runner tests
+      - name: grok setup/auth tests
         run: bash scripts/tests/test_run_grok.sh
+      - name: harness-adapter grok tests
+        run: bash scripts/tests/test_harness_adapter_grok.sh
       - name: state reducer tests
         run: python3 scripts/tests/test_state_reduce.py
       - name: health triage tests

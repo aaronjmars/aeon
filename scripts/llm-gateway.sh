@@ -20,7 +20,7 @@
 #
 # NOTE: `grok` here is the GATEWAY path — Claude Code (`claude -p`) pointed at
 # xAI's Anthropic-compatible API. It is distinct from the grok CLI *harness*
-# (harness: grok in aeon.yml → scripts/run-grok.sh), which runs the grok binary
+# (harness: grok in aeon.yml → harness-adapter/adapters/grok.sh), which runs the grok binary
 # itself and never sources this file.
 #
 # NOTE: do not add `set -e/-u` here — this file is sourced and must not change

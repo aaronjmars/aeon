@@ -44,6 +44,19 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Fixed
 
+- **`scripts/run-grok.sh` is now setup-only.** With every surface dispatching
+  through `run-harness`, the script's ~260-line run path (model/permission flags,
+  MCP allows, run-shaping knobs, grok invocation, envelope normalization) had no
+  callers — a second, drifting copy of `adapters/grok.sh`. Removed. What remains
+  is the CLI version pin and the `GROK_CREDENTIALS` restore + rotating-refresh
+  persistence (§2b). A stale caller using the old contract (prompt on stdin) now
+  **exits 2 with a pointer to `run-harness`** rather than staging grok and
+  returning empty stdout, which would read as "the model returned nothing".
+  Its flag/envelope/MCP test coverage was **moved, not deleted**, into a new
+  `scripts/tests/test_harness_adapter_grok.sh` — the first test suite for
+  `harness-adapter` — which guards the `--trust` regression, the thought
+  firewall, the per-server `MCPTool` allows, model-id forwarding, and
+  abnormal-stop handling against the code that now implements them.
 - **One run path: `messages.yml` and `apps/mcp-server` now dispatch through
   `run-harness`.** They were the last two surfaces calling `scripts/run-grok.sh`
   (and, on the claude side, `claude -p -`) directly, bypassing the harness

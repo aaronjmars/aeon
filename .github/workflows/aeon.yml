@@ -788,7 +788,7 @@ jobs:
           HARNESS="$RESOLVED_HARNESS"
           # On the grok harness a claude-* model id is meaningless — fall back to
           # grok's current default (grok-4.5) unless an explicit grok model was
-          # chosen. run-grok.sh omits --model for a non-grok value as a safety net.
+          # chosen. The grok adapter omits --model for a non-grok value as a safety net.
           if [ "$HARNESS" = "grok" ]; then
             case "$MODEL" in claude-*|"") MODEL="grok-4.5" ;; esac
           fi
@@ -877,7 +877,7 @@ jobs:
           # than let Claude's config parse-failure break the whole skill run.
           # The MCP_FLAGS/ALLOWED additions below are the CLAUDE path; the exported
           # ${VAR}s are harness-agnostic and also feed grok, which reads .mcp.json
-          # natively and expands them (run-grok.sh only adds the MCPTool allows).
+          # natively and expands them (the adapter adds --trust + MCPTool allows).
           MCP_FLAGS=()
           if [ -f .mcp.json ] && jq -e '.mcpServers' .mcp.json >/dev/null 2>&1; then
             # MCP OAuth (durable): mint a fresh access token from any captured refresh

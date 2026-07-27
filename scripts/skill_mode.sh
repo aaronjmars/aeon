@@ -91,10 +91,18 @@ write_tools() { echo "$BASE_TOOLS,$WRITE_TOOLS"; }
 # the intent reads identically on either harness: read-only documents no Edit and no
 # git/gh/python; write adds them.
 #
-# Output: one argv token per line, so run-grok.sh can read it with
+# Output: one argv token per line, so a caller can read it with
 #   mapfile -t GROK_ARGS < <(skill_mode.sh grok-args "$MODE")
 # and pass "${GROK_ARGS[@]}" straight through (a Bash rule's embedded space is
 # preserved because each whole line becomes one array element).
+#
+# ORPHANED as of the run-path consolidation: `run-grok.sh` was the only consumer,
+# and harness-adapter/adapters/grok.sh maps capability mode differently
+# (--permission-mode bypassPermissions plus the dispatcher's OS sandbox, because
+# a denied tool aborts grok's whole turn). Nothing calls `grok-args` today. It is
+# kept, not deleted, because removing it means settling what grok's read-only
+# enforcement should actually be — see docs/CAPABILITIES.md, which still
+# describes THIS allowlist as the mechanism.
 
 # Bash command globs allowed on every tier (mirror BASE_TOOLS' Bash(...:*) set).
 GROK_BASE_BASH="curl jq ./notify ./notify-jsonrender mkdir ls cat chmod date echo node npm npx head tail wc sort grep"
@@ -123,7 +131,8 @@ grok_args() {
 }
 
 # --- Grok Build run-shaping: frontmatter -> GROK_* env -----------------------
-# Map optional per-skill frontmatter to the env vars run-grok.sh reads, so a
+# Map optional per-skill frontmatter to the env vars harness-adapter's grok
+# adapter reads, so a
 # skill can opt into grok's newer headless features without any workflow change:
 #
 #   effort: high            # low|medium|high|xhigh|max  -> --effort
