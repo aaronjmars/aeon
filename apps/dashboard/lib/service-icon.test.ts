@@ -1,15 +1,15 @@
 /**
- * Tests for components/ui/ServiceIcon - the brand marks beside every credential
- * in Settings > Access Keys (regression: five native-harness secrets and two
- * GitHub PATs were added to lib/secrets-catalog.ts without a matching row in the
- * icon map, so they rendered as grey two-letter badges instead of a logo).
+ * Tests for lib/service-icons.ts - the brand marks beside every credential in
+ * Settings > Access Keys (regression: five native-harness secrets and two GitHub
+ * PATs were added to lib/secrets-catalog.ts without a matching row in the icon
+ * map, so they rendered as grey two-letter badges instead of a logo).
  *
  * Run with:  node --import tsx --test apps/dashboard/lib/service-icon.test.ts
  */
 import { describe, it } from "node:test";
 import { strict as assert } from "node:assert";
 
-import { resolveServiceMark } from "../components/ui/ServiceIcon";
+import { resolveServiceMark } from "./service-icons";
 import { BUILTIN_SECRETS } from "./secrets-catalog";
 
 describe("resolveServiceMark", () => {
