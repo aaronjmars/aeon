@@ -8,9 +8,9 @@
  * Tool naming: aeon-{slug} (e.g. aeon-article, aeon-hn-digest)
  * Each tool accepts a single optional `var` argument (the skill's variable input).
  *
- * Skill execution: spawns the configured harness (`claude -p -`, or the Grok
- * `run-grok.sh` when `harness: grok`) with the skill prompt, exactly as GitHub
- * Actions does, so local runs are identical to scheduled runs.
+ * Skill execution: spawns the configured harness through harness-adapter's
+ * `run-harness` with the skill prompt, exactly as GitHub Actions does, so local
+ * runs are identical to scheduled runs.
  */
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";

@@ -44,6 +44,21 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Fixed
 
+- **One run path: `messages.yml` and `apps/mcp-server` now dispatch through
+  `run-harness`.** They were the last two surfaces calling `scripts/run-grok.sh`
+  (and, on the claude side, `claude -p -`) directly, bypassing the harness
+  adapter. That is a fix-delivery bug, not a style one: grok's MCP folder-trust
+  gate was fixed for skill runs and stayed broken on these two for two releases,
+  because the fix lived in the adapter they didn't use. With one path, an
+  adapter-level fix reaches every surface by construction. `run-grok.sh` is now
+  genuinely **setup-only** (CLI pin + `GROK_CREDENTIALS` restore/refresh), which
+  `messages.yml` invokes explicitly since the run no longer installs grok on
+  demand. Verified live on a real instance: an inbound message answered on grok
+  called a live MCP tool (`glim__glim_web_fetch`) and reported real token usage.
+  `apps/mcp-server` also now resolves **all six** harnesses — it previously
+  recognised only `claude`/`grok` and silently ran anything else on claude.
+  `messages.yml` stages only `claude`/`grok`, so the other four are answered on
+  claude with a `::warning::` instead of a silent swap.
 - **Removed the dead `GROK_JSON_SCHEMA` knob.** `scripts/run-grok.sh` mapped it
   to grok's `--json-schema`, but **nothing in the repo has ever set it** (checked
   the full history) - it was introduced as part of grok's run-shaping surface and

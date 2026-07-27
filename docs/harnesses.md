@@ -193,9 +193,8 @@ default untrusted posture. The flag is hidden on `grok --help` but accepted.
 (`GROK_FOLDER_TRUST=0` disables the gate wholesale, but it ungates project hooks
 along with MCP — prefer the scoped flag.)
 
-Both grok run paths do this: `harness-adapter/adapters/grok.sh` for skill runs,
-and `scripts/run-grok.sh` for inbound messages and the local MCP server (see
-[the two run paths](#newer-grok-knobs-opt-in-per-skill) below).
+This is applied by `harness-adapter/adapters/grok.sh`, which every surface now
+goes through — see [one run path](#newer-grok-knobs-opt-in-per-skill) below.
 
 Trusting is sound here: the folder is the operator's own checked-out repo, which
 the harness is already executing as the agent's workspace.
@@ -230,39 +229,47 @@ api.x.ai strings the CLI rejects as "unknown model id"). `best_of_n`/`verify` bu
 on grok's subagents (so the harness drops `--no-subagents` for those runs);
 `verify` can't combine with structured output.
 
-These knobs are read by `harness-adapter/adapters/grok.sh` (ported from
-`run-grok.sh` §3c), which is what runs a skill on the `aeon.yml` path. There are
-**two grok run paths**, and knowing which one you're on matters:
+These knobs are read by `harness-adapter/adapters/grok.sh`, ported from
+`run-grok.sh` §3c.
 
-| Path | Runs grok via | Used by |
-|------|---------------|---------|
-| adapter | `run-harness grok` → `adapters/grok.sh` | scheduled/manual skill runs + the scorer (`aeon.yml`) |
-| script | `scripts/run-grok.sh` (stdin prompt) | inbound messages (`messages.yml`), local MCP server (`apps/mcp-server`) |
+**There is exactly one run path.** Every surface that runs a skill or a reply —
+scheduled and manual runs, the scorer, inbound messages, the local MCP server —
+goes through `run-harness`. `scripts/run-grok.sh` is now **setup-only**: it
+installs the pinned grok CLI and stages/refreshes `GROK_CREDENTIALS` (§2b), and
+callers invoke it as `run-grok.sh setup`.
 
-`aeon.yml` additionally calls `run-grok.sh setup` — install the pinned CLI, stage
-and refresh auth — on both paths. Both paths honour folder trust and the MCPTool
-allows; the run-shaping knobs above are adapter-side, so a `messages.yml` reply
-uses `run-grok.sh`'s own defaults.
+That consolidation is deliberate. `messages.yml` and `apps/mcp-server` used to
+call `run-grok.sh` directly and so bypassed the adapter, which is how grok's MCP
+folder-trust gate stayed broken on those two surfaces after it was fixed for
+skill runs — a fix landed in one path and silently didn't reach the other. With
+one path, an adapter-level fix reaches every surface by construction.
 
 **Structured output** is `run-harness --json-schema`, on every harness (native on
-claude/grok/codex, prompt-shim on pi/vibe/kimi). It is therefore adapter-path
-only — a `messages.yml` reply or an `apps/mcp-server` call returns plain text.
-(A grok-only `GROK_JSON_SCHEMA` env var existed on the script path until it was
-removed: nothing in the repo ever set it, and the scorer it was reserved for goes
-schema-less on purpose so a single parse path covers all six harnesses.)
+claude/grok/codex, prompt-shim on pi/vibe/kimi). Callers that don't pass it get
+plain text. (A grok-only `GROK_JSON_SCHEMA` env var existed on the old script
+path until it was removed: nothing in the repo ever set it, and the scorer it was
+reserved for goes schema-less on purpose so a single parse path covers all six
+harnesses.)
+
+**Harness coverage differs by surface**, because each has to stage the CLI it
+dispatches to. Skill runs (`aeon.yml`) install any of the six. The local MCP
+server resolves all six but expects the CLI to already be installed on your
+machine. `messages.yml` stages only `claude` and `grok`; a repo configured for
+one of the other four gets a `::warning::` and is answered on claude, rather than
+being switched silently.
 
 ## Every entry point runs on either harness
 
 The harness split isn't just the scheduled skill run — it's wired through every
 surface that launches the agent, so a grok-only fork (no Claude credentials)
-behaves identically everywhere:
+behaves identically everywhere. All of them dispatch through `run-harness`:
 
 | Surface | How grok is selected | Notes |
 |---------|---------------------|-------|
 | Scheduled / manual skill run (`aeon.yml`) | dispatch **Harness** input → per-skill `harness:` → global `harness:` → `claude` | full flags + MCP + scorer |
 | Skill chains (`chain-runner.yml`) | inherits — each step dispatches `aeon.yml`, which resolves per-skill/global | |
-| Inbound messages (`messages.yml`, Telegram/Discord/Slack) | global `harness:` in `aeon.yml` | conversational reply in write mode |
-| Local MCP server (`apps/mcp-server`) | `AEON_HARNESS` env → global `harness:` | `resolveHarness()` in `skill-executor.ts` |
+| Inbound messages (`messages.yml`, Telegram/Discord/Slack) | global `harness:` in `aeon.yml` | conversational reply in write mode; only `claude`/`grok` have a CLI staged here — the other four warn and answer on claude |
+| Local MCP server (`apps/mcp-server`) | `AEON_HARNESS` env → global `harness:` | `resolveHarness()` in `skill-executor.ts`; resolves all six, expects the CLI installed locally |
 | Webhook (`apps/webhook`) | relay only → dispatches `messages.yml` | harness-agnostic |
 | Post-run quality scorer (`aeon.yml`) | scores through the same harness the skill ran on | |
 

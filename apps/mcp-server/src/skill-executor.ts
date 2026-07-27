@@ -1,6 +1,6 @@
 /**
  * Aeon skill executor — shared core for loading the skill catalog and running a
- * skill through the configured harness (`claude` CLI or the Grok `run-grok.sh`),
+ * skill through the configured harness via harness-adapter's `run-harness`,
  * identical to how GitHub Actions invokes it.
  *
  * Extracted from the MCP server so the load → prompt → spawn → parse logic lives
@@ -51,18 +51,25 @@ export function buildSkillPrompt(slug: string, varValue: string): string {
   return prompt;
 }
 
+/** Every harness harness-adapter's run-harness can dispatch to. */
+export const HARNESSES = ["claude", "grok", "codex", "pi", "vibe", "kimi"] as const;
+export type Harness = (typeof HARNESSES)[number];
+const isHarness = (v: string): v is Harness =>
+  (HARNESSES as readonly string[]).includes(v);
+
 /**
  * Which agent harness runs the skill. Mirrors aeon.yml's resolution so a local
  * MCP run matches a scheduled one: the AEON_HARNESS env wins, else the repo's
  * global `harness:` in aeon.yml, else `claude`. Any unknown value → `claude`.
  */
-export function resolveHarness(repoRoot: string): "claude" | "grok" {
+export function resolveHarness(repoRoot: string): Harness {
   const envH = (process.env.AEON_HARNESS || "").trim().toLowerCase();
-  if (envH === "grok" || envH === "claude") return envH;
+  if (isHarness(envH)) return envH;
   try {
     const cfg = readFileSync(join(repoRoot, "aeon.yml"), "utf-8");
     const m = cfg.match(/^harness:\s*["']?([A-Za-z]+)/m);
-    if (m && m[1].toLowerCase() === "grok") return "grok";
+    const configured = m?.[1].toLowerCase();
+    if (configured && isHarness(configured)) return configured;
   } catch {
     /* no aeon.yml → default */
   }
@@ -70,11 +77,11 @@ export function resolveHarness(repoRoot: string): "claude" | "grok" {
 }
 
 /**
- * Run a skill synchronously and return its text output. Uses `claude -p -` on the
- * Claude harness and `scripts/run-grok.sh` on the Grok harness — both emit the
- * same `{ result }` JSON envelope, so parsing is shared. Failure modes (missing
- * skill, missing CLI, non-zero exit, empty output) are returned as human-readable
- * strings rather than thrown, so callers can surface them without special-casing.
+ * Run a skill synchronously and return its text output. Dispatches through
+ * harness-adapter's `run-harness`, which emits one `{ result, usage }` envelope
+ * for every harness, so parsing is shared. Failure modes (missing skill, missing
+ * CLI, non-zero exit, empty output) are returned as human-readable strings rather
+ * than thrown, so callers can surface them without special-casing.
  */
 export function runSkill(
   repoRoot: string,
@@ -97,30 +104,32 @@ export function runSkill(
     `${logPrefix} Running skill: ${slug}${varValue ? ` (var=${varValue})` : ""} [harness: ${harness}]\n`
   );
 
-  const [cmd, args, spawnEnv]: [string, string[], NodeJS.ProcessEnv] =
-    harness === "grok"
-      ? // run-grok.sh reads the prompt on stdin, discovers .mcp.json natively, and
-        // maps SKILL_MODE to grok's permission flags. MODEL unset → grok's default.
-        ["bash", [join(repoRoot, "scripts", "run-grok.sh")], { ...process.env, SKILL_MODE: "write" }]
-      : ["claude", ["-p", "-", "--output-format", "json"], process.env];
+  // Every harness goes through harness-adapter's run-harness — the same dispatcher
+  // aeon.yml uses — so a local MCP run behaves like a scheduled one and adapter-level
+  // fixes (grok's MCP folder --trust, codex's TOML config translation, kimi's
+  // config overlay) apply here too. This path used to call `claude -p -` and
+  // scripts/run-grok.sh directly, which is how it missed those fixes.
+  // Write mode: a skill run may edit memory, commit, and notify.
+  const runHarness = join(repoRoot, "harness-adapter", "run-harness");
+  const args = [runHarness, harness, "--mode", "write", "--timeout", "600"];
+  if (existsSync(join(repoRoot, ".mcp.json"))) {
+    args.push("--mcp-config", join(repoRoot, ".mcp.json"));
+  }
 
-  const result = spawnSync(cmd, args, {
+  const result = spawnSync("bash", args, {
     input: prompt,
     cwd: repoRoot,
-    env: spawnEnv,
+    env: process.env,
     timeout: 600_000, // 10 minutes — same as the GitHub Actions timeout
     maxBuffer: 10 * 1024 * 1024, // 10 MB
     encoding: "utf-8",
   });
 
   if (result.error) {
-    const enoent =
-      (result.error as NodeJS.ErrnoException).code === "ENOENT";
+    const enoent = (result.error as NodeJS.ErrnoException).code === "ENOENT";
     const msg = enoent
-      ? harness === "grok"
-        ? `'bash' or scripts/run-grok.sh not found — run from inside an Aeon repo clone with the grok CLI installed (npm i -g @xai-official/grok).`
-        : `'claude' command not found. Install it with: npm install -g @anthropic-ai/claude-code`
-      : `Failed to spawn ${cmd}: ${result.error.message}`;
+      ? `'bash' or harness-adapter/run-harness not found — run from inside an Aeon repo clone.`
+      : `Failed to spawn run-harness: ${result.error.message}`;
     return `Error: ${msg}`;
   }
 
@@ -134,8 +143,8 @@ export function runSkill(
     return `Skill '${slug}' produced no output.`;
   }
 
-  // Both harnesses wrap the result as { result: "..." } (run-grok.sh normalizes
-  // grok's envelope to match claude's --output-format json).
+  // run-harness normalizes every harness to { result: "..." }, so this parse is
+  // harness-agnostic.
   try {
     const parsed = JSON.parse(stdout) as { result?: string };
     return parsed.result ?? stdout;

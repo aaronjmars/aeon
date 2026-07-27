@@ -452,12 +452,36 @@ jobs:
           # aeon.yml). A grok-only repo (no Claude creds) must respond via grok.
           CONFIG_HARNESS=$(grep -E '^harness:' aeon.yml | sed 's/^harness: *//' | tr -d ' ')
           HARNESS="${CONFIG_HARNESS:-claude}"
-          if [ "$HARNESS" != "grok" ]; then HARNESS="claude"; fi   # unknown → safe default
+          # Only claude and grok have their CLI staged on this workflow ("Install
+          # Claude Code" above, plus the grok setup below). The other four
+          # run-harness harnesses would need their CLI + provider auth installed
+          # here the way aeon.yml's "Install harness CLI" step does. Until that
+          # lands, a repo configured for one of them answers messages on claude —
+          # say so out loud instead of swapping the harness silently.
+          case "$HARNESS" in
+            claude|grok) ;;
+            codex|pi|vibe|kimi)
+              echo "::warning::harness '$HARNESS' has no CLI staged on the messages workflow — replying on claude instead (skill runs still use $HARNESS)."
+              HARNESS="claude" ;;
+            *)
+              echo "::warning::unknown harness '$HARNESS' — falling back to claude"
+              HARNESS="claude" ;;
+          esac
           # On grok a claude-* model id is meaningless — fall back to grok's default.
           if [ "$HARNESS" = "grok" ]; then
             case "$MODEL" in claude-*|"") MODEL="grok-4.5" ;; esac
           fi
           echo "Using harness: $HARNESS  |  model: $MODEL"
+
+          # Stage grok's CLI + auth. run-grok.sh's `setup` subcommand is the single
+          # source of truth for the version pin, the GROK_CREDENTIALS restore and
+          # the OAuth refresh/persist (§2b). This used to happen implicitly, because
+          # the run itself went through run-grok.sh and step 1 installs the CLI on
+          # demand; now that the run goes through run-harness (whose grok adapter
+          # only checks `command -v grok`), staging has to be explicit.
+          if [ "$HARNESS" = "grok" ]; then
+            bash "${GITHUB_WORKSPACE}/scripts/run-grok.sh" setup
+          fi
 
           # AI Gateway routing — same path as aeon.yml's Run steps. The grok harness
           # has its own auth and does NOT use the gateway, so skip it there (avoids
@@ -571,25 +595,36 @@ jobs:
           - For anything else, do your best and explain what you did.
 
           Always send your response back via ./notify so the user sees it."
-          # Harness split — both paths emit the SAME {result, usage} envelope, so
-          # the token/notify handling below is unchanged. run-grok.sh discovers
-          # .mcp.json natively (the preflight above already exported its secrets)
-          # and maps SKILL_MODE=write to grok's permission flags; a conversational
-          # reply can run skills, update memory, and notify, i.e. write mode.
-          if [ "$HARNESS" = "grok" ]; then
-            if ! CLAUDE_OUTPUT=$(
-              export MODEL SKILL_MODE=write
-              echo "$PROMPT" | bash "${GITHUB_WORKSPACE}/scripts/run-grok.sh"
-            ); then
-              echo "::error::grok harness failed. Output: $(printf '%s' "$CLAUDE_OUTPUT" | tail -c 300 | tr '\n' ' ')"
-              exit 1
-            fi
-          elif ! CLAUDE_OUTPUT=$(echo "$PROMPT" | claude -p - \
-            --model "$MODEL" --allowedTools "$ALLOWED" \
-            "${MCP_FLAGS[@]}" --output-format json 2>&1); then
-            echo "::error::Claude CLI failed. Output: $CLAUDE_OUTPUT"
+          # Unified execution: EVERY harness runs through harness-adapter's
+          # run-harness, the same way aeon.yml runs a skill — one
+          # {result, usage{...}} envelope, so the token/notify handling below is
+          # unchanged. This is the point of the change: fixes that live in the
+          # adapter now apply here too. Previously this path called
+          # scripts/run-grok.sh directly and bypassed the adapter entirely, which
+          # is why grok's MCP folder-trust gate stayed broken on inbound messages
+          # after it was fixed for skill runs (#779 → #781).
+          #
+          # Write mode: a conversational reply can run skills, update memory and
+          # notify. run-harness applies its OS sandbox only to read-only runs, so
+          # there is nothing to opt out of here.
+          RH="${GITHUB_WORKSPACE}/harness-adapter/run-harness"
+          RH_ARGS=(--mode write --allowed-tools "$ALLOWED" --timeout 600)
+          # Pass --mcp-config only when the preflight actually ENABLED MCP (every
+          # referenced ${VAR} resolved) — MCP_FLAGS doubles as that gate.
+          # run-harness re-expands the config and translates it per harness; the
+          # claude adapter adds --strict-mcp-config itself, as this step used to.
+          if [ "${#MCP_FLAGS[@]}" -gt 0 ]; then RH_ARGS+=(--mcp-config .mcp.json); fi
+          HARNESS_ERR=$(mktemp)
+          if ! CLAUDE_OUTPUT=$(echo "$PROMPT" | bash "$RH" "$HARNESS" \
+            --model "$MODEL" "${RH_ARGS[@]}" 2>"$HARNESS_ERR"); then
+            echo "::error::$HARNESS harness failed: $(tail -c 400 "$HARNESS_ERR" | tr '\n' ' ')"
             exit 1
           fi
+          # run-harness diagnostics are the only signal when a harness degrades but
+          # still exits 0 (a skipped MCP server, a token-estimate fallback), so
+          # surface them in the job log rather than swallowing them.
+          if [ -s "$HARNESS_ERR" ]; then sed 's/^/run-harness: /' "$HARNESS_ERR" >&2; fi
+          rm -f "$HARNESS_ERR"
 
           echo "$CLAUDE_OUTPUT" | jq -r '.result // empty'
 
