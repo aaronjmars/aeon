@@ -87,9 +87,25 @@ mode: read-only   # read repo + fetch web + ./notify; no repo mutation
 mode: write       # default — full Write / Edit / git / gh / python3
 ```
 
-A `read-only` skill runs with a restricted Claude Code `--allowedTools` set (`Write`, `Edit`, `Bash(git:*)`, `Bash(gh:*)` are dropped), so it **physically cannot** commit, push, edit code, or open a PR — the runtime counterpart of declaring `read_only` above. A post-run guard records the skill's run-log on its behalf and reverts any code/config a shell redirection slipped through, while preserving its real output (memory, `output/`). `write` is the default and a strict superset (it adds `python3`). Resolution and the exact tool sets live in [`scripts/skill_mode.sh`](../scripts/skill_mode.sh).
+[`scripts/skill_mode.sh`](../scripts/skill_mode.sh) resolves the tier from frontmatter. `write` is the default and a strict superset (it adds `Write`/`Edit`/`git`/`gh`/`python3`). The tier is then enforced in **three layers**, and it is worth knowing which one is actually load-bearing:
 
-The same `mode:` maps onto the **Grok Build harness** (`harness: grok`) via `scripts/skill_mode.sh grok-args`: `read-only` → a read-only allowlist (no `Edit`, no `git`/`gh`/`python`) under `--sandbox read-only`; `write` adds `Edit` + `Bash(git *)`/`Bash(gh *)`/`python`. Enforcement is that allowlist plus, for `read-only`, the sandbox: grok runs headless (`grok -p`), so any tool that isn't allow-listed and isn't a read-class fast-path has no approval prompt and is refused — the same blast radius as Claude Code's `-p` allowlist. (We pass `--permission-mode dontAsk` too, but grok currently wires that flag only for `bypassPermissions`; the allowlist + sandbox are what actually gate the run.) The post-run guard is harness-agnostic and still applies as defense-in-depth.
+| Layer | What it does | Where |
+|---|---|---|
+| 1. Tool allowlist | Drops `Write`, `Edit`, `Bash(git:*)`, `Bash(gh:*)`, `python3` from the model's tool set | `skill_mode.sh allowed-tools` → `run-harness --allowed-tools` |
+| 2. **OS sandbox** | Write-locks the workspace for the whole run — the repo is mounted read-only, network stays open | `run-harness --mode read-only` → [`harness-adapter/lib/sandbox.sh`](../harness-adapter/lib/sandbox.sh) |
+| 3. Post-run guard | Reverts and cleans anything that still landed under `CODE_PATHS`, preserving the skill's real output (memory, `output/`) and writing its run-log on its behalf | `.github/workflows/aeon.yml` |
+
+**Layer 2 is the guarantee.** Layer 1 is a real narrowing but not a boundary: a shell redirection routes around it, and only the claude and pi adapters consume the allowlist at all. Layer 3 is after-the-fact repair. So the sentence "a read-only skill physically cannot mutate the repo" is true because of the sandbox — `bwrap --ro-bind` on Linux, `sandbox-exec` with a `deny file-write*` profile on macOS — which applies uniformly on **all six harnesses**, claude included.
+
+### Why the sandbox is the dispatcher's, not each harness's
+
+Native harness sandboxes were tried and are deliberately not relied on:
+
+- **grok** — its `--sandbox read-only` is silently ignored on grok 0.2.101 (writes still land) and nest-conflicts with the wrapper. grok also cannot carry an allowlist at all: it aborts the entire turn on a denied tool (`stopReason=Cancelled`) rather than degrading, so `adapters/grok.sh` runs `--permission-mode bypassPermissions` with **no** `--allow`/`--deny` rules. Until the wrapper sandbox was extended to grok, a read-only grok skill had *no* runtime enforcement — measured: it created a file on request, and only layer 3 took it back.
+- **codex** — its `--sandbox read-only` works but also kills the network, which a skill needs. `adapters/codex.sh` disables it (`danger-full-access`) and lets the wrapper be the sole enforcer; only one FS sandbox may be active.
+- **pi**, **vibe**, **kimi** — ship no filesystem sandbox.
+
+If no OS sandbox is available on the machine, `run-harness` says so on stderr (`read-only is advisory`) and layers 1 and 3 still apply. On CI that path should never be taken — `aeon.yml` installs bubblewrap in its own step, before the harness CLIs, precisely so that a missing `bwrap` can't silently downgrade enforcement while still *looking* enforced.
 
 Rule of thumb: a skill that declares `capabilities: [read_only, sends_notifications]` should also carry `mode: read-only` — the documentation surface and the runtime gate should agree.
 
@@ -111,6 +127,6 @@ Closing a capability (deprecating a value) follows the same protocol in reverse 
 
 ## What this isn't
 
-- **Not a sandbox.** A skill declaring `read_only` is trusted to be read-only; the runtime doesn't enforce it. The operator-plus-scanner remains the trust boundary.
+- **Not a sandbox.** A skill declaring `capabilities: [read_only]` is *trusted* to be read-only; nothing enforces that declaration. The operator-plus-scanner remains the trust boundary. Don't confuse it with the `mode: read-only` frontmatter above, which **is** enforced (by an OS sandbox) — the two are separate fields and a skill can declare one without the other.
 - **Not a substitute for `trusted-sources.txt`.** Pack-level `trust_level: trusted` still requires the explicit trusted-sources listing — capabilities don't shortcut that.
 - **Not an exhaustive permission model.** It's a coarse-grained hint so the install surface is informative. If you need fine-grained policy, that's a different feature.

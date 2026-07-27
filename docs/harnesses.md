@@ -140,15 +140,30 @@ token - so for high parallelism refresh centrally on a schedule so exactly one r
 mints and persists per interval. codex's `CODEX_AUTH` just expires (no auto-persist
 yet) - re-capture via **Connect ChatGPT** or use the OpenAI key.
 
-## Capability mode carries over unchanged
+## Capability mode carries over — but not the way you'd guess
 
-A `mode: read-only` skill maps to grok's `--sandbox read-only` with a read-only
-allowlist; `write` adds `Edit` + `git`/`gh`/`python` — the same drops as on
-Claude Code (`scripts/skill_mode.sh grok-args`). Enforcement is the explicit
-allowlist plus the read-only sandbox: a headless run has no prompt path, so any
-tool not on the allowlist and not a read-class fast-path is refused. Grok Build
-has no free tier — it needs a SuperGrok / X Premium+ subscription (OAuth) or xAI
-API credits (`XAI_API_KEY`).
+A `mode: read-only` skill is read-only on grok, same as on Claude Code. The
+mechanism is different, and the difference matters if you are reasoning about
+blast radius.
+
+Grok is the one harness that **cannot** be gated by an allowlist. Headless grok
+aborts the entire turn on a denied tool (`stopReason=Cancelled`, empty or partial
+output) instead of degrading the way Claude does, and skills are authored for
+Claude Code — they reach for tools no allowlist predicted. So
+`harness-adapter/adapters/grok.sh` runs `--permission-mode bypassPermissions`
+with **no** `--allow` and **no** `--deny` rules, deliberately. Grok's own
+`--sandbox read-only` is no help either: on grok 0.2.101 it is silently ignored
+(writes still land) and it nest-conflicts with the wrapper sandbox.
+
+What actually enforces read-only is the dispatcher's OS sandbox
+(`harness-adapter/lib/sandbox.sh`) — `bwrap --ro-bind` write-locks the workspace
+for the whole run, network open — plus the workflow's post-run revert as
+defense-in-depth. That is the same enforcement every other harness gets, grok
+included. See [CAPABILITIES.md](CAPABILITIES.md#runtime-enforcement-the-mode-write-tier)
+for the three layers and which one is load-bearing.
+
+Grok Build has no free tier — it needs a SuperGrok / X Premium+ subscription
+(OAuth) or xAI API credits (`XAI_API_KEY`).
 
 ## Standing instructions
 

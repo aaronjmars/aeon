@@ -1,12 +1,15 @@
 # sandbox.sh — wrapper-level OS sandbox for uniform read-only enforcement.
 #
-# Only grok and codex have native kernel sandboxes; opencode and pi enforce
-# nothing, and claude's --allowedTools can be sidestepped by shell redirection.
+# No harness enforces read-only usefully on its own. codex's native sandbox works
+# but also kills the network; grok's --sandbox read-only is silently ignored on
+# 0.2.101 (writes still land); pi, vibe and kimi ship no filesystem sandbox at
+# all; and claude's --allowedTools is sidestepped by a shell redirection.
 # So for read-only runs the DISPATCHER applies its own sandbox around whatever
 # harness runs: the workspace (cwd) becomes unwritable, everything else stays
-# usable (harnesses need to write their own state under $HOME and $TMPDIR).
+# usable (harnesses need to write their own state under $HOME and $TMPDIR, and
+# the network stays open — read-only is about the repo, not egress).
 # This mirrors aeon's semantic: "a read-only skill physically cannot mutate the
-# repo" — and makes it mean the same thing on all five harnesses.
+# repo" — and makes it mean the same thing on all six harnesses.
 
 sandbox_prefix() {
   # sandbox_prefix TMPDIR [EXPANDED_MCP] -> prints prefix argv tokens (one per

@@ -44,32 +44,25 @@ echo "$RT" | grep -q "Read" && echo "$RT" | grep -q "WebFetch" \
   && echo "$RT" | grep -q "Bash(curl:\*)" && echo "$RT" | grep -q "Bash(./notify:\*)" \
   && pass "read-only tier keeps read/web/curl/notify" || bad "read-only tier keeps read/web/curl/notify"
 
-# grok-args: write tier maps to grok grammar with mutation tools + bypassPermissions
-# (-F fixed-string for the Bash(cmd *) tokens — the literal * is not a regex here)
-GW=$(bash "$M" grok-args write)
-echo "$GW" | grep -qx -- "--permission-mode" && echo "$GW" | grep -qx "bypassPermissions" \
-  && echo "$GW" | grep -qx "Edit" && echo "$GW" | grep -Fqx "Bash(git *)" \
-  && echo "$GW" | grep -Fqx "Bash(gh *)" \
-  && pass "grok write tier: bypassPermissions + Edit/git/gh (space-glob)" || bad "grok write tier: bypassPermissions + Edit/git/gh"
-# never emit --deny (a denied tool can re-trigger the turn-abort bypass removes)
-if echo "$GW" | grep -qx -- "--deny"; then bad "grok args must not emit --deny"; else pass "grok args emit no --deny"; fi
-# grok write must NOT be sandboxed read-only
-if echo "$GW" | grep -qx -- "--sandbox"; then bad "grok write tier must not set --sandbox"; else pass "grok write tier has no --sandbox"; fi
-
-# grok-args: read-only tier is sandboxed and drops Edit/git/gh
-GR=$(bash "$M" grok-args read-only)
-echo "$GR" | grep -qx -- "--sandbox" && echo "$GR" | grep -qx "read-only" \
-  && pass "grok read-only tier sets --sandbox read-only" || bad "grok read-only tier sets --sandbox read-only"
-if echo "$GR" | grep -qx "Edit" || echo "$GR" | grep -Fqx "Bash(git *)" || echo "$GR" | grep -Fqx "Bash(gh *)"; then
-  bad "grok read-only tier drops Edit/git/gh"
+# grok-args is DELETED and must stay deleted. It emitted grok `--allow` rules that
+# never gated anything (adapters/grok.sh runs --permission-mode bypassPermissions,
+# because a denied tool aborts grok's whole turn) plus grok's own
+# `--sandbox read-only`, which grok 0.2.101 silently ignores. Read-only on grok is
+# the dispatcher's OS sandbox. A resurrected subcommand would re-document a guard
+# that does not exist, so an unknown subcommand must fail loudly, not print flags.
+if bash "$M" grok-args read-only >/dev/null 2>&1; then
+  bad "grok-args should be gone — read-only on grok is the wrapper OS sandbox, not an allowlist"
 else
-  pass "grok read-only tier drops Edit/git/gh"
+  pass "grok-args rejected (removed with the run-grok.sh run path)"
 fi
-echo "$GR" | grep -qx "Read" && echo "$GR" | grep -Fqx "Bash(curl *)" && echo "$GR" | grep -Fqx "Bash(./notify *)" \
-  && pass "grok read-only tier keeps Read/curl/notify" || bad "grok read-only tier keeps Read/curl/notify"
-# unknown mode → write tier (no sandbox)
-GB=$(bash "$M" grok-args banana)
-if echo "$GB" | grep -qx -- "--sandbox"; then bad "grok unknown mode falls back to write (no sandbox)"; else pass "grok unknown mode falls back to write"; fi
+# (capture first, then grep: `set -o pipefail` above would otherwise surface the
+# script's own exit 2 as the pipeline's status and mask a passing grep)
+USAGE=$(bash "$M" grok-args read-only 2>&1 >/dev/null)
+case "$USAGE" in
+  *usage:*grok-args*) bad "usage line still advertises grok-args" ;;
+  *usage:*)           pass "unknown subcommand prints usage on stderr, without grok-args" ;;
+  *)                  bad "unknown subcommand should print usage (got: $USAGE)" ;;
+esac
 
 # grok-run-env: frontmatter run-knobs → export GROK_* lines
 FX="zzz-test-fx-$$"

@@ -27,6 +27,16 @@ claude and grok keep their own branches on purpose: claude would otherwise lose
 the multi-provider gateway cascade and Langfuse tracing, grok its `GROK_*` run
 knobs.
 
+> **Superseded in aeon itself.** The three-branch shape above is how the swap
+> *lands* on an untouched instance, and it is still the smallest correct first
+> step. aeon has since collapsed it: **every** harness including grok goes
+> through `run-harness`, `scripts/run-grok.sh` is setup-only (CLI pin + OAuth
+> refresh), and the gateway cascade wraps the `run-harness claude` call rather
+> than replacing it — grok's `GROK_*` knobs moved into `adapters/grok.sh`. Keeping
+> grok on its own branch is what let an adapter-level MCP fix ship while
+> `messages.yml` and `apps/mcp-server` stayed broken. If you are wiring this up
+> fresh, prefer routing everything through `run-harness` from the start.
+
 **In scope:** codex, pi, vibe, kimi. **Deliberately excluded**, each for a
 measured reason:
 
