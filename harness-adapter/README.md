@@ -46,7 +46,7 @@ output **fails the run** — partial or empty results are never emitted as succe
 | Token usage | ✅ + cost | ✅ + cost¹ | ✅ | ✅ + cost | 0² | 0² |
 | Read-only enforcement | ✅ sandbox | ✅ sandbox³ | ✅ native | ✅ sandbox | ✅ sandbox⁴ | ✅ sandbox⁴ |
 | Structured output | native | native | native | shim⁵ | shim⁵ | shim⁵ |
-| MCP tool call (live) | ✅ | ✅ | ⚠️ wired, headless-denied⁶ | n/a — warn+skip | ✅ | ✅ |
+| MCP tool call (live) | ✅ | ✅ needs `--trust`⁷ | ✅⁶ | n/a — warn+skip | ✅ | ✅ needs overlay⁸ |
 | Native provider auth | Claude Pro/Max OAuth | X account · `XAI_API_KEY` | ChatGPT OAuth · `OPENAI_API_KEY` | provider env key | Mistral key | Moonshot OAuth · key |
 
 All six round-trip the contract on real CLIs (claude ≥2.1, grok 0.2.101,
@@ -68,12 +68,21 @@ Linux) mounting the workspace read-only.
 ⁵ prompt-shim (`lib/schema-retry.sh`): the schema is appended to the prompt, the
 result validated, and one corrective retry runs. No native `--json-schema` flag
 exists on these.
-⁶ codex registers the MCP server and the model *does* invoke the tool, but
-`approval_policy="never"` resolves each call's approval as `Cancel` under
-`codex exec` (stdin closed → EOF → decline), so the tool never runs headlessly
-([openai/codex#24135](https://github.com/openai/codex/issues/24135)). The only
-override also drops codex's native sandbox, so MCP stays effectively unavailable on
-codex headlessly until upstream lands.
+⁶ codex calls MCP tools fine headlessly. This previously read "wired but
+approval-denied"; re-measured 2026-07-27 on codex-cli 0.144.6, the real blocker was
+a translation bug in `lib/mcp-translate.sh` — `env`/`headers` were emitted as JSON
+objects, which codex (parsing `-c` values as TOML) rejects outright, killing the
+run before the model started. With inline tables emitted instead, a live aeon run
+invoked `glim_twitter_get` and returned data only the MCP server could supply.
+⁷ grok gates repo-local (project-scoped) MCP servers behind its folder-trust store
+(`~/.grok/trusted_folders.toml`); a CI checkout is never trusted, so the adapter
+passes `--trust` whenever an MCP config is in play. Without it the server is
+silently never started and no `mcp__<srv>__*` tool exists.
+⁸ kimi auto-discovers `<cwd>/.mcp.json` and that WINS over the config staged in
+`$KIMI_CODE_HOME`, so it sends `${VAR}` placeholders verbatim instead of the
+expanded secret. `lib/sandbox.sh` overlays the expanded copy onto the workspace
+file inside the bwrap sandbox. Linux-only: on macOS (`sandbox-exec`, no
+bind-mounts) kimi still reads the literal `${VAR}`s.
 
 ## Flags
 
@@ -98,7 +107,7 @@ codex headlessly until upstream lands.
 | Result | envelope passthrough | `type=="text"` chunks (never `thought`) | last `agent_message` | last assistant `message_end` | last assistant `content` (never `reasoning_content`) | last assistant `content` |
 | Usage | native + cost | streaming `end` event → cost | sum of `turn.completed.usage` | per-message usage + cost | none → 0 | none → 0 |
 | Read-only | `--allowedTools` + wrapper sandbox | `bypassPermissions` + wrapper sandbox | `--sandbox read-only` (native) | `--tools` subset + wrapper sandbox | wrapper sandbox only | wrapper sandbox only |
-| MCP | `--mcp-config` | native `.mcp.json` + `MCPTool(...)` allows | `-c mcp_servers.*` (auto-denied headless⁶) | unsupported by design → warn+skip | `config.toml [[mcp_servers]]` in temp `VIBE_HOME` | `{mcpServers}` in temp `KIMI_CODE_HOME` |
+| MCP | `--mcp-config` | native `.mcp.json` + `MCPTool(...)` allows + `--trust`⁷ | `-c mcp_servers.*` (TOML inline tables⁶) | unsupported by design → warn+skip | `config.toml [[mcp_servers]]` in temp `VIBE_HOME` | `{mcpServers}` in temp `KIMI_CODE_HOME` + sandbox overlay⁸ |
 | CLAUDE.md | native + `@imports` | native (no imports) | via `project_doc_fallback_filenames` | native | native | native |
 
 ### Design notes
@@ -131,9 +140,14 @@ carrying just the delta in `AGENTS.md`, which every other harness reads.
 - **Read-only really holds**: codex answered *"this workspace is read-only"*; pi
   lost write/edit/bash to `--tools` subsetting; vibe/kimi are held by the wrapper
   sandbox — no stray files, on any harness.
-- **Codex MCP tools are wired but auto-denied headlessly** (footnote ⁶) — an open
-  upstream limitation; claude/grok call live MCP tools cleanly, vibe/kimi via their
-  temp-home configs, pi warns-and-skips by design.
+- **Every harness but pi calls live MCP tools** (2026-07-27 sweep, glim.sh over
+  streamable HTTP). Three of them needed a dispatcher fix first, and each failed
+  *silently* — the agent just reported the server "not connected" and quietly fell
+  back to raw HTTP, which reads as a working run: codex crashed on config load
+  (footnote ⁶), grok never started the server in an untrusted checkout (⁷), and
+  kimi sent unexpanded `${VAR}` placeholders (⁸). vibe worked untouched; pi
+  warns-and-skips by design. **Verify MCP by what the tool returned, not by whether
+  the run went green.**
 - **Pi's minimalism is measurable**: the same one-line prompt consumed ~2.4k input
   tokens on pi vs ~12k on codex — its sub-1k system prompt holds up.
 

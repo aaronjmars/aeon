@@ -44,6 +44,39 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Fixed
 
+- **MCP now actually works on codex, grok and kimi.** A live sweep of all six
+  harnesses against a remote MCP server (glim.sh over streamable HTTP, run on
+  GitHub Actions) found three broken. Each failed *silently*: the agent reported
+  the server "not connected", fell back to plain HTTP, and the run still went
+  green with a plausible-looking answer - so the run log was not evidence the
+  tools had been used. Only `vibe` worked untouched; `pi` rejects MCP by design.
+  - **codex could not load its config at all** when a server carried `headers`
+    or `env`. `lib/mcp-translate.sh` emitted those as JSON objects, but codex
+    parses `-c` values as TOML, where an object must be an inline table
+    (`{ "K" = "V" }`, not `{"K":"V"}`). Every remote MCP server carries an auth
+    header, so codex exited 1 before the model started: `Error loading
+    config.toml: invalid type: string "{\"Authorization\":...}", expected a map`.
+    Now emitted as inline tables with quoted keys, so header names that are not
+    TOML bare keys (`X-Api-Key`) stay valid.
+  - **grok never started the server.** It gates repo-local (project-scoped) MCP
+    servers behind its folder-trust store (`~/.grok/trusted_folders.toml`), and
+    a CI runner checks the repo out into a never-trusted path on every run - so
+    no `mcp__<srv>__*` tool existed, on every run, forever. The adapter now
+    passes `--trust`, and only when an MCP config is in play.
+  - **kimi sent unexpanded `${VAR}` placeholders.** It auto-discovers
+    `<cwd>/.mcp.json`, and that wins over the expanded copy staged in
+    `$KIMI_CODE_HOME`, so a `Bearer ${MCP_GLIM_TOKEN}` header went to the server
+    verbatim and 401'd. `lib/sandbox.sh` now overlays the expanded config onto
+    the workspace file inside the bwrap sandbox - process-private, so no secret
+    is written into the working tree. Linux only; macOS `sandbox-exec` has no
+    bind-mounts.
+- **Dashboard: the MCP panel warned about the wrong harness.** It disabled its
+  controls on `codex`, citing `openai/codex#24135` (tool approvals auto-denied
+  under `codex exec`). Re-measured on codex-cli 0.144.6: codex calls MCP tools
+  fine, and the real fault was the config-load crash above. `pi` is the harness
+  that genuinely cannot use MCP - its adapter warns and skips every server by
+  design - so the banner, disabled controls and tooltips now point at `pi`, and
+  codex is no longer blocked from a feature that works.
 - **Community skill packs install cleanly.** Five defects, each of which broke
   `bin/install-skill-pack` for real packs in `catalog/skill-packs.json`; a sweep
   of all 10 registry packs now installs 52/52 skills with no skips or warnings

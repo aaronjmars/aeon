@@ -9,12 +9,18 @@ import type { Secret, McpServer, McpServers, Harness } from '../lib/types'
 // One-click starters - public HTTP MCP servers that install with no token.
 const FEATURED = MCP_CATALOG
 
-// Codex can't call MCP tools in headless runs: under `codex exec` each tool call
-// raises an approval prompt that reads EOF on the closed stdin and resolves as
-// cancel, so the tool never runs (upstream openai/codex#24135). Wiring a server
-// on codex would silently no-op at run time, so the MCP controls are disabled and
-// the operator is told to switch harness. Keep in sync with harness-adapter.
-const MCP_DISABLED_MSG = "Codex can't run MCP tools in headless runs (openai/codex#24135). Switch the harness to claude, grok, kimi or vibe to use MCP."
+// Pi rejects MCP as a design decision — its adapter warns and skips every server
+// (`pi does not support MCP by design`), so a server wired here would silently
+// no-op at run time. The controls are disabled and the operator is told to switch
+// harness. Keep in sync with harness-adapter/adapters/pi.sh.
+//
+// This gate used to target CODEX, on the belief that `codex exec` auto-denied
+// every tool call (openai/codex#24135). Re-measured live 2026-07-27 on codex-cli
+// 0.144.6: codex calls MCP tools fine, and the real fault was ours — the adapter
+// emitted `headers`/`env` as JSON objects where codex wants TOML inline tables,
+// which crashed config load before the model started. Fixed in
+// harness-adapter/lib/mcp-translate.sh; codex is a supported MCP harness now.
+const MCP_DISABLED_MSG = "Pi does not support MCP - it rejects MCP servers by design, so any server configured here is skipped at run time. Switch the harness to claude, grok, codex, kimi or vibe to use MCP."
 
 interface McpPanelProps {
   harness: Harness
@@ -53,9 +59,9 @@ function transportOf(server: McpServer): string {
 }
 
 export function McpPanel({ harness, servers, loading, saving, secrets, busy, onSave, onSetSecret, onDeleteSecret, onGoToSecret }: McpPanelProps) {
-  // Codex can't use MCP headlessly (see MCP_DISABLED_MSG): grey out every MCP
-  // action so a run isn't configured to use tools it will silently skip.
-  const mcpDisabled = harness === 'codex'
+  // Pi skips MCP entirely (see MCP_DISABLED_MSG): grey out every MCP action so a
+  // run isn't configured to use tools it will silently skip.
+  const mcpDisabled = harness === 'pi'
 
   const [draft, setDraft] = useState<McpServers>(servers)
   useEffect(() => { setDraft(servers) }, [servers])
@@ -197,7 +203,7 @@ export function McpPanel({ harness, servers, loading, saving, secrets, busy, onS
 
       {mcpDisabled && (
         <div className="border border-aeon-red/40 bg-aeon-panel px-[var(--space-md)] py-[var(--space-sm)]">
-          <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-aeon-red mb-1.5">⚠ MCP is unavailable on the Codex harness</p>
+          <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-aeon-red mb-1.5">⚠ MCP is unavailable on the Pi harness</p>
           <p className="text-[11px] text-primary-40 leading-relaxed">
             {MCP_DISABLED_MSG} You can still view your servers below, but the actions are disabled until you switch harness in the top bar.
           </p>

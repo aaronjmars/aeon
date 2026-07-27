@@ -117,8 +117,27 @@ fi
 [ -n "$RULES" ] && ARGS+=(--rules "$RULES")
 
 # MCP: grok discovers the project .mcp.json natively (cwd->git-root walk) and
-# expands ${VAR} from the env itself — we only grant permission to call the tools.
+# expands ${VAR} from the env itself (verified: a `Bearer ${TOK}` header arrives at
+# the server fully expanded) — we grant permission to call the tools, and --trust
+# the folder.
+#
+# --trust is REQUIRED, not optional hardening. grok gates every repo-local
+# (project-scoped) MCP server behind its folder-trust store
+# (~/.grok/trusted_folders.toml, shared with hooks + LSP): in an untrusted folder
+# the server is silently never started and no mcp__<srv>__* tool exists. A CI
+# runner checks the repo out fresh into a never-trusted path every single run, so
+# without this flag MCP is dead on grok 100% of the time — `grok mcp doctor` names
+# it exactly ("folder untrusted … re-run with --trust"), but the run itself only
+# shows an agent that can't find its tools. Measured on a real runner 2026-07-27:
+# the glim-mcp skill reported GLIM_NOT_CONNECTED while MCP_GLIM_TOKEN was live and
+# the workflow had logged "MCP enabled: glim".
+#
+# Trusting is sound here: the folder is the operator's own checked-out repo, which
+# the harness is already executing as the agent's workspace. The flag is hidden on
+# --help but accepted (grok 0.2.101+); it is passed ONLY when an MCP config is in
+# play, so a non-MCP run keeps the default untrusted posture.
 if [ -n "${RH_MCP_CONFIG:-}" ] && [ -f "${RH_MCP_CONFIG:-}" ]; then
+  ARGS+=(--trust)
   for srv in $(jq -r '.mcpServers // {} | keys[]' "$RH_MCP_CONFIG"); do
     ARGS+=(--allow "MCPTool(${srv}__*)")
   done

@@ -29,16 +29,28 @@ mcp_to_codex_flags() {
   # NOTE: codex parses -c values as TOML. JSON strings and arrays are valid TOML;
   # the env OBJECT is emitted as JSON and may need `key = value` inline-table
   # syntax on some codex versions — verify against your installed codex.
+  #
+  # Scalars and arrays round-trip as JSON because JSON strings/arrays ARE valid
+  # TOML. OBJECTS do not: `{"Authorization":"Bearer x"}` is a JSON object, and
+  # TOML wants an inline table `{ "Authorization" = "Bearer x" }` (`:` vs `=`).
+  # Passing the JSON form makes codex refuse to load its config at all —
+  #   Error loading config.toml: invalid type: string "{\"Authorization\":...}",
+  #   expected a map in `mcp_servers.probe.http_headers`
+  # — so the whole run dies before the model starts, not just MCP. Measured on
+  # codex-cli 0.144.6 with an http server carrying an auth header (the shape
+  # every real remote MCP server uses). Keys are emitted QUOTED so header names
+  # like `X-Api-Key`, which are not TOML bare keys, stay valid.
   jq -r '
+    def inline_table: "{ " + ([to_entries[] | "\(.key|tojson) = \(.value|tojson)"] | join(", ")) + " }";
     .mcpServers // {} | to_entries[] |
     .key as $k | .value as $s |
     ( if $s.command then
         ["mcp_servers.\($k).command=\($s.command | tojson)"]
         + (if $s.args then ["mcp_servers.\($k).args=\($s.args | tojson)"] else [] end)
-        + (if $s.env then ["mcp_servers.\($k).env=\($s.env | tojson)"] else [] end)
+        + (if $s.env then ["mcp_servers.\($k).env=\($s.env | inline_table)"] else [] end)
       elif $s.url then
         ["mcp_servers.\($k).url=\($s.url | tojson)"]
-        + (if $s.headers then ["mcp_servers.\($k).http_headers=\($s.headers | tojson)"] else [] end)
+        + (if $s.headers then ["mcp_servers.\($k).http_headers=\($s.headers | inline_table)"] else [] end)
       else [] end
     ) | .[] | "-c", .' "$1"
 }

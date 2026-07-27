@@ -140,7 +140,7 @@ if [ "$MODE" = "read-only" ] && [ "$SANDBOX" = "auto" ]; then
     claude | grok | codex | pi | vibe | kimi)
       . "$HERE/lib/sandbox.sh"
       SB=()
-      if PREFIX=$(sandbox_prefix "$RH_TMPDIR"); then
+      if PREFIX=$(sandbox_prefix "$RH_TMPDIR" "$MCP"); then
         while IFS= read -r tok; do SB+=("$tok"); done <<<"$PREFIX"
         CMD=("${SB[@]}" "${CMD[@]}")
         echo "read-only: workspace write-locked via ${SB[0]}" >&2
