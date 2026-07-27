@@ -44,6 +44,33 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Fixed
 
+- **Read-only skills are now sandboxed on every harness, and notify's queues moved
+  out of the repo.** Three linked defects:
+  - **`.pending-<skill>.md` was being committed.** `.gitignore` ignores
+    `.pending-*/` (directories), not the file, so the json-render staging file was
+    tracked. A sandboxed harness that could not overwrite it left the previous
+    run's copy in place and "Capture skill output" published *that* as the new
+    run's output — a green run reporting another run's work, and feeding it to the
+    health scorer. Measured on a live instance: four consecutive runs captured a
+    byte-identical artifact from a fifth.
+  - **notify's queues lived in the workspace**, so under the OS sandbox they could
+    not be written at all — costing dedup state, the re-delivery queue and the feed
+    entry. They now live in `$AEON_PENDING_DIR` (outside the repo, exported by the
+    workflow), which is also what removed the reason `claude`/`grok` ran with
+    `--no-sandbox`.
+  - **`claude` and `grok` therefore ran read-only skills with no runtime
+    enforcement.** It mattered most on grok, whose adapter uses
+    `--permission-mode bypassPermissions` and never applied an allowlist: a
+    read-only grok skill could write anywhere in the repo (verified — it created a
+    file on request), with only the post-run guard reverting it afterwards. Both
+    now run under the wrapper sandbox. Bubblewrap installation was hoisted out of
+    "Install harness CLI" — which skips claude and skipped grok by name — into its
+    own step, or the sandbox would have silently degraded to advisory.
+- **The read-only guard now cleans what it reverts.** `git checkout` only undoes
+  edits to *tracked* files; the `git clean` list covered 6 of the ~15 `CODE_PATHS`,
+  so a file a read-only skill *created* outside those 6 (e.g. under
+  `apps/dashboard/lib/`, or a new top-level directory) survived and was committed
+  by `git add -A`. Both lists are now the same set.
 - **`scripts/run-grok.sh` is now setup-only.** With every surface dispatching
   through `run-harness`, the script's ~260-line run path (model/permission flags,
   MCP allows, run-shaping knobs, grok invocation, envelope normalization) had no

@@ -20,6 +20,13 @@
 # .pending-notify (notify re-delivery), .pending-deploy (deploy-prototype build),
 # plus .pending-notify-temp where skills stage notify bodies for `./notify -f`
 .pending-*/
+# ...and the FILE form. The trailing slash above matches directories only, so the
+# json-render staging file (.pending-<skill>.md) was tracked and committed; a later
+# read-only run that could not overwrite it had the previous run's digest published
+# as its own. It now lives outside the repo ($AEON_PENDING_DIR); this is the guard
+# against it coming back.
+.pending-*.md
+apps/dashboard/outputs/.pending-*.md
 
 # Skill provenance lock (per-repo, not committed)
 skills.lock

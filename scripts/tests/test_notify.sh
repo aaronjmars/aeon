@@ -1,20 +1,26 @@
 #!/usr/bin/env bash
 # Integration test for scripts/notify.sh — exercises arg parsing, probe suppression,
-# dedup, severity gate, and the .pending-notify fallback with all channels unset.
+# dedup, severity gate, and the notify-queue fallback with all channels unset.
+# The queues live under $AEON_PENDING_DIR (outside the workspace), so the test
+# points that at a temp dir instead of writing into the repo.
 # No network, no secrets. Run: bash scripts/tests/test_notify.sh
 set -uo pipefail
 cd "$(dirname "$0")/../.." || exit 1
 NOTIFY="scripts/notify.sh"
 
+# Queues live outside the repo now; isolate them per-run.
+AEON_PENDING_DIR="$(mktemp -d)"; export AEON_PENDING_DIR
+trap 'rm -rf "$AEON_PENDING_DIR"' EXIT
+
 # Channels unset → everything falls back to .pending-notify
 unset TELEGRAM_BOT_TOKEN TELEGRAM_CHAT_ID DISCORD_WEBHOOK_URL SLACK_WEBHOOK_URL \
       RESEND_API_KEY NOTIFY_EMAIL_TO JSONRENDER_ENABLED NOTIFY_MIN_SEVERITY 2>/dev/null
 
-WORK=".pending-notify"
+WORK="$AEON_PENDING_DIR/notify-queue"
 fail=0
 pass() { echo "ok   - $1"; }
 bad()  { echo "FAIL - $1"; fail=1; }
-reset() { rm -rf "$WORK" .notify-sent-hashes; }
+reset() { rm -rf "$WORK" "$AEON_PENDING_DIR/notify-sent-hashes"; }
 
 # 1. structured message lands in pending with title header
 reset
@@ -110,24 +116,24 @@ fi
 MK="$(mktemp -d)"; mkdir -p "$MK/memory"; cd "$MK" || exit 1
 
 # 9. muted key suppresses the send
-rm -rf .pending-notify .notify-sent-hashes; echo "token-movers:BTC" > memory/mutes.log; : > memory/snoozes.log
+rm -rf "$WORK" "$AEON_PENDING_DIR/notify-sent-hashes"; echo "token-movers:BTC" > memory/mutes.log; : > memory/snoozes.log
 TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 NOTIFY_DRY_RUN=1 \
   bash "$ABS_NOTIFY" "BTC alert that should be muted away entirely" --mute-key "token-movers:BTC" >/dev/null 2>&1
-[ ! -f .pending-notify/tg-payload.jsonl ] && pass "--mute-key muted suppresses" || bad "--mute-key muted suppresses"
+[ ! -f "$WORK/tg-payload.jsonl" ] && pass "--mute-key muted suppresses" || bad "--mute-key muted suppresses"
 
 # 10. future snooze suppresses
-rm -rf .pending-notify .notify-sent-hashes; : > memory/mutes.log
+rm -rf "$WORK" "$AEON_PENDING_DIR/notify-sent-hashes"; : > memory/mutes.log
 printf 'token-movers:ETH:%s\n' "$(( $(date -u +%s) + 3600 ))" > memory/snoozes.log
 TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 NOTIFY_DRY_RUN=1 \
   bash "$ABS_NOTIFY" "ETH alert snoozed for an hour from now" --mute-key "token-movers:ETH" >/dev/null 2>&1
-[ ! -f .pending-notify/tg-payload.jsonl ] && pass "--mute-key future snooze suppresses" || bad "--mute-key future snooze suppresses"
+[ ! -f "$WORK/tg-payload.jsonl" ] && pass "--mute-key future snooze suppresses" || bad "--mute-key future snooze suppresses"
 
 # 11. expired snooze delivers
-rm -rf .pending-notify .notify-sent-hashes
+rm -rf "$WORK" "$AEON_PENDING_DIR/notify-sent-hashes"
 printf 'token-movers:SOL:%s\n' "$(( $(date -u +%s) - 10 ))" > memory/snoozes.log
 TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 NOTIFY_DRY_RUN=1 \
   bash "$ABS_NOTIFY" "SOL alert should deliver since snooze expired" --mute-key "token-movers:SOL" >/dev/null 2>&1
-[ -f .pending-notify/tg-payload.jsonl ] && pass "--mute-key expired snooze delivers" || bad "--mute-key expired snooze delivers"
+[ -f "$WORK/tg-payload.jsonl" ] && pass "--mute-key expired snooze delivers" || bad "--mute-key expired snooze delivers"
 
 cd "$ROOT" || exit 1
 rm -rf "$MK"
@@ -185,29 +191,51 @@ fi
 
 reset
 
-# 16. read-only cwd (codex-style FS-blocked / network-open sandbox): notify must
-#     fall through to inline delivery, NOT abort at the .pending-notify queue write.
-#     Regression guard for the set -e abort that made codex read-only skills silently
-#     drop every notification. See scripts/notify.sh "Non-fatal by design" comment.
+# 16. read-only cwd (a read-only skill under the OS sandbox): the queue lives
+#     OUTSIDE the workspace now, so notify must still succeed AND still queue —
+#     that is what lets the capture/feed steps see this run's output instead of
+#     republishing the previous run's file. Regression guard for the stale-digest
+#     bug and for the set -e abort that once dropped codex notifications entirely.
 reset
 NOTIFY_ABS="$PWD/scripts/notify.sh"
 RO="$(mktemp -d)"
 chmod 555 "$RO"
 if ( cd "$RO" && : > .wtest ) 2>/dev/null; then
   rm -f "$RO/.wtest"; chmod 755 "$RO"; rm -rf "$RO"
-  pass "read-only cwd fallthrough (skipped: cwd still writable, likely root)"
+  pass "read-only cwd queues outside the workspace (skipped: cwd still writable, likely root)"
 else
   ( cd "$RO" && bash "$NOTIFY_ABS" --severity critical \
       "A real notification long enough to clear the probe and severity floors here" ) \
       >/dev/null 2>"${RO}.err"
   ec=$?
   chmod 755 "$RO"; rm -rf "$RO"
-  if [ "$ec" -eq 0 ] && grep -q "read-only FS" "${RO}.err"; then
-    pass "read-only cwd -> inline fallthrough (exit 0, no set -e abort)"
+  if [ "$ec" -eq 0 ] && [ -n "$(ls -A "$WORK"/*.md 2>/dev/null)" ]; then
+    pass "read-only cwd still queues (queue is outside the workspace)"
   else
-    bad "read-only cwd -> inline fallthrough (exit=$ec; err=$(tr '\n' '|' <"${RO}.err"))"
+    bad "read-only cwd queue (exit=$ec; queued=$(ls -A "$WORK" 2>/dev/null | tr '\n' ' '); err=$(tr '\n' '|' <"${RO}.err"))"
   fi
   rm -f "${RO}.err"
+fi
+
+# 17. …and if the QUEUE ITSELF is unwritable, notify must fall through to inline
+#     delivery rather than abort under set -e (the original codex regression).
+reset
+UNWRITABLE="$(mktemp -d)"; chmod 555 "$UNWRITABLE"
+if ( : > "$UNWRITABLE/.wtest" ) 2>/dev/null; then
+  rm -f "$UNWRITABLE/.wtest"; chmod 755 "$UNWRITABLE"; rm -rf "$UNWRITABLE"
+  pass "unwritable queue -> inline fallthrough (skipped: dir still writable, likely root)"
+else
+  AEON_PENDING_DIR="$UNWRITABLE/nope" bash "$NOTIFY_ABS" --severity critical \
+    "Another real notification long enough to clear the probe and severity floors" \
+    >/dev/null 2>"${UNWRITABLE}.err"
+  ec=$?
+  chmod 755 "$UNWRITABLE"; rm -rf "$UNWRITABLE"
+  if [ "$ec" -eq 0 ] && grep -q "unwritable" "${UNWRITABLE}.err"; then
+    pass "unwritable queue -> inline fallthrough (exit 0, no set -e abort)"
+  else
+    bad "unwritable queue fallthrough (exit=$ec; err=$(tr '\n' '|' <"${UNWRITABLE}.err"))"
+  fi
+  rm -f "${UNWRITABLE}.err"
 fi
 
 reset

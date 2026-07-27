@@ -143,7 +143,7 @@ Two exemptions: **reserved `index.md`/`log.md`** stay untyped (OKF §6/§7), and
 - **`./scripts/skill-runs [--hours N] [--full] [--json] [--failures]`** — Audit recent GitHub Actions skill runs (counts, pass/fail rates, anomalies). Needs `gh` + `jq`.
 - **WebSearch** / **WebFetch** — built-in Claude tools for search and URL fetching; they bypass the bash sandbox, so prefer them over `curl` for reads.
 
-**json-render feed:** when `JSONRENDER_ENABLED=true` **and** `SKILL_NAME` is set, `./notify` queues your output at `apps/dashboard/outputs/.pending-${SKILL_NAME}.md`; a post-run workflow step then converts it into a rendered spec via `./notify-jsonrender`, which the dashboard feed displays. (`./aeon` itself only launches the dashboard web app — it does not run skills.)
+**json-render feed:** when `JSONRENDER_ENABLED=true` **and** `SKILL_NAME` is set, `./notify` queues your output at `$AEON_PENDING_DIR/.pending-${SKILL_NAME}.md` (outside the repo); a post-run workflow step then converts it into a rendered spec via `./notify-jsonrender`, which the dashboard feed displays. (`./aeon` itself only launches the dashboard web app — it does not run skills.)
 
 ## Capability mode
 

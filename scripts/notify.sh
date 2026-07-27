@@ -13,7 +13,7 @@
 #
 # Per-channel rendering (via scripts/notify_format.py): Telegram = Markdown
 # normalized to HTML (parse_mode=HTML, fence-safe chunks, 3900), Discord embeds
-# (color by severity), Slack Block Kit. Falls back to .pending-notify/ for
+# (color by severity), Slack Block Kit. Falls back to $AEON_PENDING_DIR/notify-queue for
 # post-run delivery when the sandbox blocks outbound curl.
 set -euo pipefail
 
@@ -114,10 +114,25 @@ if [ -n "$LINK" ]; then
   MSG=$(printf '%s\n\n🔗 %s' "$MSG" "$LINK")
 fi
 
+# --- staging area for notify's queues ---------------------------------------
+# These MUST live outside the workspace. Two reasons, both measured:
+#   1. A read-only skill runs under an OS sandbox that mounts the repo read-only,
+#      so a queue inside the workspace simply cannot be written — the run then
+#      loses its dedup state, its re-delivery queue and its feed entry.
+#   2. `.gitignore` ignores `.pending-*/` (directories), not `.pending-*.md`, so
+#      the json-render staging FILE was getting COMMITTED. A later sandboxed run
+#      that couldn't overwrite it left the previous run's copy in place, and the
+#      "Capture skill output" step happily published that stale digest as the new
+#      run's output — a green run reporting someone else's work.
+# The workflow exports AEON_PENDING_DIR; the fallbacks keep local runs and other
+# entry points working.
+PENDING_DIR="${AEON_PENDING_DIR:-${RUNNER_TEMP:-${TMPDIR:-/tmp}}/aeon-pending}"
+mkdir -p "$PENDING_DIR" 2>/dev/null || true
+
 # Dedup within this run — same rendered message never sent twice
 _sha() { if command -v sha256sum >/dev/null 2>&1; then sha256sum; else shasum -a 256; fi; }
 HASH=$(printf '%s' "$TITLE|$SEVERITY|$MSG" | _sha | awk '{print $1}')
-HASH_FILE=".notify-sent-hashes"
+HASH_FILE="$PENDING_DIR/notify-sent-hashes"
 touch "$HASH_FILE" 2>/dev/null || true
 if grep -qxF "$HASH" "$HASH_FILE" 2>/dev/null; then
   echo "notify: duplicate message (hash ${HASH:0:8}), skipping" >&2
@@ -138,7 +153,7 @@ else
   PLAIN="$MSG"
 fi
 
-# Try to save to .pending-notify/ for post-run re-delivery. This queue is the
+# Try to save to $PENDING_DIR/notify-queue for post-run re-delivery. This queue is the
 # fallback for the INVERSE sandbox — network blocked, FS writable (the old claude
 # wrapper case): notify can't reach the wire inline, so the workflow's "Send
 # pending notifications" step re-delivers post-run from here.
@@ -149,8 +164,8 @@ fi
 # script runs `set -e`, so an unguarded failure here would kill the whole notify
 # before a single channel is tried).
 TS=$(date -u +%s)
-if ! { mkdir -p .pending-notify && printf '%s' "$PLAIN" > ".pending-notify/${TS}.md"; } 2>/dev/null; then
-  echo "notify: .pending-notify unwritable (read-only FS) — delivering inline only" >&2
+if ! { mkdir -p "$PENDING_DIR/notify-queue" && printf '%s' "$PLAIN" > "$PENDING_DIR/notify-queue/${TS}.md"; } 2>/dev/null; then
+  echo "notify: notify-queue unwritable — delivering inline only" >&2
 fi
 
 DELIVERED=false
@@ -219,8 +234,8 @@ if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
 
     # Dry-run (tests): record the payload instead of sending. No network.
     if [ "${NOTIFY_DRY_RUN:-}" = "1" ]; then
-      mkdir -p .pending-notify
-      printf '%s\n' "$TG_PAYLOAD" >> .pending-notify/tg-payload.jsonl
+      mkdir -p "$PENDING_DIR/notify-queue"
+      printf '%s\n' "$TG_PAYLOAD" >> "$PENDING_DIR/notify-queue/tg-payload.jsonl"
       DELIVERED=true
       continue
     fi
@@ -285,17 +300,16 @@ if [ -n "${RESEND_API_KEY:-}" ] && [ -n "${NOTIFY_EMAIL_TO:-}" ]; then
 fi
 
 # json-render channel — save raw message for post-run conversion. Non-fatal for
-# the same reason as the .pending-notify/ queue above: on a read-only-FS harness
+# the same reason as the notify-queue above: on a read-only-FS harness
 # (codex) this write can't land, and it must not abort a run whose channel
 # delivery already succeeded inline. The feed entry is simply skipped.
 if [ "${JSONRENDER_ENABLED:-false}" = "true" ] && [ -n "${SKILL_NAME:-}" ]; then
-  if ! { mkdir -p apps/dashboard/outputs \
-       && printf '%s' "$PLAIN" > "apps/dashboard/outputs/.pending-${SKILL_NAME}.md"; } 2>/dev/null; then
+  if ! printf '%s' "$PLAIN" > "$PENDING_DIR/.pending-${SKILL_NAME}.md" 2>/dev/null; then
     echo "notify: json-render queue unwritable (read-only FS) — feed entry skipped" >&2
   fi
 fi
 
 # Remove pending file if immediate delivery succeeded (prevents double-send)
 if [ "$DELIVERED" = "true" ]; then
-  rm -f ".pending-notify/${TS}.md"
+  rm -f "$PENDING_DIR/notify-queue/${TS}.md"
 fi
