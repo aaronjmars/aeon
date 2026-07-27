@@ -44,6 +44,18 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Fixed
 
+- **Removed the dead `GROK_JSON_SCHEMA` knob.** `scripts/run-grok.sh` mapped it
+  to grok's `--json-schema`, but **nothing in the repo has ever set it** (checked
+  the full history) - it was introduced as part of grok's run-shaping surface and
+  reserved for the scorer, which never used it and now goes schema-less on
+  purpose so one parse path covers all six harnesses. Structured output lives
+  where it is uniform: `run-harness --json-schema` (native on claude/grok/codex,
+  prompt-shim on pi/vibe/kimi); keeping a grok-only env var alongside it would
+  recreate the per-harness divergence `harness-adapter` exists to remove. The
+  `--check` precedence rule it required goes with it. Structured output is
+  therefore adapter-path only - `messages.yml` and `apps/mcp-server` return plain
+  text, as they already did in practice. Two tests now guard against the knob
+  coming back.
 - **grok's MCP `--trust` fix extended to the other two run paths.** #779 fixed
   only `harness-adapter/adapters/grok.sh`, which covers scheduled and manual
   skill runs. grok is *also* run directly through `scripts/run-grok.sh` by

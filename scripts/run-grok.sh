@@ -38,10 +38,16 @@
 #   GROK_REASONING_EFFORT low|medium|high|xhigh|max  → --reasoning-effort (reasoning models only)
 #   GROK_BEST_OF_N        N>=2: run N ways in parallel, keep the best → --best-of-n
 #   GROK_CHECK            1/true/yes/on: append a self-verification loop → --check
-#   GROK_JSON_SCHEMA      JSON Schema string → --json-schema (structured output;
-#                         reliably honoured only by grok-build, not composer)
 #   GROK_COMPAT_RULES     override the Claude→grok compatibility preamble appended
 #                         to grok's system prompt via --rules (default below, §3d)
+#
+# Structured output is NOT available on this path. There was a GROK_JSON_SCHEMA
+# knob here, but nothing in the repo ever set it (checked the full history) and
+# the scorer it was reserved for went schema-less on purpose, so one parse path
+# covers all six harnesses. Structured output now lives where it is uniform:
+# `run-harness --json-schema` (native on claude/grok/codex, prompt-shim on
+# pi/vibe/kimi). Re-adding a grok-only env var here would recreate exactly the
+# per-harness divergence the harness-adapter exists to remove.
 #
 # MCP: grok discovers the project .mcp.json natively (no flag needed); this script
 # only adds `--allow MCPTool(<server>__*)` so the model may call those tools.
@@ -324,21 +330,14 @@ case "${GROK_BEST_OF_N:-}" in
   *[!0-9]*) log "::warning::ignoring non-integer GROK_BEST_OF_N='${GROK_BEST_OF_N}'";;
   *) RUN_FLAGS+=(--best-of-n "$GROK_BEST_OF_N"); GROK_WANTS_SUBAGENTS=1 ;;
 esac
-# --check: append a self-verification loop before finishing. grok refuses to
-# combine it with --json-schema (verification would corrupt the structured
-# response), so json-schema wins if both are requested.
+# --check: append a self-verification loop before finishing.
+# (This used to be gated against GROK_JSON_SCHEMA, since grok refuses to combine
+# --check with --json-schema. That knob is gone — see the header note — so there
+# is nothing left to conflict with. Structured output on this path would need
+# reintroducing both the flag and that precedence rule.)
 case "${GROK_CHECK:-}" in
-  1|true|yes|on)
-    if [ -n "${GROK_JSON_SCHEMA:-}" ]; then
-      log "::warning::ignoring --check: grok can't combine it with --json-schema (structured output takes precedence)"
-    else
-      RUN_FLAGS+=(--check); GROK_WANTS_SUBAGENTS=1
-    fi ;;
+  1|true|yes|on) RUN_FLAGS+=(--check); GROK_WANTS_SUBAGENTS=1 ;;
 esac
-# --json-schema: constrain output to a schema (structured output). Populates
-# .structuredOutput on reasoning models; composer leaves it null and just emits
-# JSON text — both are handled by the normalizer below.
-if [ -n "${GROK_JSON_SCHEMA:-}" ]; then RUN_FLAGS+=(--json-schema "$GROK_JSON_SCHEMA"); fi
 
 # --- 3d. Claude→grok compatibility preamble (--rules) -----------------------
 # Every Aeon skill is authored for the Claude Code harness: its data-fetch steps name

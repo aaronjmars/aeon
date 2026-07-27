@@ -148,18 +148,19 @@ echo "p" | GROK_FAKE_OUT='{"text":"x"}' MODEL="" SKILL_MODE=write XAI_API_KEY=xa
 if grep -qx -- "--best-of-n" "$ARGS_FILE"; then bad "GROK_BEST_OF_N=1 is a no-op"; else pass "GROK_BEST_OF_N=1 is a no-op"; fi
 grep -qx -- "--no-subagents" "$ARGS_FILE" && pass "default run keeps --no-subagents" || bad "default run keeps --no-subagents"
 
-# 8d2. --check is dropped when --json-schema is set (grok refuses to combine them)
+# 8e. This path emits NO --json-schema: structured output is run-harness's job
+# (uniform across all six harnesses), not a grok-only env var. Guards against
+# reintroducing the divergence, and against a stray GROK_JSON_SCHEMA in the
+# environment silently taking effect again.
+echo "p" | GROK_FAKE_OUT='{"text":"x"}' MODEL="" SKILL_MODE=write XAI_API_KEY=xai-test GROK_JSON_SCHEMA='{"type":"object"}' bash "$R" >/dev/null 2>&1
+if grep -qx -- "--json-schema" "$ARGS_FILE"; then bad "no --json-schema on the run-grok.sh path"; else pass "no --json-schema on the run-grok.sh path"; fi
+# ...and --check is no longer suppressed by it (nothing left to conflict with).
 echo "p" | GROK_FAKE_OUT='{"text":"x"}' MODEL="" SKILL_MODE=write XAI_API_KEY=xai-test GROK_CHECK=true GROK_JSON_SCHEMA='{"type":"object"}' bash "$R" >/dev/null 2>&1
-if grep -qx -- "--check" "$ARGS_FILE"; then bad "--check dropped when --json-schema present"; else pass "--check dropped when --json-schema present"; fi
-grep -qx -- "--json-schema" "$ARGS_FILE" && pass "--json-schema kept over --check" || bad "--json-schema kept over --check"
+grep -qx -- "--check" "$ARGS_FILE" && pass "--check no longer gated on a schema knob" || bad "--check gating"
 
-# 8e. GROK_JSON_SCHEMA maps to --json-schema (structured output)
-SCHEMA='{"type":"object"}'
-echo "p" | GROK_FAKE_OUT='{"text":"x"}' MODEL="" SKILL_MODE=write XAI_API_KEY=xai-test GROK_JSON_SCHEMA="$SCHEMA" bash "$R" >/dev/null 2>&1
-grep -qx -- "--json-schema" "$ARGS_FILE" && grep -Fqx "$SCHEMA" "$ARGS_FILE" \
-  && pass "GROK_JSON_SCHEMA → --json-schema" || bad "GROK_JSON_SCHEMA mapping"
-
-# 8f. .structuredOutput (grok-build under --json-schema) is normalized into .result
+# 8f. .structuredOutput (grok-build under run-harness --json-schema) is normalized
+# into .result — the normalizer still has to handle it, even though this script
+# never sets the flag itself.
 OUT=$(run '{"text":"interim chatter","structuredOutput":{"score":4,"flags":[]},"stopReason":"EndTurn","thought":"secret"}')
 RES=$(echo "$OUT" | jq -r '.result')
 { echo "$RES" | jq -e '.score==4' >/dev/null 2>&1 && ! echo "$OUT" | grep -q "secret" && ! echo "$RES" | grep -q "interim"; } \

@@ -244,10 +244,12 @@ and refresh auth — on both paths. Both paths honour folder trust and the MCPTo
 allows; the run-shaping knobs above are adapter-side, so a `messages.yml` reply
 uses `run-grok.sh`'s own defaults.
 
-`GROK_JSON_SCHEMA` is script-side only: `run-grok.sh` maps it to `--json-schema`,
-but nothing in the repo sets it (the scorer it was reserved for now goes
-schema-less, so one parse path covers all six harnesses). On the adapter path,
-structured output comes from `run-harness --json-schema` instead.
+**Structured output** is `run-harness --json-schema`, on every harness (native on
+claude/grok/codex, prompt-shim on pi/vibe/kimi). It is therefore adapter-path
+only — a `messages.yml` reply or an `apps/mcp-server` call returns plain text.
+(A grok-only `GROK_JSON_SCHEMA` env var existed on the script path until it was
+removed: nothing in the repo ever set it, and the scorer it was reserved for goes
+schema-less on purpose so a single parse path covers all six harnesses.)
 
 ## Every entry point runs on either harness
 

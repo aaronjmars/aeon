@@ -132,9 +132,10 @@ grok_args() {
 #   best_of_n: 3            # run N ways, keep the best   -> --best-of-n
 #   verify: true            # append a self-check loop    -> --check
 #
-# Output is `export GROK_X=...` lines for exactly the fields present (so unset
-# fields fall through to run-grok.sh's defaults, and the scorer's own
-# GROK_JSON_SCHEMA is never clobbered). aeon.yml's grok branch evals this.
+# Output is `export GROK_X=...` lines for exactly the fields present, so unset
+# fields fall through to the adapter's defaults. aeon.yml's grok branch evals this.
+# (This note used to reserve GROK_JSON_SCHEMA for the scorer. The scorer never
+# set it and now goes schema-less deliberately, so the knob is gone.)
 # read one frontmatter scalar (first '---' block), stripping inline # comment,
 # quotes and surrounding whitespace. Prints nothing if absent.
 _fm() {
