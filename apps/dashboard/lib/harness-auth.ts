@@ -20,7 +20,7 @@ export interface HarnessOAuth {
   // server + browser) and kimi (`kimi login` → device URL + browser) open their
   // own browser and complete on approval, so the same args work for the aeon CLI
   // (TTY, inherit stdio) and the dashboard route (spawn, wait for exit 0). The
-  // route also opens the verification URL it parses, as a fallback.
+  // route must NOT open the URL as well, or the operator lands on two tabs.
   cli: string
   ttyArgs: string[]
   deviceArgs: string[]

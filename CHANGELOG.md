@@ -71,6 +71,24 @@ from or pin to; the template keeps serving the latest `main` to new forks.
   so a file a read-only skill *created* outside those 6 (e.g. under
   `apps/dashboard/lib/`, or a new top-level directory) survived and was committed
   by `git add -A`. Both lists are now the same set.
+- **Connecting a harness account no longer opens two browser tabs.** The
+  dashboard's "Connect X account" (grok) and "Connect ChatGPT"/"Connect Kimi"
+  (codex/kimi) routes each parsed the verification URL out of the CLI's live
+  output and opened it, on the premise that the CLI printed the URL and waited.
+  All three CLIs open it themselves, so every Connect landed the operator on two
+  identical auth tabs (verified on grok 0.2.106, codex, and kimi). The routes now
+  wait on the tab the CLI opened. They still parse the URL, but only to quote
+  back in the timeout error so an operator whose browser never opened can finish
+  by hand. `openBrowser` remains in use for MCP OAuth, where the dashboard builds
+  the authorize URL itself and no CLI is involved.
+- **Every credential in Settings shows its brand mark again.** `CODEX_AUTH`,
+  `KIMI_AUTH`, `OPENAI_API_KEY`, `MOONSHOT_API_KEY`, `MISTRAL_API_KEY`,
+  `GH_READ_PAT` and `GH_SECRETS_PAT` were added to the secrets catalog without a
+  matching row in the service-icon map, so all seven rendered as grey two-letter
+  initials badges. The icon map and `lib/secrets-catalog.ts` are separate lists,
+  so a new `resolveServiceMark` export plus `lib/service-icon.test.ts` now fail
+  the build when a catalogued secret has no logo or glyph, naming the offender.
+
 - **`scripts/run-grok.sh` is now setup-only.** With every surface dispatching
   through `run-harness`, the script's ~260-line run path (model/permission flags,
   MCP allows, run-shaping knobs, grok invocation, envelope normalization) had no

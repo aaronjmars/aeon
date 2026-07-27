@@ -6,24 +6,24 @@ import { join } from 'path'
 import { ghArgsRepo } from '@/lib/gh'
 import { syncGatewayProvider, syncHarness } from '@/lib/gateway'
 import { errorResponse, requireGh } from '@/lib/http'
-import { openBrowser } from '@/lib/open-browser'
 
 // One-click "Connect X account" for the Grok Build (`grok`) harness — the exact
 // parallel to the Claude subscription flow (app/api/auth: run `claude
 // setup-token`, capture the credential). Because the dashboard runs on the
-// operator's own machine, the route can drive the CLI and open their browser.
+// operator's own machine, the route can drive the CLI directly.
 //
 // Two paths:
 //  1. key present → store it as the XAI_API_KEY secret (API-key auth; also powers
 //     the Grok gateway). No browser flow.
-//  2. no key → run `grok login --device-auth`. Unlike `claude setup-token`, grok's
-//     device flow prints the verification URL and *waits* rather than opening the
-//     browser itself, so we parse the URL from its live output (never hardcoded —
-//     xAI rotates the per-attempt user_code) and open it. On approval grok writes
-//     ~/.grok/auth.json; we tar+base64 that into the GROK_CREDENTIALS secret, which
-//     scripts/run-grok.sh restores into ~/.grok before each Actions run.
+//  2. no key → run `grok login --device-auth`. grok opens the verification URL in
+//     the operator's browser ITSELF, so this route must not open it too - doing
+//     both is what made Connect spawn two identical accounts.x.ai tabs. We still
+//     parse the URL out of grok's live output (never hardcoded - xAI rotates the
+//     per-attempt user_code), but only to hand back if the flow fails. On approval
+//     grok writes ~/.grok/auth.json; we tar+base64 that into the GROK_CREDENTIALS
+//     secret, which scripts/run-grok.sh restores into ~/.grok before each run.
 //
-// The credential file is ~/.grok/auth.json (confirmed on grok 0.2.82, mode 0600).
+// The credential file is ~/.grok/auth.json (confirmed on grok 0.2.106, mode 0600).
 
 const GROK_DIR = '.grok'
 const AUTH_FILE = `${GROK_DIR}/auth.json`
@@ -31,8 +31,9 @@ const AUTH_FILE = `${GROK_DIR}/auth.json`
 const DEVICE_URL_RE = /https:\/\/accounts\.x\.ai\/oauth2\/device\S*/
 const LOGIN_TIMEOUT_MS = 240_000 // ample time to approve in the browser (< Node's 5-min request cap)
 
-// Run `grok login --device-auth`, opening the browser at the verification URL as
-// soon as grok prints it. Resolves on approval (exit 0), rejects otherwise.
+// Run `grok login --device-auth` and wait for the operator to approve in the tab
+// grok opened. Resolves on approval (exit 0), rejects otherwise, quoting the
+// verification URL so an operator whose browser never opened can finish by hand.
 function grokLogin(): Promise<void> {
   return new Promise((resolve, reject) => {
     let child
@@ -41,21 +42,18 @@ function grokLogin(): Promise<void> {
     } catch (e) {
       return reject(e)
     }
-    let opened = false
     let buf = ''
-    const onData = (chunk: Buffer) => {
-      buf += chunk.toString()
-      if (!opened) {
-        const m = buf.match(DEVICE_URL_RE)
-        if (m) { opened = true; openBrowser(m[0]) }
-      }
-    }
+    const onData = (chunk: Buffer) => { buf += chunk.toString() }
     child.stdout?.on('data', onData)
     child.stderr?.on('data', onData)
+    // Read off the whole buffer at failure time rather than latching the first
+    // chunk: a chunk boundary mid-URL would otherwise pin a truncated link.
+    const verifyUrl = () => buf.match(DEVICE_URL_RE)?.[0] ?? ''
 
     const timer = setTimeout(() => {
       child.kill()
-      reject(new Error('Timed out waiting for approval. Approve in the browser and click Connect again.'))
+      const url = verifyUrl()
+      reject(new Error(`Timed out waiting for approval. Approve in the browser and click Connect again.${url ? ` If no tab opened, visit ${url}` : ''}`))
     }, LOGIN_TIMEOUT_MS)
 
     child.on('error', (e: NodeJS.ErrnoException) => {

@@ -50,14 +50,12 @@ export function driveTtyLogin(harness: string): void {
   execFileSync(spec.oauth.cli, spec.oauth.deviceArgs.length && !process.stdout.isTTY ? spec.oauth.deviceArgs : spec.oauth.ttyArgs, { stdio: 'inherit' })
 }
 
-// Drive the DEVICE login (headless: parse the verification URL from live output
-// and open the browser at it), for the dashboard route. Resolves on approval.
-// Faithful to grokLogin() in app/api/grok-auth/route.ts.
-export function driveDeviceLogin(
-  harness: string,
-  openBrowser: (url: string) => void,
-  timeoutMs = 240_000,
-): Promise<void> {
+// Drive the DEVICE login for the dashboard route, waiting on the tab the CLI
+// opens for itself. Resolves on approval. Faithful to grokLogin() in
+// app/api/grok-auth/route.ts, including NOT opening the browser here: codex and
+// kimi both launch it themselves ("If your browser did not open...", "Opening
+// browser for Kimi device login"), so a second open just duplicates the tab.
+export function driveDeviceLogin(harness: string, timeoutMs = 240_000): Promise<void> {
   const spec = HARNESS_AUTH[harness]
   if (!spec?.oauth) return Promise.reject(new Error(`${harness} has no OAuth login`))
   const { cli, deviceArgs } = spec.oauth
@@ -68,24 +66,20 @@ export function driveDeviceLogin(
     } catch (e) {
       return reject(e)
     }
-    let opened = false
     let buf = ''
-    const onData = (chunk: Buffer) => {
-      buf += chunk.toString()
-      if (!opened) {
-        // Open the first EXTERNAL verification URL. codex prints its localhost
-        // callback server first (http://localhost:1455) — opening that instead of
-        // the auth page would do nothing, so skip loopback hosts.
-        const urls = buf.match(new RegExp(DEVICE_URL_RE.source, 'g')) || []
-        const ext = urls.find((u) => !/localhost|127\.0\.0\.1|\[::1\]/.test(u))
-        if (ext) { opened = true; openBrowser(ext) }
-      }
-    }
+    const onData = (chunk: Buffer) => { buf += chunk.toString() }
     child.stdout?.on('data', onData)
     child.stderr?.on('data', onData)
+    // The first EXTERNAL URL in the output, quoted back only when the flow fails
+    // so an operator whose browser never opened can finish by hand. codex prints
+    // its localhost callback server first (http://localhost:1455), which is not
+    // the auth page, so skip loopback hosts.
+    const verifyUrl = () => (buf.match(new RegExp(DEVICE_URL_RE.source, 'g')) || [])
+      .find((u) => !/localhost|127\.0\.0\.1|\[::1\]/.test(u)) ?? ''
     const timer = setTimeout(() => {
       child.kill()
-      reject(new Error('Timed out waiting for approval. Approve in the browser and connect again.'))
+      const url = verifyUrl()
+      reject(new Error(`Timed out waiting for approval. Approve in the browser and connect again.${url ? ` If no tab opened, visit ${url}` : ''}`))
     }, timeoutMs)
     child.on('error', (e: NodeJS.ErrnoException) => {
       clearTimeout(timer)

@@ -21,6 +21,14 @@ const DOMAINS: Record<string, string> = {
   ANTHROPIC_API_KEY: 'anthropic.com',
   // Grok Build (grok CLI) X-account OAuth session — same brand as XAI_API_KEY.
   GROK_CREDENTIALS: 'x.ai',
+  // Native harness auth. A captured OAuth session carries the same brand as the
+  // provider key it substitutes for, so CODEX_AUTH sits under OpenAI (Codex signs
+  // in with ChatGPT) and KIMI_AUTH under Kimi, its own product domain.
+  CODEX_AUTH: 'openai.com',
+  OPENAI_API_KEY: 'openai.com',
+  KIMI_AUTH: 'kimi.com',
+  MOONSHOT_API_KEY: 'moonshot.ai',
+  MISTRAL_API_KEY: 'mistral.ai',
   ...GATEWAY_DOMAINS,
   // Channels
   TELEGRAM_BOT_TOKEN: 'telegram.org',
@@ -42,7 +50,10 @@ const DOMAINS: Record<string, string> = {
   REPLICATE_API_TOKEN: 'replicate.com',
   RESEND_API_KEY: 'resend.com',
   ADMANAGE_API_KEY: 'admanage.ai',
+  // All three GitHub PATs (write / read-only / secrets-write) carry the same mark.
   GH_GLOBAL: 'github.com',
+  GH_READ_PAT: 'github.com',
+  GH_SECRETS_PAT: 'github.com',
   BASE_RPC_URL: 'base.org',
   // Observability
   LANGFUSE_PUBLIC_KEY: 'langfuse.com',
@@ -90,15 +101,27 @@ interface ServiceIconProps {
   className?: string
 }
 
-export function ServiceIcon({ name, domain, glyph, className = '' }: ServiceIconProps) {
-  const [failed, setFailed] = useState(false)
+// Resolve a credential / group to the mark it renders: a logo `src`, a `glyph`,
+// or neither (the initials badge). Exported so a test can assert every catalogued
+// secret earns a real mark. The maps above and lib/secrets-catalog.ts are separate
+// lists, and a credential added to only one of them silently degrades to a grey
+// two-letter badge - which is how CODEX_AUTH, KIMI_AUTH, OPENAI_API_KEY,
+// MOONSHOT_API_KEY, MISTRAL_API_KEY, GH_READ_PAT and GH_SECRETS_PAT lost theirs.
+export function resolveServiceMark({ name, domain, glyph }: Omit<ServiceIconProps, 'className'>): {
+  src?: string
+  glyph?: 'mail' | 'key'
+} {
   const resolvedDomain = domain ?? (name ? DOMAINS[name] : undefined)
-  const resolvedGlyph = glyph ?? (name ? GLYPHS[name] : undefined)
   // Explicit override wins over the domain favicon; a vendored domain logo wins
   // over the favicon service.
   const explicitSrc = name ? ICON_URLS[name] : undefined
   const domainSrc = resolvedDomain ? (DOMAIN_ICON_URLS[resolvedDomain] ?? faviconUrl(resolvedDomain)) : undefined
-  const src = explicitSrc ?? domainSrc
+  return { src: explicitSrc ?? domainSrc, glyph: glyph ?? (name ? GLYPHS[name] : undefined) }
+}
+
+export function ServiceIcon({ name, domain, glyph, className = '' }: ServiceIconProps) {
+  const [failed, setFailed] = useState(false)
+  const { src, glyph: resolvedGlyph } = resolveServiceMark({ name, domain, glyph })
 
   // Light chip backing so dark/filled marks (GitHub, Base, x.AI…) stay legible
   // against the near-black UI. Logos sit grayscale-and-calm, lifting to full

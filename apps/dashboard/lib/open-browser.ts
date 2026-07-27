@@ -1,6 +1,8 @@
 // Server-only: open the operator's browser at `url`. The dashboard runs on the
-// operator's own machine, so the auth routes (Grok device-auth, MCP OAuth) can
-// drive it directly.
+// operator's own machine, so MCP OAuth can drive it directly - there the
+// dashboard builds the authorize URL itself and no CLI is involved. The harness
+// logins (grok/codex/kimi) deliberately do NOT call this: their CLIs open the
+// browser themselves, and opening it again duplicates the tab.
 import { execFile } from 'child_process'
 
 // Fire-and-forget; a failure to auto-open isn't fatal — every caller also
