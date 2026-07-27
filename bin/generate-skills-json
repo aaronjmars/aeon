@@ -49,7 +49,28 @@ get_skill_updated() {
 fm() {
   awk -v f="$2" -v q="${3:-}" '
     /^---$/{n++; next}
-    n==1 && $0 ~ "^"f":" { sub("^"f": *", ""); if (q=="strip") gsub(/"/, ""); print; exit }
+    n==1 && $0 ~ "^"f":" {
+      line=$0
+      sub("^"f": *", "", line)
+      # YAML block scalar (">", ">-", "|", "|-", ...): the value is the indented
+      # block that follows, not the marker. Community SKILL.md files lean on this
+      # for long descriptions; reading only this line records the literal ">-" as
+      # the description and the catalog/dashboard shows that. Fold the block into
+      # one space-joined line.
+      if (q=="fold" && line ~ /^[|>][-+0-9]*$/) {
+        val=""
+        while ((getline nxt) > 0) {
+          if (nxt ~ /^---$/ || nxt !~ /^[ \t]/) break
+          gsub(/^[ \t]+/, "", nxt); gsub(/[ \t]+$/, "", nxt)
+          if (nxt == "") continue
+          val = (val == "" ? nxt : val " " nxt)
+        }
+        line=val
+      }
+      if (q=="strip") gsub(/"/, "", line)
+      print line
+      exit
+    }
   ' "$1"
 }
 
@@ -69,7 +90,7 @@ for skill_dir in "$SKILLS_DIR"/*/; do
 
   # Parse frontmatter (fm reads one scalar; `strip` drops double-quotes)
   name=$(fm "$skill_file" name)
-  description=$(fm "$skill_file" description)
+  description=$(fm "$skill_file" description fold)
   var=$(fm "$skill_file" var strip)
 
   # Category is declared in each SKILL.md frontmatter — the single source of

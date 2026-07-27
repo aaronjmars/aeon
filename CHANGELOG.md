@@ -44,6 +44,32 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Fixed
 
+- **Community skill packs install cleanly.** Five defects, each of which broke
+  `bin/install-skill-pack` for real packs in `catalog/skill-packs.json`; a sweep
+  of all 10 registry packs now installs 52/52 skills with no skips or warnings
+  (was 8/52).
+  - `bin/generate-packs-json` assigned `skills.lock` skills to the synthetic
+    `installed` pack *after* the catch-all check that aborts on an unassigned
+    skill. A community `SKILL.md` is written to its author's conventions and
+    usually has no `category:`, so the catalog build died on exactly the skills
+    the `installed` pack exists to hold - taking out **6 of 10** registry packs
+    (44 skills). The lock pass now runs before the check.
+  - `bin/install-skill-pack` treated a manifest `path` ending in `SKILL.md` as a
+    directory and looked for `SKILL.md/SKILL.md`, skipping every skill in the
+    pack with a "missing" line that reads like the file isn't there. The file
+    form is now accepted as its parent directory.
+  - `record_provenance` called `gh api` with `-f`, which switches the request to
+    POST; `POST /repos/{o}/{r}/commits` 404s and gh prints the error body on
+    stdout, so `skills.lock` recorded `{"message":"Not Found",...}unknown` as the
+    `commit_sha` of every installed skill. Now `-X GET`, pinned to the fetched
+    branch, path-prefixed for `--path` packs, and validated as a 40-char hex.
+  - `skill_fetch_repo` hardcoded `main` with no fallback, making any pack on
+    `master` uninstallable by the documented one-command form (it failed as if
+    the repo didn't exist). It now resolves the repo's real default branch and
+    reports the ref it used, which callers record in `skills.lock`.
+  - `bin/generate-skills-json` read only the first line of a frontmatter field,
+    so a YAML block-scalar `description: >-` was catalogued as the literal `>-`
+    and shown that way in the dashboard. Block scalars are now folded.
 - **Grok OAuth (`GROK_CREDENTIALS`) now survives past 6h.** The captured
   X-account session holds a 6h access token plus a refresh token that xAI
   **rotates and revokes on every refresh**, so a static secret used to break

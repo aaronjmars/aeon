@@ -9,12 +9,14 @@ on:
   pull_request:
     paths:
       - 'scripts/**'
+      - 'bin/**'
       - 'aeon.yml'
       - '.github/workflows/ci-tests.yml'
   push:
     branches: [main]
     paths:
       - 'scripts/**'
+      - 'bin/**'
       - 'aeon.yml'
   workflow_dispatch:
 
@@ -44,6 +46,8 @@ jobs:
         run: bash scripts/tests/test_validate_pack.sh
       - name: community pack registry validation tests
         run: bash scripts/tests/test_validate_skill_packs.sh
+      - name: community skill install catalog tests
+        run: bash scripts/tests/test_community_skill_install.sh
       - name: grok harness runner tests
         run: bash scripts/tests/test_run_grok.sh
       - name: state reducer tests

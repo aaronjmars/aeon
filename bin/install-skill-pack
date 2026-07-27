@@ -291,6 +291,11 @@ PACK_LABEL="$REPO_NAME"
 echo "Fetching $REPO ($BRANCH)..."
 
 REPO_ROOT=$(skill_fetch_repo "$REPO" "$BRANCH" "$TMP_DIR") || exit 1
+# skill_fetch_repo may have resolved a different ref (default-branch fallback);
+# record what was actually fetched so skills.lock provenance stays honest.
+if [[ -f "$TMP_DIR/.skill-fetch-branch" ]]; then
+  BRANCH=$(cat "$TMP_DIR/.skill-fetch-branch")
+fi
 
 PACK_DIR="$REPO_ROOT"
 if [[ -n "$SUBPATH" ]]; then
@@ -367,6 +372,22 @@ if [[ -f "$MANIFEST_PATH" ]]; then
     rel_path=$(jq -r ".skills[$i].path // empty" "$MANIFEST_PATH")
     [[ -z "$rel_path" ]] && rel_path="skills/$slug"
     rel_path="${rel_path#/}"
+    rel_path="${rel_path%/}"
+    # `path` is the skill DIRECTORY. Pack authors routinely point it at the file
+    # instead ("skills/foo/SKILL.md") — we'd then look for SKILL.md/SKILL.md and
+    # skip every skill in the pack with a "missing ..." line that reads like the
+    # file is absent when it's right there. Accept the file form and use its
+    # parent; the whole directory is copied either way, so this is the same
+    # install, not a laxer one.
+    if [[ "$rel_path" == */SKILL.md ]]; then
+      rel_path=$(dirname "$rel_path")
+    elif [[ "$rel_path" == "SKILL.md" ]]; then
+      # A bare root SKILL.md has no directory to copy — taking the parent here
+      # would vacuum the whole repo (LICENSE, README, everything) into skills/.
+      echo "Manifest skill '$slug' sets path to a root-level SKILL.md." >&2
+      echo "Give each skill its own directory (skills/$slug/SKILL.md) and set path to that directory." >&2
+      exit 1
+    fi
     # Reject path traversal.
     if [[ "$rel_path" == *".."* ]]; then
       echo "Manifest path may not contain '..': $rel_path" >&2
@@ -629,7 +650,21 @@ record_provenance() {
   local slug="$1"
   local source_path="$2"
   local commit_sha
-  commit_sha=$(gh api "repos/$REPO/commits" -f path="$source_path/SKILL.md" --jq '.[0].sha' 2>/dev/null || echo "unknown")
+  # -X GET is required: `gh api` switches to POST as soon as a -f field is
+  # present, and POST /repos/{o}/{r}/commits is not an endpoint — it 404s, and
+  # gh prints the error body on STDOUT, so the old form captured
+  # '{"message":"Not Found",...}unknown' and wrote that into skills.lock as the
+  # commit_sha of every installed skill. -f sha= pins the log to the branch we
+  # actually fetched instead of the repo default.
+  # $source_path is relative to the PACK dir; the API wants it relative to the
+  # repo root, so a --path pack has to carry that prefix or every lookup misses
+  # and the whole pack records commit_sha "unknown".
+  local api_path="${SUBPATH:+$SUBPATH/}$source_path/SKILL.md"
+  commit_sha=$(gh api -X GET "repos/$REPO/commits" \
+    -f path="$api_path" -f sha="$BRANCH" -f per_page=1 \
+    --jq '.[0].sha' 2>/dev/null || true)
+  # Anything that isn't a 40-char hex object name is a failure, not a sha.
+  [[ "$commit_sha" =~ ^[0-9a-f]{40}$ ]] || commit_sha="unknown"
   local entry
   entry=$(jq -n \
     --arg name "$slug" \

@@ -43,19 +43,40 @@ skill_is_trusted() {
 
 # skill_fetch_repo <repo> <branch> <dest_dir>
 #   Download owner/repo@branch as a tarball into <dest_dir>, extract it, and echo
-#   the extracted top-level directory. Tries refs/heads/<branch> then
-#   refs/tags/<branch>. Returns non-zero (message on stderr) on failure — callers
-#   should use:  root=$(skill_fetch_repo "$REPO" "$BRANCH" "$TMP") || exit 1
+#   the extracted top-level directory. Tries refs/heads/<branch>, then
+#   refs/tags/<branch>, then the repo's actual default branch (callers default
+#   <branch> to "main", which silently fails on every repo still on "master").
+#   Returns non-zero (message on stderr) on failure — callers should use:
+#     root=$(skill_fetch_repo "$REPO" "$BRANCH" "$TMP") || exit 1
 skill_fetch_repo() {
-  local repo="$1" branch="$2" dest="$3" url root
+  local repo="$1" branch="$2" dest="$3" url root default_branch
   url="https://github.com/$repo/archive/refs/heads/$branch.tar.gz"
   if ! curl -sfL "$url" -o "$dest/repo.tar.gz" 2>/dev/null; then
     url="https://github.com/$repo/archive/refs/tags/$branch.tar.gz"
     if ! curl -sfL "$url" -o "$dest/repo.tar.gz" 2>/dev/null; then
-      echo "Failed to fetch $repo (branch/tag: $branch)" >&2
-      return 1
+      # Neither a branch nor a tag by that name. Ask GitHub what the repo's
+      # default branch actually is and retry once — a pack on "master" is
+      # otherwise uninstallable by the documented one-command form, with a
+      # failure that reads like the repo doesn't exist.
+      default_branch=$(curl -sfL --max-time 10 "https://api.github.com/repos/$repo" 2>/dev/null \
+        | sed -n 's/.*"default_branch": *"\([^"]*\)".*/\1/p' | head -1)
+      if [[ -z "$default_branch" ]] || [[ "$default_branch" == "$branch" ]]; then
+        echo "Failed to fetch $repo (branch/tag: $branch)" >&2
+        return 1
+      fi
+      url="https://github.com/$repo/archive/refs/heads/$default_branch.tar.gz"
+      if ! curl -sfL "$url" -o "$dest/repo.tar.gz" 2>/dev/null; then
+        echo "Failed to fetch $repo (branch/tag: $branch, default: $default_branch)" >&2
+        return 1
+      fi
+      branch="$default_branch"
+      echo "  note: '$branch' not found — using default branch '$default_branch'" >&2
     fi
   fi
+  # Callers run this in a command substitution, so an exported variable would not
+  # survive the subshell. Drop the ref that was actually fetched next to the
+  # tarball instead; callers read it back to keep skills.lock provenance honest.
+  printf '%s' "$branch" > "$dest/.skill-fetch-branch"
   tar -xzf "$dest/repo.tar.gz" -C "$dest" 2>/dev/null
   root=$(find "$dest" -mindepth 1 -maxdepth 1 -type d | head -1)
   if [[ -z "$root" ]]; then

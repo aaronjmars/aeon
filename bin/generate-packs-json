@@ -66,25 +66,16 @@ for slug, s in skills.items():
     if key:
         assigned[slug] = key
 
-# 3) catch-all — any skill whose category has no pack (freshly authored or
-# imported skills land here as category 'other') goes to the catch-all pack
-# (the one claiming category 'other'), so adding a skill never breaks the
-# catalog. Without a catch-all declared, an unassigned skill is a hard error.
-catch_all = cat_to_pack.get("other")
-unassigned = sorted(set(skills) - set(assigned))
-if unassigned:
-    if not catch_all:
-        sys.exit(f"ERROR: {len(unassigned)} skill(s) not assigned to any pack and "
-                 f"no catch-all pack (category 'other') is declared: {unassigned}")
-    for slug in unassigned:
-        assigned[slug] = catch_all
-
-# 5) community installs override everything above. Anything recorded in
+# 3) community installs override everything above. Anything recorded in
 # skills.lock was deliberately installed from another repo — it must NOT be
 # folded into a first-party category pack (where the Core-only visibility lens
 # would hide it). Pull it into a synthetic, always-visible "installed" pack so
-# the dashboard surfaces it as yours. Runs LAST so it overrides whatever
-# first-party pack claimed the slug by category. No skills.lock (the upstream
+# the dashboard surfaces it as yours. Runs after the category pass so it
+# overrides whatever first-party pack claimed the slug by category, and BEFORE
+# the catch-all check below — a community SKILL.md is written to its author's
+# conventions and frequently carries no `category:` at all, so a lock-installed
+# skill must be assigned here or step 4 kills the run for a skill that was
+# never going to belong to a first-party pack. No skills.lock (the upstream
 # case) → no override → packs.json is byte-identical to before.
 installed_src = {}  # slug -> source_repo
 lock_path = os.path.join(root, "skills.lock")
@@ -99,6 +90,23 @@ if os.path.exists(lock_path):
         if slug in skills:
             installed_src[slug] = rec.get("source_repo", "")
             assigned[slug] = "installed"
+
+# 4) catch-all — any skill whose category has no pack (freshly authored or
+# imported skills land here as category 'other') goes to the catch-all pack
+# (the one claiming category 'other'), so adding a skill never breaks the
+# catalog. Without a catch-all declared, an unassigned skill is a hard error.
+# Reaching here means a first-party skill in this repo has a missing or unknown
+# `category:` — the ci-skill-category gate is the fix, not a pack edit.
+catch_all = cat_to_pack.get("other")
+unassigned = sorted(set(skills) - set(assigned))
+if unassigned:
+    if not catch_all:
+        sys.exit(f"ERROR: {len(unassigned)} skill(s) not assigned to any pack and "
+                 f"no catch-all pack (category 'other') is declared: {unassigned}\n"
+                 f"Set a valid `category:` in each SKILL.md "
+                 f"(core|evolution|basics|dev|crypto|productivity) — see docs/skill-packs.md.")
+    for slug in unassigned:
+        assigned[slug] = catch_all
 
 def skill_entry(slug):
     s = skills[slug]

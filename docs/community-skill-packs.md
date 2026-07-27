@@ -85,7 +85,7 @@ The manifest lives at the pack root (or under `--path <subdir>` if the pack is n
 | `homepage` | string | optional | Project page, docs, or Twitter handle. |
 | `skills[]` | array | **required** | At least one entry. |
 | `skills[].slug` | string | **required** | Aeon skill slug. Must match `[A-Za-z0-9_-]+`. Used as the directory name under `skills/`. |
-| `skills[].path` | string | optional | Path inside the pack repo (relative). Defaults to `skills/<slug>`. May not contain `..`. |
+| `skills[].path` | string | optional | Path to the skill's **directory** inside the pack repo (relative). Defaults to `skills/<slug>`. May not contain `..`. A path ending in `/SKILL.md` is accepted and its parent directory used, but write the directory. |
 | `skills[].description` | string | optional | Falls back to the SKILL.md frontmatter `description:`. |
 | `skills[].category` | string | optional | One of `research`, `dev`, `crypto`, `social`, `productivity`. Defaults to `research` in `skills.json`. |
 | `skills[].schedule` | string | optional | Cron string written into `aeon.yml`. Default `0 12 * * *`. |
@@ -174,6 +174,12 @@ The operator is always the trust boundary. The install script does not auto-trus
 1. Repo is public with a clear license file.
 2. Each skill has a `SKILL.md` in `skills/<slug>/SKILL.md`.
 3. Skills follow Aeon's `SKILL.md` conventions (frontmatter `name:`, `description:`, etc.).
+   Include a **`category:`** from Aeon's vocabulary - `core`, `evolution`,
+   `basics`, `dev`, `crypto`, `productivity`. Installed skills are grouped under
+   the dashboard's **Installed** pack regardless, but the category is what the
+   catalog records and what the operator sees; a missing or invented one shows
+   up as `other`. The pack's own `skills[].category` is metadata for the
+   installer - the `SKILL.md` frontmatter is what `skills.json` reads.
 4. `skills-pack.json` declares every skill the pack intends to install. Skills present in `skills/` but missing from the manifest are not installed.
 5. Optional but encouraged: a `README.md` that names each skill, explains scheduling assumptions, and lists any required environment variables.
 6. Run `./scripts/validate-pack.sh /path/to/your-pack-dir` (from an Aeon checkout) to pre-flight the pack locally — it runs the same structural invariants `install-skill-pack` enforces (valid `skills-pack.json`, clean slugs, no `..` in paths, present per-skill `SKILL.md`, locked-taxonomy capabilities) and exits non-zero on any blocking error. Add `--path <subdir>` if `skills-pack.json` is nested.
