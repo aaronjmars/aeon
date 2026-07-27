@@ -44,6 +44,14 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Fixed
 
+- **grok's MCP `--trust` fix extended to the other two run paths.** #779 fixed
+  only `harness-adapter/adapters/grok.sh`, which covers scheduled and manual
+  skill runs. grok is *also* run directly through `scripts/run-grok.sh` by
+  **inbound messages** (`messages.yml`) and the **local MCP server**
+  (`apps/mcp-server`) - both of which do a full MCP preflight and then hit the
+  same untrusted-checkout gate, so MCP stayed silently dead there. `run-grok.sh`
+  now passes `--trust` alongside its `MCPTool` allows, scoped to runs with a
+  `.mcp.json`. Covered by two new cases in `scripts/tests/test_run_grok.sh`.
 - **MCP now actually works on codex, grok and kimi.** A live sweep of all six
   harnesses against a remote MCP server (glim.sh over streamable HTTP, run on
   GitHub Actions) found three broken. Each failed *silently*: the agent reported

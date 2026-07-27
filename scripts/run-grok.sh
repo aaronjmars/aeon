@@ -237,9 +237,24 @@ fi
 # headless run they're blocked unless an explicit allow rule names them. Add one
 # `--allow MCPTool(<server>__*)` per server declared in .mcp.json (grok namespaces
 # every MCP tool as `<server>__<tool>`).
+#
+# Permission is necessary but NOT sufficient: grok also gates every repo-local
+# (project-scoped) MCP server behind its folder-trust store
+# (~/.grok/trusted_folders.toml, shared with hooks + LSP). A CI runner checks the
+# repo out into a path that has never been trusted, on every run, so without
+# --trust the server is silently never STARTED and no mcp__<srv>__* tool exists —
+# the allow rules above then grant permission to call tools that don't exist. The
+# run doesn't fail; the agent reports the server "not connected" and falls back to
+# plain HTTP, which reads as a normal green run. `grok mcp doctor` names it
+# ("folder untrusted … re-run with --trust"). Same fix as
+# harness-adapter/adapters/grok.sh; applied here for the surfaces that still run
+# through this script (messages.yml, apps/mcp-server). Scoped to MCP runs, so a
+# repo with no .mcp.json keeps the default untrusted posture. The flag is hidden
+# on `grok --help` but accepted.
 MCP_ALLOW=()
 if [ -f .mcp.json ] && jq -e '.mcpServers' .mcp.json >/dev/null 2>&1; then
   MCP_SERVERS=$(jq -r '.mcpServers | keys[]' .mcp.json)
+  MCP_ALLOW+=(--trust)
   for srv in $MCP_SERVERS; do
     MCP_ALLOW+=(--allow "MCPTool(${srv}__*)")
   done

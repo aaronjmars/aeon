@@ -177,7 +177,19 @@ JSON
 ( cd "$MCPDIR" && echo "p" | GROK_FAKE_OUT='{"text":"x"}' MODEL="" SKILL_MODE=write XAI_API_KEY=xai-test bash "$RABS" >/dev/null 2>&1 )
 { grep -Fqx "MCPTool(github__*)" "$ARGS_FILE" && grep -Fqx "MCPTool(seqthink__*)" "$ARGS_FILE"; } \
   && pass "MCP: one MCPTool allow per .mcp.json server" || bad "MCP allow rules (args: $(tr '\n' ' ' < "$ARGS_FILE"))"
+# 9b. …and --trust, without which grok never STARTS a repo-local server on an
+# untrusted checkout (every CI run) — the allows would then permit tools that
+# don't exist, and the run goes green having silently skipped MCP.
+grep -Fqx -- "--trust" "$ARGS_FILE" \
+  && pass "MCP: --trust passed for a repo-local .mcp.json" || bad "MCP --trust missing (args: $(tr '\n' ' ' < "$ARGS_FILE"))"
 rm -rf "$MCPDIR"
+
+# 9c. No .mcp.json → no --trust (default untrusted posture preserved).
+NOMCPDIR="$(mktemp -d)"
+( cd "$NOMCPDIR" && echo "p" | GROK_FAKE_OUT='{"text":"x"}' MODEL="" SKILL_MODE=write XAI_API_KEY=xai-test bash "$RABS" >/dev/null 2>&1 )
+grep -Fqx -- "--trust" "$ARGS_FILE" \
+  && bad "MCP: --trust leaked into a run with no .mcp.json" || pass "MCP: no --trust without a .mcp.json"
+rm -rf "$NOMCPDIR"
 
 # 9b. No .mcp.json in cwd → no MCPTool rules leak in
 TMPD="$(mktemp -d)"

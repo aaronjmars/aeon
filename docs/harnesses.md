@@ -188,10 +188,14 @@ glim (http: https://glim.sh/mcp)
   → re-run with --trust to allow repo-local servers
 ```
 
-The adapter passes `--trust` only when an MCP config is in play, so a non-MCP run
-keeps the default untrusted posture. The flag is hidden on `grok --help` but
-accepted. (`GROK_FOLDER_TRUST=0` disables the gate wholesale, but it ungates
-project hooks along with MCP — prefer the scoped flag.)
+`--trust` is passed only when an MCP config is in play, so a non-MCP run keeps the
+default untrusted posture. The flag is hidden on `grok --help` but accepted.
+(`GROK_FOLDER_TRUST=0` disables the gate wholesale, but it ungates project hooks
+along with MCP — prefer the scoped flag.)
+
+Both grok run paths do this: `harness-adapter/adapters/grok.sh` for skill runs,
+and `scripts/run-grok.sh` for inbound messages and the local MCP server (see
+[the two run paths](#newer-grok-knobs-opt-in-per-skill) below).
 
 Trusting is sound here: the folder is the operator's own checked-out repo, which
 the harness is already executing as the agent's workspace.
@@ -227,12 +231,23 @@ on grok's subagents (so the harness drops `--no-subagents` for those runs);
 `verify` can't combine with structured output.
 
 These knobs are read by `harness-adapter/adapters/grok.sh` (ported from
-`run-grok.sh` §3c), which is what actually runs a skill now — `run-grok.sh` is
-invoked only as `run-grok.sh setup`, to install the pinned CLI and stage/refresh
-grok's auth. One consequence: **`GROK_JSON_SCHEMA` no longer reaches a run.** It
-is still implemented in `run-grok.sh`'s (now unused) run path, but nothing in
-`aeon.yml` → `run-harness grok` reads it; the adapter takes structured output
-from `run-harness --json-schema` instead.
+`run-grok.sh` §3c), which is what runs a skill on the `aeon.yml` path. There are
+**two grok run paths**, and knowing which one you're on matters:
+
+| Path | Runs grok via | Used by |
+|------|---------------|---------|
+| adapter | `run-harness grok` → `adapters/grok.sh` | scheduled/manual skill runs + the scorer (`aeon.yml`) |
+| script | `scripts/run-grok.sh` (stdin prompt) | inbound messages (`messages.yml`), local MCP server (`apps/mcp-server`) |
+
+`aeon.yml` additionally calls `run-grok.sh setup` — install the pinned CLI, stage
+and refresh auth — on both paths. Both paths honour folder trust and the MCPTool
+allows; the run-shaping knobs above are adapter-side, so a `messages.yml` reply
+uses `run-grok.sh`'s own defaults.
+
+`GROK_JSON_SCHEMA` is script-side only: `run-grok.sh` maps it to `--json-schema`,
+but nothing in the repo sets it (the scorer it was reserved for now goes
+schema-less, so one parse path covers all six harnesses). On the adapter path,
+structured output comes from `run-harness --json-schema` instead.
 
 ## Every entry point runs on either harness
 
