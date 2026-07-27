@@ -44,6 +44,38 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Fixed
 
+- **Inbound messages now run on all six harnesses.** `messages.yml` staged only
+  the claude and grok CLIs, so a repo configured for codex/pi/vibe/kimi had every
+  inbound message answered on **claude** — loudly (`::warning::`), but still not
+  the harness the operator chose, and on Anthropic credentials a
+  single-provider fork may not even have. The cause was structural: both the
+  ~100-line harness/provider/model resolution and the ~150-line install recipes
+  lived *inside* `aeon.yml` steps, so no other workflow could reach them.
+  Extracted to **`scripts/resolve-harness.sh`** (prints `HARNESS`/`AUTH_MODE`/
+  `HARNESS_MODEL`/`MODEL_ARG` as `KEY=VALUE` lines) and
+  **`scripts/install-harness.sh`**; both workflows now call them. Each still
+  declares its own `env:` block, since `secrets.*` only resolves per workflow —
+  but the logic, the half that drifted, is shared. This is the same class of bug
+  as the two-path grok trap (#784), and the last surface where "aeon supports six
+  harnesses" wasn't true. Verified by a differential test: 832 resolution cases
+  and every config-generating install case produce byte-identical output to the
+  inline versions they replace.
+  - The extraction also made two latent bugs reachable and fixed both. A missing
+    provider credential used to die *mid-heredoc* under `set -u` — the config
+    file was already created, so the harness was left holding a **0-byte
+    `config.toml`** and an error naming a shell variable instead of the secret.
+    (It never fired inside a workflow, where the `env:` block always binds the
+    name; it appears the moment the script is callable standalone.) It now fails
+    closed and names the missing secret. Separately, `messages.yml` gated the
+    Anthropic gateway on `!= grok`, correct only while claude and grok were the
+    sole options — with the other four reachable it would have pointed their env
+    at a gateway they never call. Now gated on `= claude`.
+  - Both scripts get real test suites — `test_resolve_harness.sh` (28 cases) and
+    `test_install_harness.sh` (21 cases). This logic had **never** been tested:
+    inside a workflow step the only way to exercise it was to dispatch a live
+    run. The install tests stub `npm`/`pipx` and assert what actually breaks —
+    the generated codex/kimi/vibe provider config and the supply-chain version
+    pins.
 - **The docs described a read-only guard that does not exist, and the code it
   cited is deleted.** `docs/CAPABILITIES.md` and `docs/harnesses.md` both stated
   that a `mode: read-only` skill is confined on grok by an explicit tool allowlist

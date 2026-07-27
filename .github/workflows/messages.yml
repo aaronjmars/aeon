@@ -389,6 +389,58 @@ jobs:
         # (and the cache key version above).
         run: npm install -g @anthropic-ai/claude-code@2.1.168 --prefer-offline
 
+      # Inbound messaging isn't a per-skill run, so no skill name is passed and
+      # the repo-global `harness:`/`model:` keys decide — the same script aeon.yml
+      # uses, so a repo answers messages on the harness it runs skills on.
+      - name: Resolve harness
+        id: harness
+        if: steps.msg.outputs.source != ''
+        env:
+          HARNESS_MODEL: ${{ vars.HARNESS_MODEL }}
+          # Native-auth secrets — presence ONLY, to detect which provider each
+          # harness runs on (native login/key > OpenRouter). Never echoed.
+          CODEX_AUTH: ${{ secrets.CODEX_AUTH }}
+          KIMI_AUTH: ${{ secrets.KIMI_AUTH }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          MOONSHOT_API_KEY: ${{ secrets.MOONSHOT_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_OAUTH_TOKEN: ${{ secrets.ANTHROPIC_OAUTH_TOKEN }}
+          GROK_CREDENTIALS: ${{ secrets.GROK_CREDENTIALS }}
+          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+        run: bash scripts/resolve-harness.sh >> "$GITHUB_OUTPUT"
+
+      # Stage the resolved harness's CLI + provider auth. This step is why
+      # messages.yml now supports all six: it previously had none, so a repo on
+      # codex/pi/vibe/kimi had its messages answered on claude with a warning.
+      # The `env:` block is duplicated from aeon.yml by necessity (`secrets.*`
+      # resolves per workflow); the recipes it feeds are shared.
+      - name: Install harness CLI
+        if: steps.msg.outputs.source != '' && steps.harness.outputs.HARNESS != '' && steps.harness.outputs.HARNESS != 'claude'
+        env:
+          H: ${{ steps.harness.outputs.HARNESS }}
+          HM: ${{ steps.harness.outputs.HARNESS_MODEL }}
+          AUTH_MODE: ${{ steps.harness.outputs.AUTH_MODE }}
+          # grok auth (staged via run-grok.sh setup): captured X-account OAuth or key,
+          # plus the secrets-write PAT that persists a rotated refresh token back to
+          # GROK_CREDENTIALS (run-grok.sh §2b).
+          GROK_CREDENTIALS: ${{ secrets.GROK_CREDENTIALS }}
+          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+          GH_SECRETS_PAT: ${{ secrets.GH_SECRETS_PAT }}
+          GH_GLOBAL: ${{ secrets.GH_GLOBAL }}
+          GROK_OAUTH_SKEW: ${{ vars.GROK_OAUTH_SKEW }}
+          # Provider credentials — restored (OAuth captures) or written into the
+          # harness's config (API keys). All land in the runner's ephemeral $HOME.
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          CODEX_AUTH: ${{ secrets.CODEX_AUTH }}
+          KIMI_AUTH: ${{ secrets.KIMI_AUTH }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          MOONSHOT_API_KEY: ${{ secrets.MOONSHOT_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+        run: |
+          set -euo pipefail
+          bash scripts/install-harness.sh "$H"
+
       - name: Run
         id: run
         if: steps.msg.outputs.source != ''
@@ -438,6 +490,19 @@ jobs:
           GH_SECRETS_PAT: ${{ secrets.GH_SECRETS_PAT }}   # persist rotated grok refresh token → GROK_CREDENTIALS (run-grok.sh §2b)
           GH_GLOBAL: ${{ secrets.GH_GLOBAL }}
           GROK_OAUTH_SKEW: ${{ vars.GROK_OAUTH_SKEW }}   # force grok OAuth refresh + persist every run when set large (durability check)
+          # Resolved by the "Resolve harness" step above; the CLI they name was
+          # staged by "Install harness CLI".
+          HARNESS: ${{ steps.harness.outputs.HARNESS }}
+          AUTH_MODE: ${{ steps.harness.outputs.AUTH_MODE }}
+          MODEL_ARG: ${{ steps.harness.outputs.MODEL_ARG }}
+          # Provider keys the non-claude harnesses read at RUN time (pi picks its
+          # provider from whichever is in env; codex/kimi/vibe read the key their
+          # staged config names). OPENROUTER_API_KEY is already declared above.
+          CODEX_AUTH: ${{ secrets.CODEX_AUTH }}
+          KIMI_AUTH: ${{ secrets.KIMI_AUTH }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          MOONSHOT_API_KEY: ${{ secrets.MOONSHOT_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
           COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
           _MSG_SOURCE: ${{ steps.msg.outputs.source }}
@@ -447,46 +512,24 @@ jobs:
           CONFIG_MODEL=$(grep -E '^model:' aeon.yml | sed 's/^model: *//' | tr -d ' ')
           MODEL="${CONFIG_MODEL:-claude-sonnet-5}"
 
-          # Harness resolution — inbound messaging isn't a per-skill run, so it
-          # follows the repo's global `harness:` in aeon.yml (same default/guard as
-          # aeon.yml). A grok-only repo (no Claude creds) must respond via grok.
-          CONFIG_HARNESS=$(grep -E '^harness:' aeon.yml | sed 's/^harness: *//' | tr -d ' ')
-          HARNESS="${CONFIG_HARNESS:-claude}"
-          # Only claude and grok have their CLI staged on this workflow ("Install
-          # Claude Code" above, plus the grok setup below). The other four
-          # run-harness harnesses would need their CLI + provider auth installed
-          # here the way aeon.yml's "Install harness CLI" step does. Until that
-          # lands, a repo configured for one of them answers messages on claude —
-          # say so out loud instead of swapping the harness silently.
-          case "$HARNESS" in
-            claude|grok) ;;
-            codex|pi|vibe|kimi)
-              echo "::warning::harness '$HARNESS' has no CLI staged on the messages workflow — replying on claude instead (skill runs still use $HARNESS)."
-              HARNESS="claude" ;;
-            *)
-              echo "::warning::unknown harness '$HARNESS' — falling back to claude"
-              HARNESS="claude" ;;
-          esac
+          # HARNESS / AUTH_MODE / MODEL_ARG come from the "Resolve harness" step
+          # (scripts/resolve-harness.sh), and the CLI was staged by "Install harness
+          # CLI" — so all six answer messages now. This used to be an inline
+          # claude-or-grok resolution here that downgraded the other four to claude
+          # with a ::warning::, because nothing on this workflow could install them.
           # On grok a claude-* model id is meaningless — fall back to grok's default.
           if [ "$HARNESS" = "grok" ]; then
             case "$MODEL" in claude-*|"") MODEL="grok-4.5" ;; esac
           fi
-          echo "Using harness: $HARNESS  |  model: $MODEL"
+          echo "Using harness: $HARNESS  |  auth: $AUTH_MODE  |  model: ${MODEL_ARG:-$MODEL}"
 
-          # Stage grok's CLI + auth. run-grok.sh's `setup` subcommand is the single
-          # source of truth for the version pin, the GROK_CREDENTIALS restore and
-          # the OAuth refresh/persist (§2b). This used to happen implicitly, because
-          # the run itself went through run-grok.sh and step 1 installs the CLI on
-          # demand; now that the run goes through run-harness (whose grok adapter
-          # only checks `command -v grok`), staging has to be explicit.
-          if [ "$HARNESS" = "grok" ]; then
-            bash "${GITHUB_WORKSPACE}/scripts/run-grok.sh" setup
-          fi
-
-          # AI Gateway routing — same path as aeon.yml's Run steps. The grok harness
-          # has its own auth and does NOT use the gateway, so skip it there (avoids
-          # "no gateway/Anthropic API" noise on a grok-only repo).
-          if [ "$HARNESS" != "grok" ]; then
+          # AI Gateway routing — same path as aeon.yml's Run step, and gated the
+          # same way: it is Anthropic-specific (llm-gateway.sh rewrites
+          # ANTHROPIC_BASE_URL/model env), so ONLY claude sources it. This used to
+          # read `!= grok`, which was correct while claude and grok were the only
+          # two possible harnesses; with codex/pi/vibe/kimi reachable it would
+          # point their env at an Anthropic gateway they never call.
+          if [ "$HARNESS" = "claude" ]; then
             GATEWAY=$(grep -A1 '^gateway:' aeon.yml | grep 'provider:' | sed 's/.*provider:[[:space:]]*//' | sed "s/[\"' ]//g" || true)
             GATEWAY="${GATEWAY:-auto}"
             source "${GITHUB_WORKSPACE}/scripts/llm-gateway.sh"
@@ -614,9 +657,21 @@ jobs:
           # run-harness re-expands the config and translates it per harness; the
           # claude adapter adds --strict-mcp-config itself, as this step used to.
           if [ "${#MCP_FLAGS[@]}" -gt 0 ]; then RH_ARGS+=(--mcp-config .mcp.json); fi
+          # Which --model to forward, mirroring aeon.yml's Run step. aeon's own ids
+          # are claude-*/grok-*, which mean nothing to an OpenRouter-backed CLI:
+          # forwarding one there leaves the harness on its default while every
+          # record names a model that never ran. MODEL_ARG (from resolve-harness.sh)
+          # is already the right value or empty for "the staged config decides" —
+          # vibe and kimi resolve a config ALIAS, so passing --model breaks them.
+          RH_MODEL_ARGS=()
+          case "$HARNESS" in
+            claude) RH_MODEL_ARGS=(--model "$MODEL") ;;
+            grok)   case "$MODEL" in grok-*) RH_MODEL_ARGS=(--model "$MODEL") ;; esac ;;
+            *)      if [ -n "${MODEL_ARG:-}" ]; then RH_MODEL_ARGS=(--model "$MODEL_ARG"); fi ;;
+          esac
           HARNESS_ERR=$(mktemp)
           if ! CLAUDE_OUTPUT=$(echo "$PROMPT" | bash "$RH" "$HARNESS" \
-            --model "$MODEL" "${RH_ARGS[@]}" 2>"$HARNESS_ERR"); then
+            "${RH_MODEL_ARGS[@]}" "${RH_ARGS[@]}" 2>"$HARNESS_ERR"); then
             echo "::error::$HARNESS harness failed: $(tail -c 400 "$HARNESS_ERR" | tr '\n' ' ')"
             exit 1
           fi

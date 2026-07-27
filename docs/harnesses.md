@@ -266,12 +266,22 @@ path until it was removed: nothing in the repo ever set it, and the scorer it wa
 reserved for goes schema-less on purpose so a single parse path covers all six
 harnesses.)
 
-**Harness coverage differs by surface**, because each has to stage the CLI it
-dispatches to. Skill runs (`aeon.yml`) install any of the six. The local MCP
-server resolves all six but expects the CLI to already be installed on your
-machine. `messages.yml` stages only `claude` and `grok`; a repo configured for
-one of the other four gets a `::warning::` and is answered on claude, rather than
-being switched silently.
+**Both hosted surfaces stage all six.** `aeon.yml` (skill runs) and
+`messages.yml` (inbound messages) share the same two scripts, so a repo answers
+messages on the harness it runs skills on:
+
+- **`scripts/resolve-harness.sh`** — decides `HARNESS` / `AUTH_MODE` /
+  `HARNESS_MODEL` / `MODEL_ARG` and prints them as `KEY=VALUE` lines. Pass a
+  skill name to pick up per-skill `harness:`/`model:` overrides; omit it (as
+  `messages.yml` does) and the repo-global keys decide.
+- **`scripts/install-harness.sh`** — stages that harness's CLI and provider auth.
+
+Each workflow still declares its own `env:` block, because `secrets.*` only
+resolves inside a workflow — but the logic is shared, which is the half that
+drifted before. `messages.yml` used to carry a second, weaker copy that knew only
+claude and grok, so a repo on codex/pi/vibe/kimi had its messages answered on
+claude with a `::warning::`. The local MCP server (`apps/mcp-server`) resolves all
+six but expects the CLI to already be installed on your machine.
 
 ## Every entry point runs on either harness
 
