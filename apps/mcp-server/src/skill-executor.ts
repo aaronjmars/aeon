@@ -58,22 +58,73 @@ const isHarness = (v: string): v is Harness =>
   (HARNESSES as readonly string[]).includes(v);
 
 /**
- * Which agent harness runs the skill. Mirrors aeon.yml's resolution so a local
- * MCP run matches a scheduled one: the AEON_HARNESS env wins, else the repo's
- * global `harness:` in aeon.yml, else `claude`. Any unknown value → `claude`.
+ * Which agent harness runs the skill. Mirrors scripts/resolve-harness.sh's
+ * precedence so a local MCP run matches a scheduled one: the AEON_HARNESS env
+ * wins, else the skill's own `harness:` override in aeon.yml, else the repo's
+ * global `harness:`, else `claude`. Any unknown value → `claude`.
+ *
+ * `slug` is optional so non-skill callers get the repo-global answer, matching
+ * resolve-harness.sh's optional skill-name argument.
  */
-export function resolveHarness(repoRoot: string): Harness {
-  const envH = (process.env.AEON_HARNESS || "").trim().toLowerCase();
-  if (isHarness(envH)) return envH;
-  try {
-    const cfg = readFileSync(join(repoRoot, "aeon.yml"), "utf-8");
-    const m = cfg.match(/^harness:\s*["']?([A-Za-z]+)/m);
-    const configured = m?.[1].toLowerCase();
-    if (configured && isHarness(configured)) return configured;
-  } catch {
-    /* no aeon.yml → default */
+export function resolveHarness(repoRoot: string, slug?: string): Harness {
+  let picked = (process.env.AEON_HARNESS || "").trim().toLowerCase();
+  if (!picked) {
+    try {
+      const cfg = readFileSync(join(repoRoot, "aeon.yml"), "utf-8");
+      // Per-skill override. aeon.yml's skills map is INLINE flow-mapping on one
+      // line (`  my-skill: { enabled: true, harness: "vibe" }`), and that is the
+      // only form resolve-harness.sh matches — keep the two greps equivalent.
+      if (slug) {
+        picked = cfg
+          .match(new RegExp(`^ {2}${slug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}:.*$`, "m"))?.[0]
+          ?.match(/harness:\s*"([^"]*)"/)?.[1]
+          ?.toLowerCase() ?? "";
+      }
+      if (!picked) picked = cfg.match(/^harness:\s*["']?([A-Za-z]+)/m)?.[1].toLowerCase() ?? "";
+    } catch {
+      /* no aeon.yml → default */
+    }
   }
-  return "claude";
+  // Allowlist LAST, as resolve-harness.sh does: a value that is set but
+  // unrecognized falls back to claude rather than to the next level down. A
+  // skill pinned to a harness that was removed must not silently inherit the
+  // repo default.
+  //
+  // One deliberate divergence: resolve-harness.sh strips no quotes from the
+  // GLOBAL key, so a hand-written `harness: "codex"` reaches its allowlist as
+  // `"codex"` and is rewritten to claude. That is a bug in that script, not a
+  // contract, so this reads the YAML correctly instead of reproducing it.
+  return isHarness(picked) ? picked : "claude";
+}
+
+/**
+ * The skill's capability tier and toolset, from the same scripts/skill_mode.sh
+ * that aeon.yml calls — NOT re-derived here. `--mode read-only` is what makes
+ * run-harness apply its OS sandbox (harness-adapter/run-harness gates
+ * sandbox_prefix on it), so getting this wrong silently drops the write boundary
+ * for the skills that declare `mode: read-only`.
+ *
+ * Returns null when the tier cannot be determined. Callers must fail rather than
+ * assume `write`: guessing the permissive tier is exactly the mistake this
+ * function exists to prevent.
+ */
+function resolveMode(repoRoot: string, slug: string): { mode: string; allowedTools: string } | null {
+  const script = join(repoRoot, "scripts", "skill_mode.sh");
+  if (!existsSync(script)) return null;
+  const run = (...args: string[]) =>
+    spawnSync("bash", [script, ...args], { cwd: repoRoot, encoding: "utf-8" });
+
+  const modeRes = run("mode", slug);
+  if (modeRes.status !== 0) return null;
+  const mode = (modeRes.stdout || "").trim();
+  if (mode !== "read-only" && mode !== "write") return null;
+
+  const toolsRes = run("allowed-tools", mode);
+  if (toolsRes.status !== 0) return null;
+  const allowedTools = (toolsRes.stdout || "").trim();
+  if (!allowedTools) return null;
+
+  return { mode, allowedTools };
 }
 
 /**
@@ -98,10 +149,19 @@ export function runSkill(
     ].join("\n");
   }
 
+  const capability = resolveMode(repoRoot, slug);
+  if (!capability) {
+    return [
+      `Error: could not resolve the capability tier for '${slug}'.`,
+      `scripts/skill_mode.sh must be present and runnable from: ${repoRoot}`,
+      `Refusing to run rather than defaulting to write mode.`,
+    ].join("\n");
+  }
+
   const prompt = buildSkillPrompt(slug, varValue);
-  const harness = resolveHarness(repoRoot);
+  const harness = resolveHarness(repoRoot, slug);
   process.stderr.write(
-    `${logPrefix} Running skill: ${slug}${varValue ? ` (var=${varValue})` : ""} [harness: ${harness}]\n`
+    `${logPrefix} Running skill: ${slug}${varValue ? ` (var=${varValue})` : ""} [harness: ${harness}, mode: ${capability.mode}]\n`
   );
 
   // Every harness goes through harness-adapter's run-harness — the same dispatcher
@@ -109,9 +169,18 @@ export function runSkill(
   // fixes (grok's MCP folder --trust, codex's TOML config translation, kimi's
   // config overlay) apply here too. This path used to call `claude -p -` and
   // scripts/run-grok.sh directly, which is how it missed those fixes.
-  // Write mode: a skill run may edit memory, commit, and notify.
+  //
+  // --mode/--allowed-tools come from scripts/skill_mode.sh, matching aeon.yml's
+  // RH_ARGS. They used to be hardcoded to write, so the twelve skills declaring
+  // `mode: read-only` ran unsandboxed with the full write toolset on this path -
+  // the same two-path drift the run-path consolidation removed, one layer up.
   const runHarness = join(repoRoot, "harness-adapter", "run-harness");
-  const args = [runHarness, harness, "--mode", "write", "--timeout", "600"];
+  const args = [
+    runHarness, harness,
+    "--mode", capability.mode,
+    "--allowed-tools", capability.allowedTools,
+    "--timeout", "600",
+  ];
   if (existsSync(join(repoRoot, ".mcp.json"))) {
     args.push("--mcp-config", join(repoRoot, ".mcp.json"));
   }
