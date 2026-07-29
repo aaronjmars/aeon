@@ -4,7 +4,6 @@
 #   claude   — reads it via --mcp-config (no translation)
 #   grok     — discovers it natively incl. ${VAR} expansion (only needs allow rules)
 #   codex    — no project .mcp.json support (openai/codex#13056): -> -c overrides
-#   opencode — own config shape: -> "mcp" object for a generated opencode.json
 #   pi       — rejects MCP by design: adapter warns and skips
 
 mcp_expand_vars() {
@@ -17,10 +16,6 @@ mcp_expand_vars() {
   perl -pe 's/\$\{([A-Z_][A-Z0-9_]*)\}/defined $ENV{$1} ? $ENV{$1} : "\${$1}"/ge' \
     < "$in" > "$out"
   grep -oE '\$\{[A-Z_][A-Z0-9_]*\}' "$out" 2>/dev/null | sed -E 's/[${}]//g' | sort -u || true
-}
-
-mcp_server_names() {
-  jq -r '.mcpServers // {} | keys[]' "$1"
 }
 
 mcp_to_codex_flags() {
@@ -72,24 +67,4 @@ mcp_to_vibe_toml() {
          ["transport = \"http\"", "url = \(.value.url|tojson)"]
          + (if .value.headers then ["headers = { \(.value.headers|to_entries|map("\(.key) = \(.value|tojson)")|join(", ")) }"] else [] end)
        else [] end)) | .[]' "$1"
-}
-
-mcp_to_opencode_json() {
-  # .mcp.json -> the "mcp" object for a generated opencode.json.
-  # stdio: {type:"local", command:[cmd, ...args], environment}; http: {type:"remote", url, headers}
-  jq -c '
-    (.mcpServers // {}) | to_entries | map(
-      select(.value.command or .value.url) | {
-        key: .key,
-        value: (
-          if .value.command then
-            ({type: "local",
-              command: ([.value.command] + (.value.args // [])),
-              enabled: true}
-             + (if .value.env then {environment: .value.env} else {} end))
-          else
-            ({type: "remote", url: .value.url, enabled: true}
-             + (if .value.headers then {headers: .value.headers} else {} end))
-          end)
-      }) | from_entries' "$1"
 }

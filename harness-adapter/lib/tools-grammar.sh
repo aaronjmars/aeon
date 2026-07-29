@@ -18,21 +18,6 @@ tools_bash_cmds() {
   tr ',' '\n' <<<"$1" | sed -n 's/^Bash(\(.*\):\*)$/\1/p'
 }
 
-tools_to_opencode_permission() {
-  # Claude allowedTools -> opencode.json "permission" object.
-  # opencode semantics: last matching rule wins, so "*" (deny) must come FIRST.
-  # Headless opencode auto-rejects "ask", so deny/allow are the only states we emit.
-  local tools="$1" edit rules
-  if tools_has_write "$tools"; then edit="allow"; else edit="deny"; fi
-  rules=$(tools_bash_cmds "$tools" \
-    | jq -Rn '[inputs | select(length > 0) | {key: (. + " *"), value: "allow"}] | from_entries')
-  jq -cn --arg edit "$edit" --argjson rules "$rules" \
-    '{read: "allow", grep: "allow", glob: "allow",
-      webfetch: "allow", websearch: "allow",
-      edit: $edit,
-      bash: ({"*": "deny"} + $rules)}'
-}
-
 tools_to_pi_exclude() {
   # Claude allowedTools / mode -> pi --exclude-tools value. pi has no permission
   # system ("YOLO mode"); the only native lever is subsetting its toolset.
