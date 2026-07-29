@@ -4,7 +4,7 @@ type: Reference
 
 # Skill packs
 
-Aeon ships **62 skills**, but most forks only ever run a handful. Packs make
+Aeon ships **63 skills**, but most forks only ever run a handful. Packs make
 that manageable: by default the dashboard shows **Core** (what makes Aeon
 different) and **Basics** (simple skills you can run right now) — everything else
 is grouped into **packs** that stay hidden until you enable them.
@@ -79,7 +79,7 @@ Pack key = category. Six packs, no empties; three are shown by default.
 | **Evolution** (`evolution`) | The self-improvement loop — authors, evolves, installs, and heals its own skills. Shown by default. | 8 |
 | **Basics** (`basics`) | Simple, immediately-runnable skills — one approachable entry per area. Shown by default. | 15 |
 | **Dev & Code** (`dev`) | PR/issue triage, review, merges, changelogs, repo monitoring, security scanning, app deploys. | 8 |
-| **Crypto & Markets** (`crypto`) | Token/DeFi/prediction-market monitoring, narrative tracking, on-chain forensics + automation. | 12 |
+| **Crypto & Markets** (`crypto`) | Token/DeFi/prediction-market monitoring, narrative tracking, on-chain forensics + automation. | 13 |
 | **Productivity** (`productivity`) | Personal + social ops: routines, ideas, retrospectives, mentions, replies, ads, email, OKF housekeeping. | 8 |
 
 ### Core + Evolution + Basics — what a fresh fork shows

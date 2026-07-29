@@ -1,6 +1,6 @@
 # Aeon integration examples
 
-Aeon ships an [MCP server](../apps/mcp-server/) so any Claude client can call its 62 skills. The scripts here are the shortest possible "first call works" demos — build the server, run `python <file>`, get a real Aeon output back.
+Aeon ships an [MCP server](../apps/mcp-server/) so any Claude client can call its 63 skills. The scripts here are the shortest possible "first call works" demos — build the server, run `python <file>`, get a real Aeon output back.
 
 | File | Stack | Skill called | What it shows |
 |------|-------|--------------|---------------|

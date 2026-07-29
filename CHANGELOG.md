@@ -11,6 +11,15 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Added
 
+- **New skill: `finance-district-mcp`** — a multichain non-custodial agent
+  wallet over MCP (contributed by @raul1stdigital). Checks balances and prices,
+  discovers the best DeFi yields, swaps, moves funds, and makes x402 paid API
+  calls across EVM, Solana, Bitcoin, and Sui. Private keys never leave a secure
+  enclave (TEE); per-transfer limits, an auto-approve threshold, and a
+  destination denylist are enforced server-side, not in the prompt. One-click
+  Connect from the dashboard MCP panel (a fifth `MCP_CATALOG` entry). Joins the
+  `crypto` pack via its `category`; brings the catalog to **63 skills** (62 →
+  63). Opt-in per deployment. (#791)
 - **Multi-harness support** — skills now run on any of six agent CLIs (Claude
   Code, Grok, Codex, Pi, Vibe, Kimi) behind one `{result, usage, session_id}`
   contract via the new `harness-adapter`'s `run-harness`. The four
@@ -53,6 +62,22 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Fixed
 
+- **Read-only skills ran in write mode on the MCP-server path.**
+  `apps/mcp-server`'s `skill-executor.ts` hardcoded `--mode write` and never
+  consulted `scripts/skill_mode.sh`, so all twelve `mode: read-only` skills ran
+  unsandboxed with the full write toolset when invoked locally through the MCP
+  server (`--mode` is what gates the OS sandbox). `resolveHarness()` had the same
+  drift, ignoring per-skill `harness:` overrides. Both now agree with
+  `resolve-harness.sh`, proven by a differential test over all 64 skills plus
+  synthetic cases. (#792)
+- **`wrap_raw_output` could fabricate a green run.**
+  `harness-adapter/lib/envelope.sh` wraps output an adapter couldn't parse in a
+  schema-valid SUCCESS envelope, so a failed parse published a blob to
+  `output/.chains/<skill>.md` as the skill's deliverable and logged 0/0/0/0 usage
+  indistinguishable from a real cheap run. The path is now countable via an
+  `rh-wrap-fallback:` marker that `aeon.yml` promotes to a `::warning::` (behaviour
+  deliberately unchanged pending blast-radius data), and `envelope.sh` gets its
+  first test suite (`test_harness_envelope.sh`, 22 assertions). (#792)
 - **Inbound messages now run on all six harnesses.** `messages.yml` staged only
   the claude and grok CLIs, so a repo configured for codex/pi/vibe/kimi had every
   inbound message answered on **claude** — loudly (`::warning::`), but still not
@@ -267,11 +292,17 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 - Patched two high-severity CVE classes in the dashboard — `sharp`/`libvips`,
   and Next.js `16.2.10 → 16.2.11`. (#758, #759)
+- Bumped the dashboard `postcss` override past `GHSA-r28c-9q8g-f849`. (#783)
 
 ### Maintenance
 
 - Repo-wide cleanup pass across 8 dimensions (dead code, weak types,
   duplication, circular deps). (#757)
+- Second code-quality sweep across the dashboard, CLI, mcp-server, and
+  harness-adapter — removed dead `opencode`/`GATEWAY` paths and five duplicate
+  helpers, tightened weak types (`Record` → miss-aware value types), wired two
+  orphaned test suites into CI, and fixed a `bin/install-from-atrium` file mode.
+  Circular deps, dead code, and duplication all measured near-zero. (#792)
 
 ## [0.1.0] - 2026-07-09
 
