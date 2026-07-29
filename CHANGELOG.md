@@ -36,7 +36,7 @@ from or pin to; the template keeps serving the latest `main` to new forks.
   Featured card shows) and a description that distinguishes an OAuth-minted,
   refreshed-every-run access token from a pasted static bearer. Custom servers
   that aren't in the catalog get a server glyph instead of the badge. The
-  section only renders once a server is connected.
+  section only renders once a server is connected. (#790)
 
 ### Changed
 
