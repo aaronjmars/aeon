@@ -9,7 +9,6 @@ interface LeftSidebarProps {
   view: DashboardView
   setView: (v: DashboardView) => void
   selectedSkill: string | null
-  setSelectedSkill: (s: string | null) => void
   skills: Skill[]
   runs: Run[]
   secrets: Secret[]

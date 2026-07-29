@@ -70,9 +70,7 @@ make_pack() {
   make_skill "$dir" "bar"
 }
 
-# ════════════════════════════════════════════════════════════════════════════
-# Test 1: duplicate slugs → ERROR, exit 1
-# ════════════════════════════════════════════════════════════════════════════
+# ── Test 1: duplicate slugs → ERROR, exit 1 ─────────────────────────────────
 TMP1=$(mktemp -d)
 trap 'rm -rf "$TMP1"' EXIT
 make_pack "$TMP1"
@@ -99,9 +97,7 @@ else
   fi
 fi
 
-# ════════════════════════════════════════════════════════════════════════════
-# Test 2: unique slugs → pass, exit 0
-# ════════════════════════════════════════════════════════════════════════════
+# ── Test 2: unique slugs → pass, exit 0 ─────────────────────────────────────
 TMP2=$(mktemp -d)
 make_pack "$TMP2"
 write_manifest "$TMP2"
@@ -118,9 +114,7 @@ else
   fi
 fi
 
-# ════════════════════════════════════════════════════════════════════════════
-# Test 3: triple duplicate → ERROR, reports the slug
-# ════════════════════════════════════════════════════════════════════════════
+# ── Test 3: triple duplicate → ERROR, reports the slug ──────────────────────
 TMP3=$(mktemp -d)
 make_pack "$TMP3"
 cat > "$TMP3/skills-pack.json" <<'EOF'
@@ -147,9 +141,7 @@ else
   fi
 fi
 
-# ════════════════════════════════════════════════════════════════════════════
-# Test 4: invalid slug (special characters) → ERROR
-# ════════════════════════════════════════════════════════════════════════════
+# ── Test 4: invalid slug (special characters) → ERROR ───────────────────────
 TMP4=$(mktemp -d)
 make_pack "$TMP4"
 cat > "$TMP4/skills-pack.json" <<'EOF'
@@ -174,9 +166,7 @@ else
   fi
 fi
 
-# ════════════════════════════════════════════════════════════════════════════
-# Test 5: path traversal (..) in skill path → ERROR
-# ════════════════════════════════════════════════════════════════════════════
+# ── Test 5: path traversal (..) in skill path → ERROR ───────────────────────
 TMP5=$(mktemp -d)
 make_pack "$TMP5"
 cat > "$TMP5/skills-pack.json" <<'EOF'
@@ -201,9 +191,7 @@ else
   fi
 fi
 
-# ════════════════════════════════════════════════════════════════════════════
-# Test 6: missing SKILL.md for a declared skill → ERROR
-# ════════════════════════════════════════════════════════════════════════════
+# ── Test 6: missing SKILL.md for a declared skill → ERROR ───────────────────
 TMP6=$(mktemp -d)
 mkdir -p "$TMP6/skills/foo"
 cat > "$TMP6/skills/foo/SKILL.md" <<'EOF'
@@ -236,9 +224,7 @@ else
   fi
 fi
 
-# ════════════════════════════════════════════════════════════════════════════
-# Test 7: invalid JSON manifest → ERROR
-# ════════════════════════════════════════════════════════════════════════════
+# ── Test 7: invalid JSON manifest → ERROR ───────────────────────────────────
 TMP7=$(mktemp -d)
 make_pack "$TMP7"
 echo "{invalid json" > "$TMP7/skills-pack.json"
@@ -255,9 +241,7 @@ else
   fi
 fi
 
-# ════════════════════════════════════════════════════════════════════════════
-# Test 8: empty skills array → ERROR
-# ════════════════════════════════════════════════════════════════════════════
+# ── Test 8: empty skills array → ERROR ──────────────────────────────────────
 TMP8=$(mktemp -d)
 cat > "$TMP8/skills-pack.json" <<'EOF'
 {
@@ -279,9 +263,7 @@ else
   fi
 fi
 
-# ════════════════════════════════════════════════════════════════════════════
-# Test 9: missing manifest file → ERROR
-# ════════════════════════════════════════════════════════════════════════════
+# ── Test 9: missing manifest file → ERROR ───────────────────────────────────
 TMP9=$(mktemp -d)
 
 out=$(bash "$V" "$TMP9" 2>&1)
@@ -296,9 +278,7 @@ else
   fi
 fi
 
-# ════════════════════════════════════════════════════════════════════════════
-# Test 10: missing recommended fields → WARNING (still exit 0)
-# ════════════════════════════════════════════════════════════════════════════
+# ── Test 10: missing recommended fields → WARNING (still exit 0) ────────────
 TMP10=$(mktemp -d)
 make_pack "$TMP10"
 cat > "$TMP10/skills-pack.json" <<'EOF'
@@ -322,9 +302,7 @@ else
   fi
 fi
 
-# ════════════════════════════════════════════════════════════════════════════
-# Test 11: unknown capability → ERROR
-# ════════════════════════════════════════════════════════════════════════════
+# ── Test 11: unknown capability → ERROR ─────────────────────────────────────
 TMP11=$(mktemp -d)
 make_pack "$TMP11"
 cat > "$TMP11/skills-pack.json" <<'EOF'
@@ -349,9 +327,7 @@ else
   fi
 fi
 
-# ════════════════════════════════════════════════════════════════════════════
-# Test 12: non-array capabilities → ERROR
-# ════════════════════════════════════════════════════════════════════════════
+# ── Test 12: non-array capabilities → ERROR ─────────────────────────────────
 TMP12=$(mktemp -d)
 make_pack "$TMP12"
 cat > "$TMP12/skills-pack.json" <<'EOF'
@@ -376,9 +352,7 @@ else
   fi
 fi
 
-# ════════════════════════════════════════════════════════════════════════════
-# Test 13: unknown category → WARNING (still exit 0)
-# ════════════════════════════════════════════════════════════════════════════
+# ── Test 13: unknown category → WARNING (still exit 0) ──────────────────────
 TMP13=$(mktemp -d)
 make_pack "$TMP13"
 cat > "$TMP13/skills-pack.json" <<'EOF'
@@ -403,9 +377,7 @@ else
   fi
 fi
 
-# ════════════════════════════════════════════════════════════════════════════
-# Test 14: skill with no slug → ERROR
-# ════════════════════════════════════════════════════════════════════════════
+# ── Test 14: skill with no slug → ERROR ─────────────────────────────────────
 TMP14=$(mktemp -d)
 make_pack "$TMP14"
 cat > "$TMP14/skills-pack.json" <<'EOF'
@@ -430,9 +402,7 @@ else
   fi
 fi
 
-# ════════════════════════════════════════════════════════════════════════════
-# Test 15: SKILL.md frontmatter missing name/description → WARNING
-# ════════════════════════════════════════════════════════════════════════════
+# ── Test 15: SKILL.md frontmatter missing name/description → WARNING ────────
 TMP15=$(mktemp -d)
 mkdir -p "$TMP15/skills/foo"
 cat > "$TMP15/skills/foo/SKILL.md" <<'EOF'
@@ -466,9 +436,7 @@ else
   fi
 fi
 
-# ════════════════════════════════════════════════════════════════════════════
-# Test 16: on-disk skill not in manifest → WARNING
-# ════════════════════════════════════════════════════════════════════════════
+# ── Test 16: on-disk skill not in manifest → WARNING ────────────────────────
 TMP16=$(mktemp -d)
 make_pack "$TMP16"
 # Add an extra on-disk skill not in the manifest
@@ -487,9 +455,7 @@ else
   fi
 fi
 
-# ════════════════════════════════════════════════════════════════════════════
-# Test 17: missing LICENSE file → WARNING
-# ════════════════════════════════════════════════════════════════════════════
+# ── Test 17: missing LICENSE file → WARNING ─────────────────────────────────
 TMP17=$(mktemp -d)
 make_pack "$TMP17"
 # Manifest has no license field AND no LICENSE file on disk — both are warnings.
@@ -521,9 +487,7 @@ else
   fi
 fi
 
-# ════════════════════════════════════════════════════════════════════════════
-# Test 18: slug with dots (.) → ERROR
-# ════════════════════════════════════════════════════════════════════════════
+# ── Test 18: slug with dots (.) → ERROR ─────────────────────────────────────
 TMP18=$(mktemp -d)
 make_pack "$TMP18"
 cat > "$TMP18/skills-pack.json" <<'EOF'
@@ -548,9 +512,7 @@ else
   fi
 fi
 
-# ════════════════════════════════════════════════════════════════════════════
-# Test 19: valid capabilities pass → exit 0
-# ════════════════════════════════════════════════════════════════════════════
+# ── Test 19: valid capabilities pass → exit 0 ───────────────────────────────
 TMP19=$(mktemp -d)
 make_pack "$TMP19"
 cat > "$TMP19/skills-pack.json" <<'EOF'
@@ -579,9 +541,7 @@ else
   fi
 fi
 
-# ════════════════════════════════════════════════════════════════════════════
-# Test 20: --path flag routes to subdirectory manifest
-# ════════════════════════════════════════════════════════════════════════════
+# ── Test 20: --path flag routes to subdirectory manifest ────────────────────
 TMP20=$(mktemp -d)
 mkdir -p "$TMP20/sub/skills/foo"
 cat > "$TMP20/sub/skills/foo/SKILL.md" <<'EOF'
@@ -616,9 +576,7 @@ else
   fi
 fi
 
-# ════════════════════════════════════════════════════════════════════════════
-# Clean up
-# ════════════════════════════════════════════════════════════════════════════
+# ── Clean up ────────────────────────────────────────────────────────────────
 for d in "$TMP1" "$TMP2" "$TMP3" "$TMP4" "$TMP5" "$TMP6" "$TMP7" "$TMP8" "$TMP9" "$TMP10" "$TMP11" "$TMP12" "$TMP13" "$TMP14" "$TMP15" "$TMP16" "$TMP17" "$TMP18" "$TMP19" "$TMP20"; do
   rm -rf "$d"
 done

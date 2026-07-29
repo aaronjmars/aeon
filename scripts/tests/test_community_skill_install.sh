@@ -92,6 +92,10 @@ if [[ -f "$d/catalog/packs.json" ]]; then
   key=$(jq -r '.packs[] | select(.skills[]?.slug=="native") | .key' "$d/catalog/packs.json")
   [[ "$key" == "crypto" ]] && pass "first-party skill still claimed by its category pack" \
     || bad "first-party skill still claimed by its category pack (got: '$key')"
+else
+  # The exit-0 assertion above means packs.json must exist; without this else a
+  # regression that stopped producing it would skip both checks and report green.
+  bad "generate-packs-json exited 0 but produced no catalog/packs.json"
 fi
 rm -rf "$d"
 

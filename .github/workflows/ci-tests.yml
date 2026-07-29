@@ -56,6 +56,13 @@ jobs:
         run: bash scripts/tests/test_resolve_harness.sh
       - name: harness install/config tests
         run: bash scripts/tests/test_install_harness.sh
+      # Both hermetic (stub curl / sourced in subshells, no network). They shipped
+      # with the scripts they cover and docs/mcp-oauth.md + docs/langfuse.md cite
+      # them as that coverage, but nothing ran them until now.
+      - name: mcp-oauth-refresh tests
+        run: bash scripts/tests/test_mcp_oauth_refresh.sh
+      - name: langfuse-otel tests
+        run: bash scripts/tests/test_langfuse_otel.sh
       - name: state reducer tests
         run: python3 scripts/tests/test_state_reduce.py
       - name: health triage tests

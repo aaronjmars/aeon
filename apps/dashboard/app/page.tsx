@@ -221,7 +221,7 @@ export default function Dashboard() {
 
       <LeftSidebar
         view={view} setView={(v) => { setView(v); setSelectedSkill(null) }}
-        selectedSkill={selectedSkill} setSelectedSkill={setSelectedSkill}
+        selectedSkill={selectedSkill}
         skills={visibleSkills} runs={runs} secrets={secrets} repo={repo} harness={harness}
         enabledCount={enabledCount} workingCount={workingCount}
         categoryFilter={categoryFilter} setCategoryFilter={setCategoryFilter}
