@@ -117,7 +117,7 @@ export async function POST(request: Request) {
     // Optional pack category - injected into the uploaded SKILL.md frontmatter so
     // the skill lands in the right pack. Ignored unless it's a known category.
     const rawCategory = isRecord(body) && typeof body.category === 'string' ? body.category : undefined
-    const category = rawCategory && (SKILL_CATEGORIES as readonly string[]).includes(rawCategory) ? rawCategory : undefined
+    const category = rawCategory && SKILL_CATEGORIES.includes(rawCategory) ? rawCategory : undefined
     // Drop any element that isn't a well-formed { path, content } before it
     // reaches createFile / the secret scanner.
     const files = rawFiles.filter(isUploadFile)

@@ -1,3 +1,4 @@
+import { CATEGORIES } from './constants'
 import type { SkillKeyRef, SkillMcpRef } from './types'
 
 export interface Frontmatter {
@@ -10,9 +11,10 @@ export interface Frontmatter {
 }
 
 // The categories a skill's frontmatter may declare. A skill's category IS its
-// pack (one grouping) — set this one line to file a skill into a pack. `lab`
-// (category `other`) is the catch-all and isn't author-selectable.
-export const SKILL_CATEGORIES = ['core', 'evolution', 'basics', 'dev', 'crypto', 'productivity'] as const
+// pack (one grouping), so this is CATEGORIES — derived rather than restated so
+// the two can't drift. `lab` (category `other`) is the catch-all and isn't
+// author-selectable, so it's absent from both.
+export const SKILL_CATEGORIES: string[] = CATEGORIES.map(c => c.key)
 
 // Insert or replace the frontmatter `category:` line. Returns content unchanged
 // when there's no `--- ... ---` block. Mirrors the backfill: replace in place if

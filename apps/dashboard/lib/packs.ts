@@ -1,6 +1,6 @@
 import { getFileContent, getDirectory } from './github'
 import { parseConfig } from './config'
-import type { Pack, PackSkill, CommunityPack } from './types'
+import type { Pack, PackSkill, CommunityPack, PacksResponse } from './types'
 
 interface PacksManifest {
   packs?: Array<{
@@ -24,7 +24,7 @@ interface CommunityManifest {
 // list. aeon.yml is NOT optional — an unreadable config throws so the caller
 // surfaces the failure instead of rendering every skill as disabled.
 // Shared by GET /api/packs and `aeon packs ls`.
-export async function getPacks(): Promise<{ firstParty: Pack[]; community: CommunityPack[] }> {
+export async function getPacks(): Promise<PacksResponse> {
   const config = parseConfig((await getFileContent('aeon.yml')).content)
   // `?.` still needed: a pack skill may simply not be listed in aeon.yml.
   const enabledOf = (slug: string) => config.skills[slug]?.enabled ?? false

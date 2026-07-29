@@ -1,5 +1,6 @@
 import { GATEWAY_SECRET_NAMES } from './gateway-registry'
 import { HARNESS_AUTH } from './harness-auth'
+import type { Harness } from './types'
 
 // First entry is the default: it's the top of the model picker AND the fallback the
 // harness-switch snap uses (modelsForHarness(...)[0] in app/page.tsx). Keep it in
@@ -86,6 +87,9 @@ export const PI_MODELS = [
 // "xAI". The last four run through harness-adapter's run-harness on a single
 // OPENROUTER_API_KEY. The `id`s are the on-disk harness values (aeon.yml
 // `harness:`) and never change — only the labels do.
+// `satisfies` (not an annotation) keeps each `id` a literal for the select
+// options while making a typo'd or dropped harness a compile error against the
+// Harness union in ./types.
 export const HARNESSES = [
   { id: 'claude', label: 'Anthropic' },
   { id: 'grok', label: 'xAI' },
@@ -93,7 +97,7 @@ export const HARNESSES = [
   { id: 'pi', label: 'Pi' },
   { id: 'vibe', label: 'Vibe' },
   { id: 'kimi', label: 'Kimi' },
-] as const
+] as const satisfies readonly { id: Harness; label: string }[]
 
 export function modelsForHarness(harness: string) {
   if (harness === 'grok') return GROK_MODELS
