@@ -39,6 +39,31 @@ validate_envelope() {
 wrap_raw_output() {
   # last-resort fallback: wrap arbitrary stdout as a best-effort envelope, so a
   # shape change never silently looks like "no output" (pattern from aeon's run-grok.sh)
+  #
+  # UNDER MEASUREMENT (2026-07-29) - this contradicts the contract at the top of
+  # this file. It turns output the adapter could not parse into a schema-valid
+  # SUCCESS envelope, and all four callers then exit 0. The run goes green and the
+  # wrapped blob is published as the skill's deliverable (aeon.yml "Capture skill
+  # output" -> output/.chains/<skill>.md), which chained skills consume and the
+  # health scorer grades. Its 0/0/0/0 usage is also indistinguishable from a real
+  # cheap run in memory/token-usage.csv.
+  #
+  # validate_envelope structurally cannot catch this: the object emitted below is
+  # exactly the shape that function checks (.result string + four numeric counts).
+  #
+  # The correct behaviour is `exit 3` (abnormal stop), and the workflow's failure
+  # path for it already exists and works - aeon.yml emits ::error::, writes
+  # /tmp/skill-error.txt and exits 1, and the `outcome == 'success'` gate then
+  # withholds the output. Flipping it is deferred only because nothing measured
+  # how often this fires, so the blast radius across a live fleet was unknown.
+  #
+  # So: identical behaviour, now COUNTABLE. The marker below reaches the workflow
+  # through the harness stderr tail, which promotes it to a ::warning::. Once
+  # there is a real number, replace this body with a diagnostic + `exit 3` and
+  # drop the `exit 0` at each call site.
+  local buf="${RH_TMPDIR:-${TMPDIR:-/tmp}}/wrap-raw-$$.txt"
+  cat > "$buf"
+  echo "rh-wrap-fallback: harness=${RH_HARNESS:-unknown} bytes=$(wc -c < "$buf" | tr -d ' '); unparseable harness output wrapped as SUCCESS, so this run reports green but its output may be junk" >&2
   jq -Rsc '{result: ., usage: {input_tokens: 0, output_tokens: 0,
-            cache_read_input_tokens: 0, cache_creation_input_tokens: 0}}'
+            cache_read_input_tokens: 0, cache_creation_input_tokens: 0}}' < "$buf"
 }

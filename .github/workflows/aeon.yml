@@ -806,6 +806,16 @@ jobs:
             # run-harness's diagnostics are the only signal when a harness stalls;
             # surface them in the step log either way, not just on failure.
             tail -c 4000 /tmp/harness-stderr.txt >&2 || true
+            # harness-adapter/lib/envelope.sh's wrap_raw_output turns output the
+            # adapter could not parse into a schema-valid SUCCESS envelope and
+            # exits 0, so the run lands here green and the blob below becomes the
+            # skill's published deliverable. That is being measured before it is
+            # turned into a hard failure (see the comment on that function), so
+            # promote its marker to a ::warning:: - countable from the Actions API
+            # without downloading logs. When the count is known, make it fatal.
+            if grep -q 'rh-wrap-fallback:' /tmp/harness-stderr.txt 2>/dev/null; then
+              echo "::warning::$HARNESS output was unparseable and wrapped as success. This run is GREEN but its output may be junk: $(grep -m1 'rh-wrap-fallback:' /tmp/harness-stderr.txt | tr -d '\r')"
+            fi
             if [ "$CLAUDE_OK" != "1" ]; then
               echo "::error::run-harness $HARNESS failed: $(tail -c 200 /tmp/harness-stderr.txt | tr '\n' ' ')"
               tail -c 500 /tmp/harness-stderr.txt | tr '\n' ' ' | cut -c1-200 > /tmp/skill-error.txt
