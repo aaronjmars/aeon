@@ -561,16 +561,12 @@ jobs:
           # Optional Langfuse OTEL tracing — sourced after the gateway in each
           # claude attempt below. Self-gates on LANGFUSE_* and never fails the run.
           LF="${GITHUB_WORKSPACE}/scripts/langfuse-otel.sh"
-          if [ "$HARNESS" = "grok" ]; then
-            # Set the post-run scorer's routing hint: route its `claude -p` scoring
-            # call to xAI (Anthropic-compatible) when an API key is present, else
-            # direct (scoring then just no-ops gracefully if no Anthropic creds).
-            if [ -n "${XAI_API_KEY:-}" ]; then echo "GATEWAY=grok" >> "$GITHUB_OUTPUT"; else echo "GATEWAY=direct" >> "$GITHUB_OUTPUT"; fi
-          elif [ "$HARNESS" != "claude" ]; then
-            # Same reasoning as grok: the run-harness harnesses carry their own
-            # auth (staged in "Install harness CLI") and never touch the gateway.
-            # The scorer routes through run-harness too, so there is no `claude -p`
-            # call left to hint at — emit the output only so it is always defined.
+          if [ "$HARNESS" != "claude" ]; then
+            # The run-harness harnesses carry their own auth (staged in "Install
+            # harness CLI") and never touch the gateway. The scorer routes through
+            # run-harness too, so there is no `claude -p` call left to hint at —
+            # emit the output only so it is always defined. Both readers of
+            # steps.run.outputs.GATEWAY are gated on HARNESS == 'claude'.
             echo "GATEWAY=$HARNESS" >> "$GITHUB_OUTPUT"
           else
             GATEWAY=$(grep -A1 '^gateway:' aeon.yml | grep 'provider:' | sed 's/.*provider:[[:space:]]*//' | sed "s/[\"' ]//g" || true)
