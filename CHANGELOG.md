@@ -28,6 +28,15 @@ from or pin to; the template keeps serving the latest `main` to new forks.
   configures an instance now lives at `.claude/skills/aeon/` (with references)
   and is documented in `docs/aeon-setup.md`, which also names the coding agents
   that can drive an install (Claude Code, Codex, Hermes, OpenClaw). (#762, #763)
+- **Dashboard: MCP credentials get their own Access Keys group.** A connected
+  server's `MCP_<SLUG>_TOKEN` / `MCP_<SLUG>_OAUTH` used to fall into the
+  "Skill Keys" catch-all as an undescribed `Custom secret` with a grey
+  two-letter badge. They now render in a dedicated **MCP** section, each row
+  carrying its server's logo from `MCP_CATALOG` (the same mark the MCP page's
+  Featured card shows) and a description that distinguishes an OAuth-minted,
+  refreshed-every-run access token from a pasted static bearer. Custom servers
+  that aren't in the catalog get a server glyph instead of the badge. The
+  section only renders once a server is connected.
 
 ### Changed
 

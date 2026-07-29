@@ -91,3 +91,43 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
 
 export const MCP_BY_SLUG: Record<string, McpCatalogEntry> =
   Object.fromEntries(MCP_CATALOG.map(e => [e.slug, e]))
+
+// --- credential names -------------------------------------------------------
+// A server's credentials derive their secret names from its slug, so the
+// operator never types one. Canonical HERE rather than in lib/mcp-oauth.ts
+// because this module is dependency-free: the client-side MCP panel, the
+// server-side OAuth flow, and the credential catalog all need the same
+// derivation, and mcp-oauth.ts pulls in node:crypto. mcp-oauth.ts re-exports
+// these, so its importers are unaffected.
+export function tokenVar(slug: string): string {
+  return 'MCP_' + slug.toUpperCase().replace(/[^A-Z0-9_]/g, '_') + '_TOKEN'
+}
+export function oauthVar(slug: string): string {
+  return 'MCP_' + slug.toUpperCase().replace(/[^A-Z0-9_]/g, '_') + '_OAUTH'
+}
+
+// Any repo secret the two helpers above could have minted. Used to sort MCP
+// credentials into their own Access Keys group instead of the "Skill Keys"
+// catch-all every uncatalogued secret otherwise lands in.
+export const MCP_SECRET_RE = /^MCP_[A-Z0-9_]+_(TOKEN|OAUTH)$/
+
+// secret name -> the catalog entry that owns it. Built FORWARD from the slugs:
+// the reverse is ambiguous, since MCP_ROBINHOOD_TRADING_TOKEN could have come
+// from `robinhood-trading` or `robinhood_trading` (both sanitize to the same
+// name). Anything not in here is a custom server the operator added by hand.
+export const MCP_SECRET_OWNER: Record<string, McpCatalogEntry> = Object.fromEntries(
+  MCP_CATALOG.flatMap(e => ([
+    [tokenVar(e.slug), e],
+    [oauthVar(e.slug), e],
+  ] as [string, McpCatalogEntry][])),
+)
+
+// Display name for an MCP credential: the catalog's brand when we know the
+// server, otherwise the slug read back out of the secret name. Best effort on
+// that fallback - a custom server's hyphens are unrecoverable, so a server
+// added as `my-server` reads back as "my server".
+export function mcpServerLabel(secretName: string): string {
+  const owner = MCP_SECRET_OWNER[secretName]
+  if (owner) return owner.name
+  return secretName.replace(/^MCP_/, '').replace(/_(TOKEN|OAUTH)$/, '').toLowerCase().replace(/_/g, ' ')
+}

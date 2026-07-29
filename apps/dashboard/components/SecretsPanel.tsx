@@ -6,6 +6,7 @@ import { inputCls, displayName } from '../lib/utils'
 import { keyProvidedByHarness } from '../lib/constants'
 import { Scramble } from './ui/Animated'
 import { ServiceIcon } from './ui/ServiceIcon'
+import type { ServiceGlyph } from '../lib/service-icons'
 import { linkify } from './ui/Linkify'
 import { InstantModeCard } from './InstantModeCard'
 import { LangfuseRegionCard } from './LangfuseRegionCard'
@@ -14,15 +15,22 @@ import { TelegramChatIdHelper } from './TelegramChatIdHelper'
 
 // Logo shown next to each credential group's header. Brand groups use their
 // favicon; non-brand groups use a glyph.
-const GROUP_ICON: Record<string, { domain?: string; glyph?: 'mail' | 'key' }> = {
+const GROUP_ICON: Record<string, { domain?: string; glyph?: ServiceGlyph }> = {
   Core: { glyph: 'key' },
   Telegram: { domain: 'telegram.org' },
   Discord: { domain: 'discord.com' },
   Slack: { domain: 'slack.com' },
   Email: { glyph: 'mail' },
   Observability: { domain: 'langfuse.com' },
+  MCP: { glyph: 'server' },
   'Skill Keys': { glyph: 'key' },
 }
+
+// Render order. MCP sits next to Skill Keys because both answer "what can a
+// skill reach out to". It's populated dynamically from whatever MCP_*_TOKEN /
+// _OAUTH secrets exist (see describeMcpSecret in lib/secrets-catalog.ts), so
+// the section simply doesn't render until a server is connected.
+const GROUP_ORDER = ['Core', 'Telegram', 'Discord', 'Slack', 'Email', 'Observability', 'MCP', 'Skill Keys']
 
 interface SecretsPanelProps {
   secrets: Secret[]
@@ -111,7 +119,7 @@ export function SecretsPanel({ secrets, skills, busy, repo, harness, focusKey, o
         </div>
       </section>
 
-      {['Core', 'Telegram', 'Discord', 'Slack', 'Email', 'Observability', 'Skill Keys'].map((group, gi) => {
+      {GROUP_ORDER.map(group => {
         const gs = secrets.filter(s => s.group === group); if (!gs.length) return null
         return (
           <section key={group} className="border-t border-[rgba(250,250,250,0.10)] pt-6">
@@ -122,9 +130,21 @@ export function SecretsPanel({ secrets, skills, busy, repo, harness, focusKey, o
               </span>
               <span className="flex-1 h-px bg-[rgba(250,250,250,0.10)]" />
               <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-primary-35">
-                {gs.filter(s => s.isSet).length} / {gs.length} set
+                {/* MCP rows only exist once a server is connected, so "n / n set"
+                    would always read 100%. Count them instead. */}
+                {group === 'MCP'
+                  ? `${gs.length} credential${gs.length === 1 ? '' : 's'}`
+                  : `${gs.filter(s => s.isSet).length} / ${gs.length} set`}
               </span>
             </div>
+            {group === 'MCP' && (
+              <p className="text-[11px] text-primary-40 leading-relaxed mb-3 -mt-1">
+                Credentials belonging to the servers on the <span className="text-primary-70">MCP</span> page. They are
+                created there (paste a bearer token, or Connect for OAuth) and listed here so every key the agent holds
+                shows up in one inventory. Removing one here leaves its server wired in <span className="text-primary-70">.mcp.json</span> but
+                unauthenticated, and runs will skip MCP with a warning until it is set again.
+              </p>
+            )}
             <div className="border border-[rgba(250,250,250,0.10)] divide-y divide-[rgba(250,250,250,0.08)]">
               {gs.map(secret => (
                 <div key={secret.name} id={`secret-${secret.name}`} className={`group px-[var(--space-md)] py-[var(--space-sm)] scroll-mt-24 transition-colors ${editingSecret === secret.name ? 'bg-aeon-red/5' : ''}`}>

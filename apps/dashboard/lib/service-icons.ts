@@ -1,4 +1,5 @@
 import { GATEWAY_REGISTRY } from './gateway-registry'
+import { MCP_SECRET_OWNER, MCP_SECRET_RE } from './mcp-catalog'
 
 // Which brand mark each credential / group carries, and the rules for picking it.
 // Kept apart from components/ui/ServiceIcon.tsx (the rendering) so it stays plain
@@ -67,9 +68,28 @@ const GLYPHS: Record<string, ServiceGlyph> = {
   NOTIFY_EMAIL_TO: 'mail',
 }
 
+// MCP server credentials (MCP_<SLUG>_TOKEN / _OAUTH) carry their server's brand,
+// taken from the same MCP_CATALOG row that drives the MCP page's Featured card -
+// so a credential and the server it belongs to always show the same mark. These
+// are full image URLs, not domains, so they ride in as explicit overrides rather
+// than through the favicon service.
+const MCP_ICON_URLS: Record<string, string> = Object.fromEntries(
+  Object.entries(MCP_SECRET_OWNER).map(([name, entry]) => [name, entry.logo]),
+)
+
 // Explicit logo overrides for services whose favicon is wrong/outdated. Vendored
 // into public/icons so they don't depend on a third-party host staying up.
 const ICON_URLS: Record<string, string> = {
+  ...MCP_ICON_URLS,
+}
+
+// A credential's glyph fallback. Custom MCP servers aren't in the catalog, so
+// there's no logo to show - give them the generic server mark rather than the
+// grey two-letter badge, which would make a whole MCP group look broken.
+function glyphFor(name: string): ServiceGlyph | undefined {
+  if (GLYPHS[name]) return GLYPHS[name]
+  if (MCP_SECRET_RE.test(name)) return 'server'
+  return undefined
 }
 
 // Same idea, keyed by DOMAIN — applies to group headers (which pass `domain`
@@ -79,7 +99,7 @@ const DOMAIN_ICON_URLS: Record<string, string> = {
   'langfuse.com': '/icons/langfuse.svg',
 }
 
-export type ServiceGlyph = 'mail' | 'key'
+export type ServiceGlyph = 'mail' | 'key' | 'server'
 
 export interface ServiceMarkQuery {
   // A credential / group name resolved against the maps above…
@@ -108,5 +128,5 @@ export function resolveServiceMark({ name, domain, glyph }: ServiceMarkQuery): {
   // over the favicon service.
   const explicitSrc = name ? ICON_URLS[name] : undefined
   const domainSrc = resolvedDomain ? (DOMAIN_ICON_URLS[resolvedDomain] ?? faviconUrl(resolvedDomain)) : undefined
-  return { src: explicitSrc ?? domainSrc, glyph: glyph ?? (name ? GLYPHS[name] : undefined) }
+  return { src: explicitSrc ?? domainSrc, glyph: glyph ?? (name ? glyphFor(name) : undefined) }
 }

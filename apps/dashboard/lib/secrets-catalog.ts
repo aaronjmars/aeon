@@ -2,6 +2,7 @@ import { execFileSync } from 'child_process'
 import { ghAvailable, ghArgsRepo, dispatchCommandsWorkflow } from './gh'
 import { syncGatewayProvider } from './gateway'
 import { GATEWAY_SECRET_NAMES } from './gateway-registry'
+import { MCP_SECRET_RE, MCP_SECRET_OWNER, mcpServerLabel, oauthVar } from './mcp-catalog'
 import type { Secret } from './types'
 
 // The curated credential catalog: every secret the dashboard/CLI knows how to
@@ -91,11 +92,41 @@ export function getSecrets(): { secrets: Secret[]; ghReady: boolean } {
   const setSecrets = new Set(listSecretNames())
   const secrets: Secret[] = BUILTIN_SECRETS.map(s => ({ ...s, isSet: setSecrets.has(s.name) }))
   for (const name of setSecrets) {
-    if (!BUILTIN_NAMES.has(name)) {
-      secrets.push({ name, group: 'Skill Keys', description: 'Custom secret', isSet: true })
-    }
+    if (BUILTIN_NAMES.has(name)) continue
+    secrets.push(MCP_SECRET_RE.test(name)
+      ? { name, group: 'MCP', description: describeMcpSecret(name, setSecrets), isSet: true }
+      : { name, group: 'Skill Keys', description: 'Custom secret', isSet: true })
   }
   return { secrets, ghReady: true }
+}
+
+// MCP credentials can't be builtins: they're minted per server by the MCP page
+// (paste-a-bearer-token, or the OAuth Connect flow), so their names aren't known
+// until one exists. Describe them at read time instead, from the catalog when
+// the server is a featured one — otherwise the group would be a wall of
+// undescribed MCP_*_TOKEN rows in the "Skill Keys" catch-all, which is where
+// they used to land.
+export function describeMcpSecret(name: string, setSecrets: ReadonlySet<string>): string {
+  const label = mcpServerLabel(name)
+  // A catalogued server is named by its brand; a custom one only has the slug
+  // the operator typed, so quote it to make clear it's their name, not ours.
+  const via = MCP_SECRET_OWNER[name] ? `the ${label} MCP server` : `your "${label}" MCP server`
+
+  if (name.endsWith('_OAUTH')) {
+    return `OAuth refresh material for ${via} - token endpoint, client ID and refresh token, captured by Connect on the MCP page. The runner mints a fresh access token from this before every run; providers rotate it, so GH_SECRETS_PAT must be set for the rotation to persist. Managed automatically: remove it to revoke, then re-connect.`
+  }
+  // A sibling _OAUTH secret means this token is Connect-minted and re-minted
+  // every run; without one it's a static bearer the operator pasted in.
+  return setSecrets.has(oauthVar(mcpSlugStem(name)))
+    ? `Access token for ${via}, referenced as \${${name}} by its Authorization header in .mcp.json. Short-lived and re-minted from the stored refresh material before every run, so don't paste over it by hand - re-connect on the MCP page instead.`
+    : `Static bearer token for ${via}, referenced as \${${name}} by its Authorization header in .mcp.json. Pasted on the MCP page when the server was added; re-paste it there to rotate.`
+}
+
+// The slug stem inside an MCP credential name, in the sanitized form both
+// tokenVar() and oauthVar() produce - so `MCP_GLIM_TOKEN` maps to the sibling
+// `MCP_GLIM_OAUTH` without needing to recover the original slug's punctuation.
+function mcpSlugStem(name: string): string {
+  return name.replace(/^MCP_/, '').replace(/_(TOKEN|OAUTH)$/, '')
 }
 
 // Set a repo secret via gh, then run the same side-effects the dashboard route

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Scramble } from './ui/Animated'
 import { inputCls } from '../lib/utils'
-import { MCP_CATALOG } from '../lib/mcp-catalog'
+import { MCP_CATALOG, tokenVar } from '../lib/mcp-catalog'
 import type { Secret, McpServer, McpServers, Harness } from '../lib/types'
 
 // One-click starters - public HTTP MCP servers that install with no token.
@@ -92,9 +92,10 @@ export function McpPanel({ harness, servers, loading, saving, secrets, busy, onS
   const [oauthError, setOauthError] = useState('')
 
   // The operator never types a secret name. They paste the bearer token (which
-  // IS the secret); we derive the env-var to store it under from the server name.
+  // IS the secret); tokenVar (lib/mcp-catalog) derives the env-var to store it
+  // under from the server name - the same derivation the OAuth flow and the
+  // Access Keys MCP group use, so all three agree on what a server's creds are called.
   const slugify = (s: string) => s.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '-').replace(/^-+|-+$/g, '')
-  const tokenVar = (slug: string) => 'MCP_' + slug.toUpperCase().replace(/[^A-Z0-9_]/g, '_') + '_TOKEN'
 
   const dirty = JSON.stringify(draft) !== JSON.stringify(servers)
   const names = Object.keys(draft)

@@ -16,15 +16,13 @@
 // advertises none of this simply can't be auto-connected, and we say so.
 import { randomBytes, createHash } from 'crypto'
 
-// --- secret names (kept in lockstep with McpPanel's tokenVar) ---------------
+// --- secret names -----------------------------------------------------------
 // A server's access token and its OAuth refresh material derive their secret
-// names from the slug, so the operator never types a secret name.
-export function tokenVar(slug: string): string {
-  return 'MCP_' + slug.toUpperCase().replace(/[^A-Z0-9_]/g, '_') + '_TOKEN'
-}
-export function oauthVar(slug: string): string {
-  return 'MCP_' + slug.toUpperCase().replace(/[^A-Z0-9_]/g, '_') + '_OAUTH'
-}
+// names from the slug, so the operator never types a secret name. Defined in
+// ./mcp-catalog (dependency-free, so the MCP panel and the credential catalog
+// can share the exact derivation without importing node:crypto via this file);
+// re-exported here because the OAuth flow is this module's public surface.
+export { tokenVar, oauthVar } from './mcp-catalog'
 
 // --- PKCE + state -----------------------------------------------------------
 function base64url(buf: Buffer): string {

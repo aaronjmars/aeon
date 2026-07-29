@@ -10,7 +10,8 @@ import { describe, it } from "node:test";
 import { strict as assert } from "node:assert";
 
 import { resolveServiceMark } from "./service-icons";
-import { BUILTIN_SECRETS } from "./secrets-catalog";
+import { BUILTIN_SECRETS, describeMcpSecret } from "./secrets-catalog";
+import { MCP_CATALOG, tokenVar, oauthVar, MCP_SECRET_RE, mcpServerLabel } from "./mcp-catalog";
 
 describe("resolveServiceMark", () => {
   it("gives every catalogued secret a logo or a glyph, never the initials badge", () => {
@@ -36,5 +37,42 @@ describe("resolveServiceMark", () => {
     const { src, glyph } = resolveServiceMark({ name: "SOME_CUSTOM_KEY" });
     assert.equal(src, undefined);
     assert.equal(glyph, undefined);
+  });
+
+  it("gives every featured MCP server's credentials its catalog logo", () => {
+    for (const entry of MCP_CATALOG) {
+      for (const name of [tokenVar(entry.slug), oauthVar(entry.slug)]) {
+        assert.equal(resolveServiceMark({ name }).src, entry.logo, `${name} should carry ${entry.name}'s logo`);
+      }
+    }
+  });
+
+  it("gives a custom MCP server's credential the server glyph, not initials", () => {
+    const { src, glyph } = resolveServiceMark({ name: "MCP_MY_SERVER_TOKEN" });
+    assert.equal(src, undefined);
+    assert.equal(glyph, "server");
+  });
+});
+
+describe("MCP credential grouping", () => {
+  it("matches only the names tokenVar/oauthVar mint", () => {
+    assert.ok(MCP_SECRET_RE.test("MCP_GLIM_TOKEN"));
+    assert.ok(MCP_SECRET_RE.test("MCP_ROBINHOOD_TRADING_OAUTH"));
+    // Near-misses that must stay in the Skill Keys catch-all.
+    assert.ok(!MCP_SECRET_RE.test("MCP_TOKEN"));
+    assert.ok(!MCP_SECRET_RE.test("GH_SECRETS_PAT"));
+    assert.ok(!MCP_SECRET_RE.test("MCP_GLIM_TOKEN_BACKUP"));
+  });
+
+  it("labels a featured server by brand and a custom one by slug", () => {
+    assert.equal(mcpServerLabel("MCP_ROBINHOOD_TRADING_TOKEN"), "Robinhood Trading");
+    assert.equal(mcpServerLabel("MCP_MY_SERVER_OAUTH"), "my server");
+  });
+
+  it("tells an OAuth-minted token apart from a pasted static bearer", () => {
+    const oauthManaged = describeMcpSecret("MCP_GLIM_TOKEN", new Set(["MCP_GLIM_TOKEN", "MCP_GLIM_OAUTH"]));
+    assert.match(oauthManaged, /re-minted/);
+    const staticBearer = describeMcpSecret("MCP_GLIM_TOKEN", new Set(["MCP_GLIM_TOKEN"]));
+    assert.match(staticBearer, /Static bearer/);
   });
 });

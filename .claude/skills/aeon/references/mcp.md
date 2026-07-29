@@ -88,6 +88,15 @@ Always handle the not-connected case explicitly, as `glim-mcp` does:
 
 If calls cost money, set a hard budget in the body (`glim-mcp`: ≤10 tool calls, ≤25 with `--deep`) and say to synthesize from what's in hand when it's spent.
 
+## Where the credentials show up
+
+A connected server's credentials are stored as ordinary repo secrets named from its slug (`tokenVar`/`oauthVar` in `lib/mcp-catalog.ts`), so they appear in **two** places:
+
+- **MCP panel** — inline per server, next to the `${VAR}` it satisfies. Where you set or re-connect them.
+- **Settings → Access Keys → MCP** — the credential inventory. Rows are built dynamically from whatever `MCP_*_TOKEN` / `MCP_*_OAUTH` secrets exist, each carrying its server's catalog logo; the section is hidden entirely until a server is connected. Removing one here leaves the server wired in `.mcp.json` but unauthenticated.
+
+There is nothing to add to `BUILTIN_SECRETS` when you add a catalog server — the group is derived from `MCP_SECRET_RE` and `MCP_SECRET_OWNER`, so a new `MCP_CATALOG` entry brings its own group row, description, and logo.
+
 ## Key refresh
 
 ### Static tokens
@@ -138,7 +147,9 @@ So on the Claude harness a single stale token silently disables every MCP tool. 
 
 | Piece | File |
 |---|---|
-| Catalog (add featured servers here) | `apps/dashboard/lib/mcp-catalog.ts` |
+| Catalog (add featured servers here) + credential-name derivation | `apps/dashboard/lib/mcp-catalog.ts` |
+| Access Keys **MCP** group (row descriptions) | `apps/dashboard/lib/secrets-catalog.ts` |
+| Per-credential logos | `apps/dashboard/lib/service-icons.ts` |
 | OAuth core — PKCE, discovery, DCR, exchange | `apps/dashboard/lib/mcp-oauth.ts` |
 | Server glue — pending flow, browser, secrets | `apps/dashboard/lib/mcp-oauth-server.ts` |
 | Start + callback routes | `apps/dashboard/app/api/mcp-auth/{route,callback/route}.ts` |
