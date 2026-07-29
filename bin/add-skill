@@ -107,7 +107,7 @@ if [[ "$LIST_ONLY" == "true" ]]; then
     skill_dir="$REPO_DIR/$skill"
     if [[ -f "$skill_dir/SKILL.md" ]]; then
       # Extract description from frontmatter
-      desc=$(sed -n '/^---$/,/^---$/p' "$skill_dir/SKILL.md" | grep -E '^description:' | sed 's/^description: *//' | head -1)
+      desc=$(skill_fm "$skill_dir/SKILL.md" description)
       if [[ -z "$desc" ]]; then
         desc=$(sed -n '/^---$/,/^---$/p' "$skill_dir/SKILL.md" | sed -n '/^description:/,/^[a-z]/p' | head -2 | tail -1 | sed 's/^ *//')
       fi

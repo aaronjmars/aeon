@@ -4,7 +4,7 @@ import { useState } from 'react'
 import type { Skill, Run, Secret, SkillKeyRef, SkillMcpRef, McpServers } from '../lib/types'
 import { modelsForHarness, keyProvidedByHarness } from '../lib/constants'
 import { MCP_BY_SLUG } from '../lib/mcp-catalog'
-import { displayName, getSkillStatus, cronLabel, statusDot, inputCls, runStatusColor } from '../lib/utils'
+import { displayName, getSkillStatus, cronLabel, statusDot, inputCls, runStatusColor, runStatusGlyph } from '../lib/utils'
 import { ScheduleEditor } from './ScheduleEditor'
 import { timeAgo } from '../lib/utils'
 import { Scramble } from './ui/Animated'
@@ -384,9 +384,7 @@ export function SkillDetail({ skill, runs, model, harness, secrets, mcpServers, 
               onClick={() => onViewRun(run)}
               className="w-full flex items-center gap-4 px-5 py-3 hover:bg-aeon-panel transition-colors text-left group"
             >
-              <span className={`text-sm w-4 shrink-0 ${runStatusColor(run)}`}>
-                {run.conclusion === 'success' ? '✓' : run.conclusion === 'failure' ? '✗' : run.status === 'in_progress' ? '◌' : '·'}
-              </span>
+              <span className={`text-sm w-4 shrink-0 ${runStatusColor(run)}`}>{runStatusGlyph(run)}</span>
               <span className="text-xs text-primary-70 truncate flex-1 font-mono group-hover:text-aeon-fg transition-colors">
                 {run.conclusion === 'success' ? 'Task completed' : run.conclusion === 'failure' ? 'Task failed' : run.status === 'in_progress' ? 'Working…' : 'Queued'}
               </span>

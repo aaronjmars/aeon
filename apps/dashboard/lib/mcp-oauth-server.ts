@@ -3,8 +3,7 @@
 // tokens as repo secrets + wiring the server into .mcp.json. Kept out of
 // lib/mcp-oauth.ts so that module stays pure/fetch-only and unit-testable; this
 // one imports gh + the child_process/github helpers.
-import { execFileSync } from 'child_process'
-import { ghArgsRepo } from './gh'
+import { ghSecretSet } from './gh'
 import type { McpServer } from './types'
 import { tokenVar, oauthVar, type TokenSet } from './mcp-oauth'
 
@@ -31,13 +30,6 @@ export const pendingFlows = new Map<string, PendingFlow>()
 
 // Ample time for the operator to approve in the browser, under Node's request cap.
 export const OAUTH_TIMEOUT_MS = 240_000
-
-function ghSecretSet(name: string, value: string): void {
-  execFileSync('gh', ['secret', 'set', name, ...ghArgsRepo()], {
-    input: value,
-    stdio: ['pipe', 'pipe', 'pipe'],
-  })
-}
 
 // Persist the captured tokens as repo secrets and return the .mcp.json server
 // descriptor for the caller (the panel) to add via its normal save path — keeping

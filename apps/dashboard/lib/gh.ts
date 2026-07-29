@@ -66,6 +66,15 @@ export function ensureActionsCanOpenPRs(): void {
   } catch { /* auto-merge unavailable (e.g. private free repo) — skill falls back to direct merge */ }
 }
 
+// Write a repo secret. The value goes in on stdin, never as an argv token, so it
+// stays out of the process table and any shell history.
+export function ghSecretSet(name: string, value: string): void {
+  execFileSync('gh', ['secret', 'set', name, ...ghArgsRepo()], {
+    input: value,
+    stdio: ['pipe', 'pipe', 'pipe'],
+  })
+}
+
 // Dispatch the "Setup Telegram Commands" workflow (.github/workflows/setup-commands.yml).
 // It reads TELEGRAM_BOT_TOKEN server-side (where secrets are readable) and pushes the
 // bot's `/` command menu via setMyCommands + setChatMenuButton — no token pasting. Used

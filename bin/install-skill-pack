@@ -483,7 +483,7 @@ if [[ "$LIST_ONLY" == "true" ]]; then
     if [[ -z "$desc" ]]; then
       skill_md="$PACK_DIR/${SKILL_PATHS[$i]}/SKILL.md"
       if [[ -f "$skill_md" ]]; then
-        desc=$(sed -n '/^---$/,/^---$/p' "$skill_md" | grep -E '^description:' | sed 's/^description: *//' | head -1)
+        desc=$(skill_fm "$skill_md" description)
       fi
     fi
     if [[ ${#desc} -gt 80 ]]; then desc="${desc:0:77}..."; fi
@@ -734,7 +734,7 @@ for i in "${!SLUGS[@]}"; do
 
   # Pull description from frontmatter if manifest didn't provide one.
   if [[ -z "$desc" ]]; then
-    desc=$(sed -n '/^---$/,/^---$/p' "$src_dir/SKILL.md" | grep -E '^description:' | sed 's/^description: *//' | head -1)
+    desc=$(skill_fm "$src_dir/SKILL.md" description)
   fi
 
   if ! scan_and_prompt "$slug" "$src_dir/SKILL.md"; then

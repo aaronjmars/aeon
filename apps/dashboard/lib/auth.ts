@@ -1,5 +1,5 @@
 import { execFileSync, execSync } from 'child_process'
-import { ghArgsRepo } from './gh'
+import { ghArgsRepo, ghSecretSet } from './gh'
 import { normalizeAuthConfig } from './auth-provider'
 import { syncGatewayProvider } from './gateway'
 
@@ -31,10 +31,7 @@ export async function configureAuth(
   }
 
   if (config.key) {
-    execFileSync('gh', ['secret', 'set', config.secretName, ...ghArgsRepo()], {
-      input: config.key,
-      stdio: ['pipe', 'pipe', 'pipe'],
-    })
+    ghSecretSet(config.secretName, config.key)
     await syncGatewayProvider()
     return { ok: true, method: config.method, secret: config.secretName, baseUrl: Boolean(config.baseUrl), gateway: config.gateway }
   }
@@ -58,10 +55,7 @@ export async function configureAuth(
     throw new Error('Could not extract a valid OAuth token. Paste your API key manually instead.')
   }
 
-  execFileSync('gh', ['secret', 'set', 'CLAUDE_CODE_OAUTH_TOKEN', ...ghArgsRepo()], {
-    input: token,
-    stdio: ['pipe', 'pipe', 'pipe'],
-  })
+  ghSecretSet('CLAUDE_CODE_OAUTH_TOKEN', token)
   await syncGatewayProvider()
   return { ok: true, method: 'oauth' }
 }

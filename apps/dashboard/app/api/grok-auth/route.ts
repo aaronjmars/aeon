@@ -3,7 +3,7 @@ import { spawn, execFileSync } from 'child_process'
 import { existsSync } from 'fs'
 import { homedir } from 'os'
 import { join } from 'path'
-import { ghArgsRepo } from '@/lib/gh'
+import { ghSecretSet } from '@/lib/gh'
 import { syncGatewayProvider, syncHarness } from '@/lib/gateway'
 import { errorResponse, requireGh } from '@/lib/http'
 
@@ -80,10 +80,7 @@ export async function POST(request: Request) {
 
     // Path 1 — API key.
     if (key) {
-      execFileSync('gh', ['secret', 'set', 'XAI_API_KEY', ...ghArgsRepo()], {
-        input: key,
-        stdio: ['pipe', 'pipe', 'pipe'],
-      })
+      ghSecretSet('XAI_API_KEY', key)
       await syncGatewayProvider() // XAI_API_KEY is also the Grok gateway secret
       return NextResponse.json({ ok: true, method: 'api-key', secret: 'XAI_API_KEY' })
     }
@@ -100,10 +97,7 @@ export async function POST(request: Request) {
 
     // tar.gz just the credential (rooted at $HOME so it restores as ~/.grok/auth.json).
     const archive = execFileSync('tar', ['czf', '-', '-C', home, AUTH_FILE], { maxBuffer: 8 * 1024 * 1024 })
-    execFileSync('gh', ['secret', 'set', 'GROK_CREDENTIALS', ...ghArgsRepo()], {
-      input: archive.toString('base64'),
-      stdio: ['pipe', 'pipe', 'pipe'],
-    })
+    ghSecretSet('GROK_CREDENTIALS', archive.toString('base64'))
 
     // GROK_CREDENTIALS is grok-CLI-only, so connecting the X account is an
     // unambiguous "use the grok harness" signal: switch harness to grok and push

@@ -73,6 +73,16 @@ function authHeaders(token: string) {
   }
 }
 
+// Authenticated GET against the repo's "contents" endpoint. Uncached: the
+// dashboard reads config it may have just written.
+function contentsGet(path: string): Promise<Response> {
+  const { token, repo } = getConfig()
+  return fetch(`${GITHUB_API}/repos/${repo}/contents/${path}`, {
+    headers: authHeaders(token),
+    cache: 'no-store',
+  })
+}
+
 // Parse a GitHub "list contents" response into its entry array. A 404 and a
 // non-array body (i.e. a single file, not a directory) both yield [] — an
 // absent-or-not-a-directory path is not an error for callers that list.
@@ -90,11 +100,7 @@ export async function getFileContent(path: string): Promise<{ content: string; s
     const content = await readFile(join(REPO_ROOT, path), 'utf-8')
     return { content, sha: '' }
   }
-  const { token, repo } = getConfig()
-  const res = await fetch(`${GITHUB_API}/repos/${repo}/contents/${path}`, {
-    headers: authHeaders(token),
-    cache: 'no-store',
-  })
+  const res = await contentsGet(path)
   if (!res.ok) throw new Error(`GitHub API ${res.status}: failed to read ${path}`)
   const data = (await res.json()) as GitHubContentFile
   return {
@@ -190,12 +196,7 @@ export async function getDirectory(path: string): Promise<Array<{ name: string; 
       return []
     }
   }
-  const { token, repo } = getConfig()
-  const res = await fetch(`${GITHUB_API}/repos/${repo}/contents/${path}`, {
-    headers: authHeaders(token),
-    cache: 'no-store',
-  })
-  return parseContentsList(res, path)
+  return parseContentsList(await contentsGet(path), path)
 }
 
 // --- Remote repo helpers (for importing skills) ---

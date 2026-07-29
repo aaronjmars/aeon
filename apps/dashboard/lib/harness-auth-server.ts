@@ -2,7 +2,7 @@ import { execFileSync, spawn, type ChildProcess } from 'child_process'
 import { existsSync } from 'fs'
 import { homedir } from 'os'
 import { join } from 'path'
-import { ghArgsRepo } from './gh'
+import { ghSecretSet } from './gh'
 import { HARNESS_AUTH, DEVICE_URL_RE } from './harness-auth'
 
 // Server-side (Node) half of native harness auth. Shared by `aeon auth` and
@@ -18,7 +18,7 @@ export function setHarnessApiKey(harness: string, key: string): { secret: string
   const k = key.trim()
   if (!k) throw new Error('empty key')
   const secret = spec.apiKey.detect ? spec.apiKey.detect(k) : spec.apiKey.secret
-  execFileSync('gh', ['secret', 'set', secret, ...ghArgsRepo()], { input: k, stdio: ['pipe', 'pipe', 'pipe'] })
+  ghSecretSet(secret, k)
   return { secret }
 }
 
@@ -34,10 +34,7 @@ export function captureHarnessCreds(harness: string): { secret: string } {
     throw new Error(`Login completed but none of ${spec.oauth.credPaths.join(', ')} was found under $HOME. Try the login in a terminal, then connect again.`)
   }
   const archive = execFileSync('tar', ['czf', '-', '-C', home, ...present], { maxBuffer: 8 * 1024 * 1024 })
-  execFileSync('gh', ['secret', 'set', spec.oauth.secret, ...ghArgsRepo()], {
-    input: archive.toString('base64'),
-    stdio: ['pipe', 'pipe', 'pipe'],
-  })
+  ghSecretSet(spec.oauth.secret, archive.toString('base64'))
   return { secret: spec.oauth.secret }
 }
 

@@ -2,9 +2,22 @@
 
 import { useEffect, useState } from 'react'
 import type { Run, SkillOutput, AnalyticsData } from '../lib/types'
-import { timeAgo, runStatusColor } from '../lib/utils'
+import type { RunLogs } from '../lib/runs'
+import { timeAgo, runStatusColor, runStatusGlyph } from '../lib/utils'
 import { SpecNode } from './SpecNode'
 import { PanelError } from './PanelError'
+
+// The Activity and Runs tabs render the same row; only their empty-state copy differs.
+function RunRow({ run, onView }: { run: Run; onView: (run: Run) => void }) {
+  return (
+    <button onClick={() => onView(run)}
+      className="w-full flex items-center gap-2.5 px-3 py-2.5 border-b border-[rgba(250,250,250,0.04)] hover:bg-aeon-bg transition-colors text-left">
+      <span className={`text-xs ${runStatusColor(run)}`}>{runStatusGlyph(run)}</span>
+      <span className="text-xs text-primary-70 truncate flex-1 font-mono">{run.workflow}</span>
+      <span className="text-[11px] text-primary-35 font-mono tabular-nums">{timeAgo(run.created_at)}</span>
+    </button>
+  )
+}
 
 interface RightPanelProps {
   runs: Run[]
@@ -39,7 +52,7 @@ export function RightPanel({ runs, outputs, feedLoading, feedError, analyticsDat
 
   const viewRunLogs = async (run: Run) => {
     setSelectedRun(run); setRunLogs(''); setRunSummary(''); setShowFullLogs(false); setLogsLoading(true); setRightTab('runs')
-    try { const r = await fetch(`/api/runs/${run.id}/logs`); if (r.ok) { const d = await r.json(); setRunSummary(d.summary || ''); setRunLogs(d.logs || '') } } catch { setRunLogs('Failed') } finally { setLogsLoading(false) }
+    try { const r = await fetch(`/api/runs/${run.id}/logs`); if (r.ok) { const d = await r.json() as RunLogs; setRunSummary(d.summary || ''); setRunLogs(d.logs || '') } } catch { setRunLogs('Failed') } finally { setLogsLoading(false) }
   }
 
   // Collapsed: a thin rail with an expand control and a vertical label.
@@ -100,16 +113,7 @@ export function RightPanel({ runs, outputs, feedLoading, feedError, analyticsDat
           ) : (
           <div>
             {!runs.length ? <div className="px-4 py-12 text-center text-xs text-primary-35 font-mono">No activity yet</div> :
-              runs.map(run => (
-                <button key={run.id} onClick={() => viewRunLogs(run)}
-                  className="w-full flex items-center gap-2.5 px-3 py-2.5 border-b border-[rgba(250,250,250,0.04)] hover:bg-aeon-bg transition-colors text-left">
-                  <span className={`text-xs ${runStatusColor(run)}`}>
-                    {run.conclusion === 'success' ? '\u2713' : run.conclusion === 'failure' ? '\u2717' : run.status === 'in_progress' ? '\u25cc' : '\u00b7'}
-                  </span>
-                  <span className="text-xs text-primary-70 truncate flex-1 font-mono">{run.workflow}</span>
-                  <span className="text-[11px] text-primary-35 font-mono tabular-nums">{timeAgo(run.created_at)}</span>
-                </button>
-              ))}
+              runs.map(run => <RunRow key={run.id} run={run} onView={viewRunLogs} />)}
           </div>
           )
         )}
@@ -142,16 +146,7 @@ export function RightPanel({ runs, outputs, feedLoading, feedError, analyticsDat
           ) : (
             <div>
               {!runs.length ? <div className="px-4 py-12 text-center text-xs text-primary-35 font-mono">No runs</div> :
-                runs.map(run => (
-                  <button key={run.id} onClick={() => viewRunLogs(run)}
-                    className="w-full flex items-center gap-2.5 px-3 py-2.5 border-b border-[rgba(250,250,250,0.04)] hover:bg-aeon-bg transition-colors text-left">
-                    <span className={`text-xs ${runStatusColor(run)}`}>
-                      {run.conclusion === 'success' ? '\u2713' : run.conclusion === 'failure' ? '\u2717' : run.status === 'in_progress' ? '\u25cc' : '\u00b7'}
-                    </span>
-                    <span className="text-xs text-primary-70 truncate flex-1 font-mono">{run.workflow}</span>
-                    <span className="text-[11px] text-primary-35 font-mono tabular-nums">{timeAgo(run.created_at)}</span>
-                  </button>
-                ))}
+                runs.map(run => <RunRow key={run.id} run={run} onView={viewRunLogs} />)}
             </div>
           )
         )}
