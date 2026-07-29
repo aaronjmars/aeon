@@ -60,7 +60,7 @@ function detectPiSecret(key: string): string {
   return 'ANTHROPIC_API_KEY'
 }
 
-export const HARNESS_AUTH: Record<string, HarnessAuthSpec> = {
+const HARNESS_AUTH_SPECS = {
   codex: {
     authSecrets: ['CODEX_AUTH', 'OPENAI_API_KEY', 'OPENROUTER_API_KEY'],
     oauth: {
@@ -96,12 +96,13 @@ export const HARNESS_AUTH: Record<string, HarnessAuthSpec> = {
     authSecrets: ['MISTRAL_API_KEY', 'OPENROUTER_API_KEY'],
     apiKey: { secret: 'MISTRAL_API_KEY', placeholder: 'Mistral API key' },
   },
-}
+} satisfies Record<string, HarnessAuthSpec>
 
-// Is `harness` one of the run-harness harnesses with native auth handling?
-export function isRunHarness(harness: string): harness is keyof typeof HARNESS_AUTH {
-  return harness in HARNESS_AUTH
-}
+// Every caller indexes this with a harness name that came off the wire, out of
+// aeon.yml, or off an argv flag — so the value type carries the miss. Under the
+// old `Record<string, HarnessAuthSpec>` the `if (!spec)` guards at all six call
+// sites were dead code the compiler believed could never fire.
+export const HARNESS_AUTH: Record<string, HarnessAuthSpec | undefined> = HARNESS_AUTH_SPECS
 
 // The URL a device-auth flow prints for the operator to approve in the browser.
 // Permissive on purpose — codex (ChatGPT) and kimi (Moonshot) print different

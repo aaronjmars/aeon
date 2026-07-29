@@ -129,7 +129,8 @@ export const GROK_AUTH_SECRETS = ['GROK_CREDENTIALS', 'XAI_API_KEY']
 // full ordered set lives in the HARNESS_AUTH registry (see lib/harness-auth.ts).
 export function authSecretsForHarness(harness: string): string[] {
   if (harness === 'grok') return GROK_AUTH_SECRETS
-  if (HARNESS_AUTH[harness]) return HARNESS_AUTH[harness].authSecrets
+  const spec = HARNESS_AUTH[harness]
+  if (spec) return spec.authSecrets
   return CLAUDE_AUTH_SECRETS
 }
 

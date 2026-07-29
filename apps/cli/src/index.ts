@@ -40,7 +40,9 @@ Global options:
   --dry-run    Preview a mutating command without writing / dispatching / pushing
   -h, --help   Help (works per-command too, e.g. \`aeon skills --help\`)`
 
-const COMMANDS: Record<string, (argv: string[]) => void | Promise<void>> = {
+// Partial: `cmd` is argv, so the miss is real — without it the `if (!handler)`
+// guard below is dead code the compiler believes can never fire.
+const COMMANDS: Partial<Record<string, (argv: string[]) => void | Promise<void>>> = {
   skills: skillsCommand,
   runs: runsCommand,
   secrets: secretsCommand,

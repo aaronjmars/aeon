@@ -196,6 +196,18 @@ export interface SyncResult {
   syncError?: string
 }
 
+// POST /api/mcp-auth - the OAuth connect result. `server` is the .mcp.json
+// descriptor the panel adds through its normal save path; `warning` is set when
+// the grant carried no refresh token.
+export interface McpAuthResponse {
+  ok?: boolean
+  slug?: string
+  server?: McpServer
+  durable?: boolean
+  warning?: string
+  error?: string
+}
+
 // GET /api/soul/examples - the gallery people available to install.
 export interface SoulExample { key: string; label: string; blurb: string }
 export interface SoulExamplesResponse { examples: SoulExample[] }

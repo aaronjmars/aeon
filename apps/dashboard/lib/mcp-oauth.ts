@@ -15,6 +15,7 @@
 // builds on. Every network hop is best-effort with clear errors: a server that
 // advertises none of this simply can't be auto-connected, and we say so.
 import { randomBytes, createHash } from 'crypto'
+import { isRecord } from './utils'
 
 // --- secret names -----------------------------------------------------------
 // A server's access token and its OAuth refresh material derive their secret
@@ -61,6 +62,30 @@ async function fetchJson(url: string, init?: RequestInit): Promise<unknown> {
   return res.json()
 }
 
+// fetchJson deliberately returns `unknown` — these bodies come from an arbitrary
+// third-party authorization server. Narrow with a guard rather than a cast, so
+// the checks below are the ones the compiler sees too.
+interface PrmMetadata { authorization_servers?: string[]; resource?: string }
+
+function isPrmMetadata(v: unknown): v is PrmMetadata {
+  if (!isRecord(v)) return false
+  const servers = v.authorization_servers
+  return (servers === undefined || (Array.isArray(servers) && servers.every(s => typeof s === 'string')))
+    && (v.resource === undefined || typeof v.resource === 'string')
+}
+
+function isAsMetadata(v: unknown): v is AsMetadata {
+  return isRecord(v) && typeof v.authorization_endpoint === 'string' && typeof v.token_endpoint === 'string'
+}
+
+function isClientCreds(v: unknown): v is ClientCreds {
+  return isRecord(v) && typeof v.client_id === 'string'
+}
+
+function isTokenSet(v: unknown): v is TokenSet {
+  return isRecord(v) && typeof v.access_token === 'string'
+}
+
 // Resolve a URL against a well-known suffix, preserving any resource path per
 // RFC 9728 (`/.well-known/oauth-protected-resource` MAY carry the resource path).
 function wellKnown(base: string, suffix: string): string {
@@ -73,9 +98,12 @@ function wellKnown(base: string, suffix: string): string {
 export async function discover(mcpUrl: string): Promise<Discovery> {
   const origin = new URL(mcpUrl).origin
   // 1. Protected Resource Metadata (RFC 9728) — optional. Try path- then origin-scoped.
-  let prm: { authorization_servers?: string[]; resource?: string } | undefined
+  let prm: PrmMetadata | undefined
   for (const url of [wellKnown(mcpUrl, 'oauth-protected-resource'), `${origin}/.well-known/oauth-protected-resource`]) {
-    try { prm = (await fetchJson(url)) as typeof prm; if (prm?.authorization_servers?.length) break } catch { /* try next */ }
+    try {
+      const body = await fetchJson(url)
+      if (isPrmMetadata(body)) { prm = body; if (prm.authorization_servers?.length) break }
+    } catch { /* try next */ }
   }
   // If PRM names an authorization server, use it. Otherwise fall back to the MCP
   // server's OWN origin acting as its authorization server — the behavior compliant
@@ -92,8 +120,8 @@ export async function discover(mcpUrl: string): Promise<Discovery> {
     `${authServer.replace(/\/$/, '')}/.well-known/openid-configuration`,
   ]) {
     try {
-      const m = (await fetchJson(url)) as AsMetadata
-      if (m?.authorization_endpoint && m?.token_endpoint) { meta = m; break }
+      const m = await fetchJson(url)
+      if (isAsMetadata(m)) { meta = m; break }
     } catch { /* try next */ }
   }
   if (!meta) {
@@ -121,12 +149,12 @@ export async function registerClient(
     response_types: ['code'],
     token_endpoint_auth_method: 'none', // public client (PKCE); AS may override
   }
-  const reg = (await fetchJson(registrationEndpoint, {
+  const reg = await fetchJson(registrationEndpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
-  })) as ClientCreds
-  if (!reg.client_id) throw new Error('Dynamic client registration returned no client_id')
+  })
+  if (!isClientCreds(reg)) throw new Error('Dynamic client registration returned no client_id')
   return { client_id: reg.client_id, client_secret: reg.client_secret }
 }
 
@@ -178,8 +206,8 @@ async function postToken(tokenEndpoint: string, form: URLSearchParams, clientSec
   const res = await fetch(tokenEndpoint, { method: 'POST', headers, body: form.toString() })
   const text = await res.text()
   if (!res.ok) throw new Error(`token endpoint → ${res.status}: ${text.slice(0, 200)}`)
-  const tok = JSON.parse(text) as TokenSet
-  if (!tok.access_token) throw new Error('token endpoint returned no access_token')
+  const tok: unknown = JSON.parse(text)
+  if (!isTokenSet(tok)) throw new Error('token endpoint returned no access_token')
   return tok
 }
 

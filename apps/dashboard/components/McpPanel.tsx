@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Scramble } from './ui/Animated'
 import { inputCls } from '../lib/utils'
 import { MCP_CATALOG, tokenVar } from '../lib/mcp-catalog'
-import type { Secret, McpServer, McpServers, Harness } from '../lib/types'
+import type { Secret, McpServer, McpServers, McpAuthResponse, Harness } from '../lib/types'
 
 // One-click starters - public HTTP MCP servers that install with no token.
 const FEATURED = MCP_CATALOG
@@ -47,7 +47,7 @@ function refsOf(server: McpServer): string[] {
 function describe(server: McpServer): string {
   if (typeof server.url === 'string') return server.url
   if (typeof server.command === 'string') {
-    const args = Array.isArray(server.args) ? ' ' + (server.args as string[]).join(' ') : ''
+    const args = Array.isArray(server.args) ? ' ' + server.args.join(' ') : ''
     return server.command + args
   }
   return '-'
@@ -160,9 +160,10 @@ export function McpPanel({ harness, servers, loading, saving, secrets, busy, onS
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ slug, url: f.url, name: f.name, scopes: f.oauthScopes, clientId: f.oauthClientId }),
       })
-      const data = await res.json().catch(() => ({}))
+      const data = await res.json().catch(() => ({})) as McpAuthResponse
       if (!res.ok || !data.ok) throw new Error(data.error || `Connect failed (${res.status})`)
-      const next = { ...draft, [slug]: data.server as McpServer }
+      if (!data.server) throw new Error('Connect returned no server descriptor')
+      const next = { ...draft, [slug]: data.server }
       setDraft(next)
       onSave(next)
       if (data.warning) setOauthError(`Connected, but: ${data.warning}`)

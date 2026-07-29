@@ -152,7 +152,7 @@ export function SkillDetail({ skill, runs, model, harness, secrets, mcpServers, 
 
   // Join the skill's declared `mcp:` servers against the live .mcp.json config
   // (installed = its URL is present) and the MCP catalog for name/logo/url.
-  const installedMcpUrls = new Set(Object.values(mcpServers ?? {}).map(s => s?.url).filter(Boolean) as string[])
+  const installedMcpUrls = new Set(Object.values(mcpServers ?? {}).map(s => s?.url).filter((u): u is string => typeof u === 'string'))
   const isMcpInstalled = (slug: string) => { const u = MCP_BY_SLUG[slug]?.url; return !!u && installedMcpUrls.has(u) }
   const mcp = skill.mcp ?? []
   const requiredMcp = mcp.filter(m => !m.optional)

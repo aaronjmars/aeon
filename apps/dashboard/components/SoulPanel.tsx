@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Scramble } from './ui/Animated'
 import { SOUL_SCAFFOLD, STYLE_SCAFFOLD, ARCHETYPES } from '../lib/soul-templates'
 import { editorCls, panelInputCls } from '../lib/utils'
-import type { SoulSources, SoulExample } from '../lib/types'
+import type { SoulSources, SoulExample, SoulExamplesResponse } from '../lib/types'
 
 export type SoulFile = 'soul' | 'style'
 
@@ -45,7 +45,7 @@ export function SoulPanel({ soul, style, loading, saving, building, installing, 
   useEffect(() => { setSoulDraft(soul) }, [soul])
   useEffect(() => { setStyleDraft(style) }, [style])
   // Ready-made souls from the soul.md gallery - installable into soul/ in one click.
-  useEffect(() => { fetch('/api/soul/examples').then(r => r.ok ? r.json() : { examples: [] }).then(d => setExamples(d.examples || [])).catch(() => {}) }, [])
+  useEffect(() => { fetch('/api/soul/examples').then(r => r.ok ? r.json() as Promise<SoulExamplesResponse> : { examples: [] }).then(d => setExamples(d.examples || [])).catch(() => {}) }, [])
 
   const installExample = (ex: SoulExample) => {
     if (installing) return
