@@ -46,6 +46,8 @@ jobs:
         run: bash scripts/tests/test_validate_pack.sh
       - name: community pack registry validation tests
         run: bash scripts/tests/test_validate_skill_packs.sh
+      - name: README first-party catalog parity tests
+        run: bash scripts/tests/test_validate_readme_catalog.sh
       - name: community skill install catalog tests
         run: bash scripts/tests/test_community_skill_install.sh
       - name: grok setup/auth tests

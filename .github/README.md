@@ -40,7 +40,7 @@ cd aeon && ./aeon
 
 Open [http://localhost:5555](http://localhost:5555) and follow the four steps:
 
-1. **Authenticate** - connect your Claude Pro/Max subscription or your X account (for the [Grok harness](../docs/harnesses.md)), or paste an API key - Anthropic, Anthropic-compatible, or an [LLM gateway](../docs/CONFIGURATION.md#llm-gateways) key, routed automatically by prefix. A single **OpenRouter** key also unlocks four more [agent harnesses](../docs/harnesses.md) - Codex, Pi, Vibe, and Kimi - each of which can alternatively run on its own native login.
+1. **Authenticate** - Aeon runs on any of six agent [harnesses](../docs/harnesses.md): Claude Code, Grok, Codex, Pi, Vibe, and Kimi. Connect at least one way to reach a model - a subscription, an API key (Anthropic, Anthropic-compatible, or an [LLM gateway](../docs/CONFIGURATION.md#llm-gateways) key, routed automatically by prefix), or a harness's own native login. More on auth: [Authentication](#authentication).
 2. **Add a channel** - [Telegram, Discord, Slack, or email](#notifications) so Aeon can talk to you.
 3. **Pick skills** - toggle what you want, set schedules. Each skill shows the API keys and MCP servers it needs, with one-click setup.
 4. **Run** - hit **Run now** on any skill to try it immediately; API keys and `var` values apply directly, no push needed. When you change config (schedules, toggles), **Push** commits it to GitHub in one click so Actions runs it on cron.
@@ -121,7 +121,7 @@ Every skill output is automatically scored 1–5 by Haiku after each run. Scores
 3. **`skill-repair`** - diagnoses and patches failing skills automatically
 4. **`self-improve`** - evolves prompts, config, and workflows based on performance
 
-Alongside this run-quality loop, **`aeon-doctor`** (opt-in, weekly) lints the *config itself* for the silent-misconfig class that never produces a failed run to detect — an unquoted `schedule:` that never fires, a duplicate key, a `mode:` typo. It's read-only: it surfaces findings and points the fix at `skill-repair`, never mutating config itself.
+Alongside this run-quality loop, **`aeon-doctor`** (opt-in, weekly) lints the *config itself* for the silent-misconfig class that never produces a failed run to detect - an unquoted `schedule:` that never fires, a duplicate key, a `mode:` typo. It's read-only: it surfaces findings and points the fix at `skill-repair`, never mutating config itself.
 
 Health skills file issues, repair skills close them. `heartbeat` is the only skill enabled by default: nothing to report → silent; something needs attention → one notification. Deep dive: [`docs/CORE.md`](../docs/CORE.md).
 
@@ -215,7 +215,7 @@ skills:
     var: "solana"               # topic for this skill
 ```
 
-Standard cron format, all times UTC. Supports `*`, `*/N`, exact values, comma lists. On each tick the scheduler dispatches **every** enabled skill whose cron is due, and multiple due skills run in parallel. The only thing that orders dispatch is `depends_on:` (a skill's dependencies fire first); `heartbeat` is listed last purely by convention.
+Standard cron format, all times UTC (`*`, `*/N`, exact values, comma lists). Every enabled skill whose cron is due dispatches on each tick, in parallel; `depends_on:` is the only thing that orders them. Scheduler cadence, reactive triggers, and skill chaining: [Configuration](../docs/CONFIGURATION.md#scheduler-frequency).
 
 ### The `var` field
 
@@ -245,27 +245,17 @@ skills:
   token-movers: { enabled: true, schedule: "30 12 * * *", model: "claude-haiku-4-5-20251001" }
 ```
 
-> These ids apply to the **claude** harness. Each other [harness](../docs/harnesses.md) carries its own model list (Codex `openai/*`, Kimi `moonshotai/*`, Vibe `mistralai/*`, Pi `deepseek/*`), which the dashboard picker swaps in when you select that harness.
+> Model ids are for the **claude** harness; each other [harness](../docs/harnesses.md) carries its own list, which the dashboard picker swaps in when you select it.
 
 ### Authentication
 
-Aeon needs **at least one** way to reach a model. Add any of these in the dashboard's **Authenticate** modal - paste a key and the provider is auto-detected from its prefix (or picked from the dropdown). You can set several: each run resolves the highest-priority one whose key is present, so you don't have to choose just one.
+Aeon needs **at least one** way to reach a model. Add it in the dashboard's **Authenticate** modal, or from the terminal with `aeon auth`:
 
-| How | Secret | Billing |
-|-----|--------|---------|
-| **Claude subscription** - one-click OAuth | `CLAUDE_CODE_OAUTH_TOKEN` | Included in your Pro/Max plan |
-| **Anthropic API** | `ANTHROPIC_API_KEY` | Pay-as-you-go · [console.anthropic.com](https://console.anthropic.com) |
-| **LLM gateway** - cheaper / crypto-settled | Bankr `bk_…` · OpenRouter `sk-or-…` · Surplus `inf_…` · Venice / UsePod | see [LLM Gateways](../docs/CONFIGURATION.md#llm-gateways) |
-| **Grok** - via your X account | `GROK_CREDENTIALS` or `XAI_API_KEY` | SuperGrok / X Premium+ · see [Harnesses](../docs/harnesses.md) |
-| **Codex / Pi / Vibe / Kimi** - four more harnesses | `OPENROUTER_API_KEY` (shared), or each harness's own native auth (`CODEX_AUTH`, `KIMI_AUTH`, `OPENAI_API_KEY`, `MOONSHOT_API_KEY`, `MISTRAL_API_KEY`) | OpenRouter or the provider · see [Harnesses](../docs/harnesses.md) |
+- **A Claude subscription** - one-click OAuth, or `claude setup-token` on the CLI (prints an `sk-ant-oat01-…` token, valid 1 year).
+- **An API key** - Anthropic, Anthropic-compatible, or an [LLM gateway](../docs/CONFIGURATION.md#llm-gateways) key (Bankr, OpenRouter, Surplus, Venice, UsePod). Paste it and the provider is auto-detected from its prefix.
+- **A harness's own login** - each harness signs in its own way (Grok with your X account, Codex with ChatGPT, Kimi with Moonshot, and so on), in the modal or with `aeon auth --harness <name>`.
 
-For the four OpenRouter-backed harnesses, capture a native login from the terminal with `aeon auth --harness codex|kimi|pi|vibe` (or the dashboard's **Connect** buttons); with none set they fall back to the shared `OPENROUTER_API_KEY`.
-
-Prefer the CLI for the subscription token?
-
-```bash
-claude setup-token   # opens browser → prints sk-ant-oat01-... (valid 1 year)
-```
+Set several and each run resolves the highest-priority one whose key is present, so you don't have to pick just one.
 
 ### Notifications
 
@@ -281,8 +271,8 @@ Set the secret → channel activates. No code changes needed.
 **Set up each channel:**
 
 - **Telegram** - create a bot with **[@BotFather](https://t.me/BotFather)**, then copy its token + your chat ID. Saving the token in the dashboard **auto-registers** the slash-command menu (`/skillname` dispatches instantly, no LLM); a **Re-register commands** button re-syncs it after you toggle skills. Every notification carries **Run again / Schedule weekly** buttons, deep links, and stateless follow-up questions. [Full guide →](../docs/telegram-commands.md)
-- **Discord** - *outbound:* Channel Settings → Integrations → Webhooks → **New Webhook**, copy the URL. *Inbound:* [discord.com/developers](https://discord.com/developers/applications) → your app → Bot → add the `channels:history` scope → copy the bot token + channel ID.
-- **Slack** - *outbound:* [api.slack.com/apps](https://api.slack.com/apps) → Create App → Incoming Webhooks → install → copy the URL. *Inbound:* add the `channels:history` + `reactions:write` scopes → copy the bot token + channel ID.
+- **Discord** - *outbound:* a channel webhook URL. *Inbound:* a bot token + channel ID, with the `channels:history` scope. ([discord.com/developers](https://discord.com/developers/applications))
+- **Slack** - *outbound:* an Incoming Webhook URL. *Inbound:* a bot token + channel ID, with the `channels:history` + `reactions:write` scopes. ([api.slack.com/apps](https://api.slack.com/apps))
 - **Email** - [resend.com/api-keys](https://resend.com/api-keys) → Create API Key → set it as `RESEND_API_KEY`, and `NOTIFY_EMAIL_TO` to your inbox. Optional: `NOTIFY_EMAIL_FROM` (default `aeon@notifications.aeon.bot` - **must be a sender/domain verified in Resend**) and `NOTIFY_EMAIL_SUBJECT_PREFIX` (default `[Aeon]`). Same key as security disclosures, so one Resend key powers all outbound email.
 
 **Restrict who can command the agent (inbound):** Telegram is already scoped to a single `TELEGRAM_CHAT_ID`. For Discord and Slack, set the optional repo variables `DISCORD_ALLOWED_AUTHOR_ID` / `SLACK_ALLOWED_USER_ID` (or same-named secrets) to the authorized sender's user ID - inbound messages from anyone else in the channel are then ignored. **Leaving them unset processes commands from any non-bot member of the channel**, so set them whenever the channel isn't private to you.

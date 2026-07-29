@@ -23,10 +23,11 @@ the same Claude-Code-shaped `{result, usage, session_id}` contract that
 `scripts/run-grok.sh` provides, so everything downstream (scoring, token
 accounting, memory, notifications) is unchanged.
 
-All four authenticate with a single **`OPENROUTER_API_KEY`** — set it in
-Settings and every one of them works. Their model picker offers OpenRouter ids
-rather than the `claude-*`/`grok-*` ids, and the model you pick is what actually
-runs. Each of these harnesses carries its own curated list (`CODEX_MODELS` /
+Each one runs on its own provider login (see **Native auth** below); a single
+shared **`OPENROUTER_API_KEY`** is the zero-setup alternative that makes all four
+work at once. Their model picker offers OpenRouter ids rather than the
+`claude-*`/`grok-*` ids, and the model you pick is what actually runs. Each of
+these harnesses carries its own curated list (`CODEX_MODELS` /
 `VIBE_MODELS` / `PI_MODELS` / `KIMI_MODELS`): **codex**
 defaults to `openai/gpt-5-mini` (it fails on `gpt-5-nano`) and also offers the
 codex-tuned line (`gpt-5.1-codex-mini`, `gpt-5.3-codex`) and the general

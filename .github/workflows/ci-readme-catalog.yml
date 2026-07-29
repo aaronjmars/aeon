@@ -1,0 +1,47 @@
+name: ci-readme-catalog
+
+# The README's "What Aeon can do" section hand-maintains two skill tables and
+# two headline counts (the summary table's Skills column, the <details> "Full
+# catalog" table, "Six packs ship in the box", "all N skills by pack") that are
+# really just catalog/packs.json data copied in by hand. packs.json is already
+# gated (ci-packs-json.yml regenerates it from SKILL.md frontmatter), but nothing
+# checked that the README kept up: add a skill, packs.json regenerates in the same
+# PR, CI goes green, and the README's full-catalog table silently omits the new
+# skill. This validator diffs the README tables against packs.json so that can't
+# ship — it compares each pack's slug SET, so a missing/renamed skill fails, not
+# just a wrong integer.
+#
+# First-party sibling of ci-skill-packs.yml (which does the same parity job for
+# the COMMUNITY registry + its "N community skill packs" counter). The two don't
+# overlap: this owns the first-party summary/full-catalog tables, that one owns
+# the "## Community Packs" table.
+#
+# Run locally: node scripts/validate-readme-catalog.mjs
+
+on:
+  pull_request:
+    paths:
+      - '.github/README.md'
+      - 'catalog/packs.json'
+      - 'catalog/skills.json'
+      - 'scripts/validate-readme-catalog.mjs'
+      - '.github/workflows/ci-readme-catalog.yml'
+  push:
+    branches: [main]
+    paths:
+      - '.github/README.md'
+      - 'catalog/packs.json'
+      - 'catalog/skills.json'
+      - 'scripts/validate-readme-catalog.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Validate the README skill tables against the first-party catalog
+        run: node scripts/validate-readme-catalog.mjs
