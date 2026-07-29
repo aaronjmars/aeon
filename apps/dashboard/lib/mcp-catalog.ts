@@ -87,6 +87,22 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     oauth: true,
     oauthScopes: ['openid', 'offline_access'],
   },
+  {
+    slug: 'finance-district',
+    name: 'Finance District Agent Wallet',
+    url: 'https://wallet-mcp.fd.xyz',
+    logo: 'https://fd.xyz/apple-icon.png',
+    description: 'Non-custodial MCP wallet for AI agents: hold and send across EVM, Solana, Bitcoin and Sui, swap tokens, earn DeFi yield, and make x402 payments — all within server-enforced spending caps, with keys that never leave a secure enclave (the agent never holds them).',
+    // Standard OAuth. PRM (RFC 9728) at wallet-mcp.fd.xyz/.well-known/oauth-protected-resource
+    // names AS https://oauth.fd.xyz (RFC 8414: authorization_code + refresh_token grants,
+    // PKCE S256, DCR registration_endpoint, public client via auth "none"). offline_access
+    // returns a refresh token; the resource scope grants tool access. oauth.fd.xyz rotates
+    // refresh tokens, so GH_SECRETS_PAT is required (same as the other providers here).
+    // Scopes verified live against the PRM's advertised scopes_supported — do NOT trim the
+    // resource scope: unlike glim/executor this server gates tool access on it.
+    oauth: true,
+    oauthScopes: ['openid', 'offline_access', 'api://fd-agent-wallet-mcp/mcp:tools'],
+  },
 ]
 
 export const MCP_BY_SLUG: Record<string, McpCatalogEntry> =
