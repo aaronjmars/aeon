@@ -65,18 +65,25 @@ row is skipped when there is no skill context, when the skill name is too long t
 fit the 64-byte `callback_data` budget, or on a force-reply prompt (Telegram forbids
 inline buttons and `force_reply` on the same message).
 
-### Groups auto-suppress buttons
+### Buttons follow the inbound workflow
 
-Inline buttons are **operator controls** — only the owner may act on a tap. In a 1:1
-DM that's automatic (you're the only one there). In a **group/channel** the message and
-its buttons are visible and tappable by every member, and one shared message can't show
-a button to only you. So `notify` **omits inline buttons entirely outside your private
-DM** — the notification still posts, just without the controls. Detection is by chat id
-sign: a private chat is **positive**, a group/supergroup/channel is **negative**. This
-is the same "only the owner can drive the bot" property the [owner gate](#owner-gate)
-enforces for taps that do slip through, now applied at send time too. Opt back in with
-`TELEGRAM_GROUP_BUTTONS=1` (buttons then show to everyone; only the owner's taps act).
-`force_reply` prompts are unaffected — they aren't inline buttons.
+Interactive controls — inline buttons **and** `force_reply` prompts — only do anything
+if the inbound **Messages workflow** (`.github/workflows/messages.yml`) is running to
+receive the tap/reply. If you **disable that workflow**, a tap is dead and a reply routes
+nowhere, so `notify` **stops attaching them** — the notification body still posts, just
+without controls that would silently do nothing (or invite a stranger in a shared chat to
+tap them). No config: `notify` resolves the workflow's state via the GitHub API (best
+effort, cached once per run) and suppresses only when it is **definitively disabled**
+(`disabled_manually` / `disabled_inactivity`); on `active`, or if the state can't be
+determined, buttons attach as normal (fail open). Re-enable the workflow and buttons come
+back on the next run.
+
+- **Force it either way:** `TELEGRAM_FORCE_BUTTONS=1` always attaches; `AEON_MESSAGES_WF_STATE=<state>`
+  overrides the lookup (skips the API call — handy for local/offline runs or to hard-pin the behaviour).
+- **Private-repo note:** the workflow-state lookup needs a token with `actions:read`
+  (`GH_TOKEN`/`GITHUB_TOKEN`/`GH_GLOBAL`, already present in the run). Public forks resolve it unauthenticated.
+- This is separate from the [owner gate](#owner-gate): the gate governs **who** may act on a
+  tap when the workflow **is** enabled; this governs **whether buttons appear at all** when it isn't.
 
 ### Custom buttons (`--buttons`)
 
