@@ -181,8 +181,26 @@ DELIVERED=false
 # Skipped when there's no skill context ($SKILL_NAME unset), when the skill name is
 # too long to fit callback_data's 64-byte budget, or on a force_reply prompt (Telegram
 # forbids inline buttons + force_reply on one message — the deliberate ask wins).
+# Inline (callback) buttons are OPERATOR controls: only the owner may act on a
+# "Run again" / "Schedule weekly" / snooze tap, and the router now enforces that
+# (owner-user gate). But a group/channel message — and its buttons — is visible and
+# tappable by every member, and a single shared message can't scope a button to one
+# viewer. So outside the owner's private DM we don't attach inline buttons at all:
+# the notification still posts, just without controls that a non-owner would only see
+# ignored (or, without the user gate, could abuse). This auto-couples buttons to the
+# same "only the owner can drive the bot" property that a 1:1 DM gives for free.
+#
+# Signal: a private (1:1) chat has a POSITIVE chat id; groups/supergroups/channels are
+# NEGATIVE. Opt back in for a group with TELEGRAM_GROUP_BUTTONS=1 (accepts the tradeoff
+# that the buttons are then visible to everyone and only the owner's taps do anything).
+# force_reply is a deliberate prompt, not an inline button, so it is unaffected.
+INLINE_BUTTONS_OK=true
+case "${TELEGRAM_CHAT_ID:-}" in
+  -*) [ "${TELEGRAM_GROUP_BUTTONS:-}" = "1" ] || INLINE_BUTTONS_OK=false ;;
+esac
+
 GLOBAL_ROW=""
-if [ -n "${SKILL_NAME:-}" ] && [ -z "$FORCE_REPLY" ] && [ "${#SKILL_NAME}" -le 48 ]; then
+if [ "$INLINE_BUTTONS_OK" = true ] && [ -n "${SKILL_NAME:-}" ] && [ -z "$FORCE_REPLY" ] && [ "${#SKILL_NAME}" -le 48 ]; then
   GLOBAL_ROW=$(jq -n --arg s "$SKILL_NAME" \
     '[{text:"🔁 Run again",       callback_data:("run:"+$s)},
       {text:"📅 Schedule weekly", callback_data:("schedule:"+$s+":weekly")}]')
@@ -192,7 +210,7 @@ REPLY_MARKUP="null"
 if [ -n "$FORCE_REPLY" ]; then
   REPLY_MARKUP=$(jq -n --arg p "$PLACEHOLDER" \
     '{force_reply:true} + (if $p != "" then {input_field_placeholder:$p} else {} end)')
-else
+elif [ "$INLINE_BUTTONS_OK" = true ]; then
   # inline_keyboard = optional skill --buttons rows, then the global quick-action row.
   KB="[]"
   if [ -n "$BUTTONS_JSON" ]; then
@@ -208,6 +226,8 @@ else
   if [ "$KB" != "[]" ]; then
     REPLY_MARKUP=$(jq -n --argjson kb "$KB" '{inline_keyboard:$kb}')
   fi
+elif [ -n "$BUTTONS_JSON" ]; then
+  echo "notify: suppressing inline buttons in a group chat (set TELEGRAM_GROUP_BUTTONS=1 to keep them)" >&2
 fi
 
 # Telegram — fence-safe chunks (parse_mode Markdown, fallback to none)

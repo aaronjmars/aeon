@@ -65,6 +65,19 @@ row is skipped when there is no skill context, when the skill name is too long t
 fit the 64-byte `callback_data` budget, or on a force-reply prompt (Telegram forbids
 inline buttons and `force_reply` on the same message).
 
+### Groups auto-suppress buttons
+
+Inline buttons are **operator controls** — only the owner may act on a tap. In a 1:1
+DM that's automatic (you're the only one there). In a **group/channel** the message and
+its buttons are visible and tappable by every member, and one shared message can't show
+a button to only you. So `notify` **omits inline buttons entirely outside your private
+DM** — the notification still posts, just without the controls. Detection is by chat id
+sign: a private chat is **positive**, a group/supergroup/channel is **negative**. This
+is the same "only the owner can drive the bot" property the [owner gate](#owner-gate)
+enforces for taps that do slip through, now applied at send time too. Opt back in with
+`TELEGRAM_GROUP_BUTTONS=1` (buttons then show to everyone; only the owner's taps act).
+`force_reply` prompts are unaffected — they aren't inline buttons.
+
 ### Custom buttons (`--buttons`)
 
 `./notify` (the canonical `scripts/notify.sh`) also takes `--buttons`, a JSON array

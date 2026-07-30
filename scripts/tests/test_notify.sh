@@ -189,6 +189,30 @@ else
   bad "no SKILL_NAME -> no global buttons"
 fi
 
+# 15b. group/public chat (negative chat id) -> inline buttons auto-suppressed, but the
+#      message still delivers. Neither the global row nor custom --buttons get attached.
+reset
+TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=-1001234567890 NOTIFY_DRY_RUN=1 SKILL_NAME=token-movers \
+  bash "$NOTIFY" "A group broadcast body long enough to clear the probe filter here" \
+  --buttons '[[{"text":"Snooze","callback_data":"snooze:token-movers:BTC:60"}]]' >/dev/null 2>&1
+if [ -f "$WORK/tg-payload.jsonl" ] && \
+   jq -e '.|has("reply_markup")|not' "$WORK/tg-payload.jsonl" >/dev/null 2>&1; then
+  pass "group chat -> inline buttons suppressed (message still sent)"
+else
+  bad "group chat -> inline buttons suppressed (message still sent)"
+fi
+
+# 15c. group chat with the explicit opt-out -> buttons come back (owner accepts the tradeoff)
+reset
+TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=-1001234567890 TELEGRAM_GROUP_BUTTONS=1 NOTIFY_DRY_RUN=1 SKILL_NAME=token-movers \
+  bash "$NOTIFY" "A group broadcast body long enough to clear the probe filter here" >/dev/null 2>&1
+if [ -f "$WORK/tg-payload.jsonl" ] && \
+   jq -e '.reply_markup.inline_keyboard[-1][0].callback_data=="run:token-movers"' "$WORK/tg-payload.jsonl" >/dev/null 2>&1; then
+  pass "group chat + TELEGRAM_GROUP_BUTTONS=1 -> buttons restored"
+else
+  bad "group chat + TELEGRAM_GROUP_BUTTONS=1 -> buttons restored"
+fi
+
 reset
 
 # 16. read-only cwd (a read-only skill under the OS sandbox): the queue lives
