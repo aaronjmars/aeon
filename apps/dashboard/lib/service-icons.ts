@@ -36,6 +36,7 @@ const DOMAINS: Record<string, string> = {
   // Channels
   TELEGRAM_BOT_TOKEN: 'telegram.org',
   TELEGRAM_CHAT_ID: 'telegram.org',
+  TELEGRAM_ALLOWED_USER_ID: 'telegram.org',
   DISCORD_BOT_TOKEN: 'discord.com',
   DISCORD_CHANNEL_ID: 'discord.com',
   DISCORD_WEBHOOK_URL: 'discord.com',
