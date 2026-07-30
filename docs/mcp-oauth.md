@@ -49,6 +49,7 @@ discovery notes) and their companion skills:
 | Robinhood Trading (`robinhood-trading`) | `agent.robinhood.com/mcp/trading` | *(default — no `offline_access`; it only advertises `internal`)* | unverified — assume yes | `robinhood-mcp` |
 | glim.sh (`glim`) | `glim.sh/mcp` | `openid offline_access` | yes — **verified live 2026-07-16** | `glim-mcp` |
 | Executor (`executor`) | `executor.sh/mcp` | `openid offline_access` | yes — **verified live 2026-07-16** | `executor-mcp` |
+| Finance District Agent Wallet (`finance-district`) | `wallet-mcp.fd.xyz` | `openid offline_access api://fd-agent-wallet-mcp/mcp:tools` (resource scope gates tool access) | yes | `finance-district-mcp` |
 
 The glim and Executor loops were verified end-to-end on a live instance
 (Connect → per-run refresh → PAT-persisted rotation → refresh off the persisted
