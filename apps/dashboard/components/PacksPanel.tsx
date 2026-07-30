@@ -145,7 +145,7 @@ export function PacksPanel({ firstParty, community, skills, enabledPacks, loadin
         </div>
         <dl className="relative z-10 grid grid-cols-2 sm:grid-cols-4 border-t border-[rgba(250,250,250,0.10)]">
           {stats.map((s, i) => (
-            <div key={s.label} className={`px-6 py-5 ${i < stats.length - 1 ? 'border-r border-[rgba(250,250,250,0.10)]' : ''}`}>
+            <div key={i} className={`px-6 py-5 ${i < stats.length - 1 ? 'border-r border-[rgba(250,250,250,0.10)]' : ''}`}>
               <dt className="text-[10px] font-mono uppercase tracking-[0.22em] text-primary-35 mb-2">{s.label}</dt>
               <dd className={`font-display leading-none ${s.tone || 'text-aeon-fg'}`} style={{ fontSize: 'clamp(28px, 3vw, 44px)' }}>{s.value}</dd>
             </div>
