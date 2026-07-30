@@ -77,3 +77,5 @@ jobs:
         run: node scripts/validate-config.js
       - name: cron-due scheduler decision tests
         run: bash scripts/tests/test_cron_due.sh
+      - name: circuit-breaker scheduler decision tests
+        run: bash scripts/tests/test_breaker.sh

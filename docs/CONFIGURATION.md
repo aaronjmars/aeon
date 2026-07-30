@@ -48,6 +48,19 @@ schedule:
 
 Claude only installs and runs when a skill actually matches - non-matching ticks cost ~10s.
 
+## Circuit breaker (outage protection)
+
+The scheduler trips a per-skill circuit breaker once a skill logs **3 consecutive failures** (`consecutive_failures` in `memory/cron-state.json`). While tripped it stops dispatching that skill every tick - so a dead upstream API or a revoked key can't burn a run every `*/5` for hours - and instead lets **one probe run through every 6 hours** (half-open). A probe that succeeds resets the counter and the skill resumes its normal schedule automatically; a probe that fails re-arms the 6h cooldown. It is auto-recovering, not a kill switch, so an outage self-heals with no operator action. `skill-health` already reports CRITICAL at the same threshold, so a tripped breaker is visible.
+
+Tune with repo variables (both optional):
+
+```
+BREAKER_THRESHOLD      failures in a row before tripping (default 3; 0 disables)
+BREAKER_COOLDOWN_MIN   minutes between half-open probes while tripped (default 360)
+```
+
+The decision logic lives in `scripts/breaker.sh` (unit-tested in `scripts/tests/test_breaker.sh`); the scheduler calls it, no inline copy. To hard-disable a skill instead, set `enabled: false` in `aeon.yml`.
+
 ## Capability tiers (read-only skills)
 
 A skill declares its write blast-radius in SKILL.md frontmatter:
