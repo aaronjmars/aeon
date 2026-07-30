@@ -59,6 +59,7 @@ const DOMAINS: Record<string, string> = {
   GH_READ_PAT: 'github.com',
   GH_SECRETS_PAT: 'github.com',
   BASE_RPC_URL: 'base.org',
+  PAGESPEED_API_KEY: 'google.com',
   // Observability
   LANGFUSE_PUBLIC_KEY: 'langfuse.com',
   LANGFUSE_SECRET_KEY: 'langfuse.com',
