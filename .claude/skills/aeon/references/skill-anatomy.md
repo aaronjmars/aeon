@@ -1,10 +1,10 @@
 # How Aeon skills are actually written
 
-Surveyed across all 63 skills in `aeonfun/aeon`. Frequencies are real counts — match the dominant convention unless there's a reason not to. Bodies run 133–757 lines (~306 median); a skill is a prompt, not a config file, and reads as prose.
+Surveyed across all 65 skills in `aeonfun/aeon`. Frequencies are real counts — match the dominant convention unless there's a reason not to. Bodies run 133–757 lines (~306 median); a skill is a prompt, not a config file, and reads as prose.
 
 ## Frontmatter
 
-Universal — **all 63 skills** carry these five:
+Universal — **all 65 skills** carry these five:
 
 ```yaml
 type: Skill          # required by ci-okf; every .md under skills/ needs a type:
@@ -88,7 +88,7 @@ var=<value>
 
 ## Calling external scripts
 
-**These do not exist in the repo.** The workflow copies them to the repo root before each run (`.github/workflows/aeon.yml:435-444`), which is why `ls` shows no `notify` but 57 skills call `./notify`. Don't "fix" the missing file, and don't expect them locally.
+**These do not exist in the repo.** The workflow copies them to the repo root before each run (`.github/workflows/aeon.yml:435-444`), which is why `ls` shows no `notify` but 61 skills call `./notify`. Don't "fix" the missing file, and don't expect them locally.
 
 | Call | Skills | Notes |
 |---|---|---|
@@ -114,7 +114,7 @@ There is **no network sandbox** — plain `curl` works for unauthenticated GETs.
 
 `memory/` is the durable state that survives between runs. Four conventions, in order of how often skills touch them:
 
-### `memory/logs/${today}.md` — the run log (59 of 63 skills)
+### `memory/logs/${today}.md` — the run log (61 of 65 skills)
 
 Every skill appends what it did, under **one** heading that is exactly its slug:
 
