@@ -36,7 +36,7 @@ skills:
   # --- Afternoon (2 PM UTC) ---
   article: { enabled: false, schedule: "0 14 * * *", var: "" } # long-form article. var: empty=standard | repo:<owner/repo> | lens:<topic>; append --visual for a Replicate hero image (angles fold in repo-article/project-lens/technical-explainer)
   digest: { enabled: false, schedule: "0 14 * * *", var: "" } # topic digest across web + X + RSS. var: empty=web | <topic> | rss[:<topic>] | "<topic> +rss" (RSS feeds from memory/feeds.yml)
-  you-web-search: { enabled: false, schedule: "workflow_dispatch", var: "" } # on-demand — high-quality web search via You.com API. var: search query/topic; keyless (100/day) or authenticated with YDC_API_KEY
+  you-web-search: { enabled: false, schedule: "workflow_dispatch", var: "" } # on-demand — high-quality web search via You.com API. var: search query/topic; authenticated with YDC_API_KEY, optional livecrawl via YOUCOM_LIVECRAWL
   last30: { enabled: false, schedule: "workflow_dispatch", var: "" } # on-demand — cross-platform 30-day social research
   search-skill: { enabled: false, schedule: "0 14 * * *" }
 

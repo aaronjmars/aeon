@@ -6,7 +6,7 @@ category: basics
 description: Web search using You.com Search API with high-quality, cited results and optional real-time web crawling
 var: ""
 tags: [web, search, research]
-requires: [YDC_API_KEY?]
+requires: [YDC_API_KEY]
 ---
 
 > **${var}** — Search query or topic. When empty, uses a general search for current notable developments across tracked areas.
@@ -18,51 +18,49 @@ Today is ${today}. Perform web search using You.com's Search API to find current
 This skill provides web search functionality via You.com's Search API, offering several advantages over basic WebSearch:
 
 - **Higher quality results** with relevance ranking and citation extraction
-- **Real-time web crawling** for fresh content when `livecrawl=web` is enabled  
-- **Keyless operation** (100 free searches/day per IP) or enhanced features with `YDC_API_KEY`
+- **Real-time web crawling** for fresh content when `livecrawl=web` is enabled
 - **Structured result format** with titles, URLs, snippets, and publication dates
-- **Safe fallback** to built-in WebSearch if You.com API is unavailable
+- **Optional livecrawl control** through `YOUCOM_LIVECRAWL` when a full page fetch is useful
 
 ## Phase 1 — Execute Search
 
 ### Authentication Check
 
-Check if YDC_API_KEY is available:
+Check if `YDC_API_KEY` is available:
 ```bash
-[ -n "$YDC_API_KEY" ] && echo "KEY_PRESENT" || echo "KEY_UNSET"
+[ -n "${YDC_API_KEY:+x}" ] && echo "KEY_PRESENT" || echo "KEY_UNSET"
+```
+
+If it is unset, stop immediately with a clear error:
+```bash
+[ -n "${YDC_API_KEY:+x}" ] || { echo "YDC_API_KEY is required for this skill"; exit 1; }
 ```
 
 ### API Call
 
-**Primary path (with or without key):** Direct `curl` to You.com Search API:
+**Primary path:** Direct authenticated `curl` to You.com Search API:
 
 ```bash
 QUERY="${var:-current notable developments in AI, crypto, and technology}"
 COUNT="10"
 
-# Build JSON payload
-jq -n --arg q "$QUERY" --arg c "$COUNT" '{
-  query: $q,
-  count: ($c | tonumber),
-  safesearch: "strict",
-  freshness: "day"
-}' > /tmp/youcom-search-payload.json
+FRESHNESS="${YOUCOM_FRESHNESS:-}"
+LIVECRAWL="${YOUCOM_LIVECRAWL:-}"
+SEARCH_URL="https://api.you.com/v1/search?query=$(echo "$QUERY" | jq -Rr @uri)&count=$COUNT&safesearch=strict"
 
-# Make API call
-if [ -n "$YDC_API_KEY" ]; then
-  # Authenticated request
-  HTTP=$(./secretcurl -s -o /tmp/youcom-search.json -w '%{http_code}' \
-    --max-time 30 -X GET \
-    "https://api.you.com/v1/agents/search?query=$(echo "$QUERY" | jq -Rr @uri)&count=$COUNT&safesearch=strict&freshness=day" \
-    -H "X-API-Key: {YDC_API_KEY}" \
-    -H "User-Agent: youdotcom-integration/aeonfun-aeon")
-else
-  # Keyless request  
-  HTTP=$(curl -s -o /tmp/youcom-search.json -w '%{http_code}' \
-    --max-time 30 -X GET \
-    "https://api.you.com/v1/agents/search?query=$(echo "$QUERY" | jq -Rr @uri)&count=$COUNT&safesearch=strict&freshness=day" \
-    -H "User-Agent: youdotcom-integration/aeonfun-aeon")
+if [ -n "${FRESHNESS:+x}" ]; then
+  SEARCH_URL="$SEARCH_URL&freshness=$(echo "$FRESHNESS" | jq -Rr @uri)"
 fi
+
+if [ -n "${LIVECRAWL:+x}" ]; then
+  SEARCH_URL="$SEARCH_URL&livecrawl=$(echo "$LIVECRAWL" | jq -Rr @uri)"
+fi
+
+HTTP=$(./secretcurl -s -o /tmp/youcom-search.json -w '%{http_code}' \
+  --max-time 30 -X GET \
+  "$SEARCH_URL" \
+  -H "X-API-Key: {YDC_API_KEY}" \
+  -H "User-Agent: youdotcom-integration/aeonfun-aeon")
 
 echo "youcom http=$HTTP bytes=$(wc -c </tmp/youcom-search.json)"
 ```
@@ -73,27 +71,20 @@ On `HTTP=200` with non-empty body, parse the response:
 
 ```bash
 if [ "$HTTP" = "200" ] && [ -s /tmp/youcom-search.json ]; then
-  # Extract web results
-  jq -r '.results.web[]? | "\(.title)|\(.url)|\(.snippet)|\(.date // "recent")"' /tmp/youcom-search.json > /tmp/youcom-results.txt
+  # Extract web and news results using the documented Search API shape.
+  jq -r '
+    [
+      (.results.web[]?  | ["web",  (.title // ""), (.url // ""), ((.snippets // []) | join(" ")), (.page_age // "recent")]),
+      (.results.news[]? | ["news", (.title // ""), (.url // ""), ((.snippets // []) | join(" ")), (.page_age // "recent")])
+    ] | .[] | @tsv
+  ' /tmp/youcom-search.json > /tmp/youcom-results.txt
   
   # Count results
   RESULT_COUNT=$(wc -l < /tmp/youcom-results.txt)
-  echo "Extracted $RESULT_COUNT web results"
+  echo "Extracted $RESULT_COUNT search results"
 else
   echo "API call failed: HTTP=$HTTP"
   RESULT_COUNT=0
-fi
-```
-
-### Fallback Strategy
-
-If You.com API fails or returns no results, fall back to built-in WebSearch:
-
-```bash
-if [ "$RESULT_COUNT" -eq 0 ]; then
-  echo "Falling back to built-in WebSearch"
-  # Use Aeon's built-in WebSearch as fallback
-  # This maintains functionality even if You.com API is unavailable
 fi
 ```
 
@@ -106,8 +97,8 @@ Process the results into a readable format:
 For each result from You.com API:
 - **Title** — article/page title
 - **URL** — direct link to source  
-- **Snippet** — relevant excerpt highlighting query match
-- **Date** — publication date when available
+- **Snippet** — join `snippets[]` into one excerpt highlighting query match
+- **Date** — `page_age` or `recent` when unavailable
 
 ### Quality Filtering
 
@@ -147,8 +138,8 @@ API Status: ${http_status} | Auth: ${auth_mode} | Quality: ${quality_score}/5
 Send formatted results via `./notify`:
 - Include query, result count, and source attribution
 - Highlight most relevant results (top 5-7)  
-- Note authentication mode (keyless/authenticated)
-- Include fallback info if WebSearch was used
+- Note authentication mode (`authenticated`)
+- Include livecrawl info when enabled
 
 ### Memory Integration  
 
@@ -158,7 +149,7 @@ Log the search for future reference:
    ```
    ### you-web-search
    - Query: "${var}"
-   - Source: You.com API (keyless|authenticated) / WebSearch fallback
+   - Source: You.com API (authenticated)
    - Results: N found, M delivered  
    - Status: HTTP ${code}
    - Quality score: X/5 (relevance, freshness, diversity)
@@ -172,9 +163,9 @@ Log the search for future reference:
 
 Handle common failure modes gracefully:
 
-- **Rate limits (429)**: Log rate limit hit, suggest API key upgrade if keyless
-- **Invalid key (401)**: Clear error about checking YDC_API_KEY variable  
-- **Network failures**: Graceful fallback to WebSearch with context
+- **Rate limits (429)**: Log rate limit hit, suggest checking the API quota or key
+- **Invalid key (401)**: Clear error about checking `YDC_API_KEY`
+- **Network failures**: Surface the API failure and exit cleanly
 - **Malformed responses**: Validate JSON structure, handle parsing errors
 - **Empty results**: Suggest query refinement, try broader terms
 
@@ -182,34 +173,35 @@ Handle common failure modes gracefully:
 
 Record failure reasons for debugging:
 - `youcom-api-unavailable` — API endpoint unreachable
-- `youcom-rate-limited` — Hit daily quota (keyless) or plan limits  
+- `youcom-rate-limited` — Hit plan limits
 - `youcom-auth-invalid` — API key rejected
 - `youcom-parse-error` — Response format unexpected
-- `websearch-fallback` — Fell back to built-in search (include reason)
 
 ## Environment Variables
 
-- **`YDC_API_KEY`** (optional) — You.com API key for authenticated access and higher quotas. When unset, uses keyless endpoint with 100 free searches/day per IP.
+- **`YDC_API_KEY`** (required) — You.com API key for authenticated access.
+- **`YOUCOM_FRESHNESS`** (optional) — Freshness filter (`day`, `week`, `month`, `year`, or a date range).
+- **`YOUCOM_LIVECRAWL`** (optional) — Pass through to `livecrawl` when you want full page content (`web`, `news`, or `all`).
 
 ## Constraints
 
 - **Never expose credentials** in logs or notifications
-- **Always attribute source** — clearly indicate You.com API vs WebSearch fallback  
+- **Always attribute source** — clearly indicate You.com API
 - **Respect rate limits** — handle 429 responses gracefully
 - **Validate all URLs** — ensure results contain real, accessible links
 - **Keep results relevant** — filter low-quality or off-topic results
-- **Maintain fallback path** — skill must function even if You.com API is unavailable
+- **Fail clearly** — if the API is unavailable, report it instead of pretending a fallback ran
 
 ## Integration Notes  
 
 ### Relationship to Built-in WebSearch
 
-This skill **supplements** rather than replaces Aeon's built-in WebSearch:
+This skill **complements** Aeon's built-in WebSearch, but it is a separate authenticated Search API path:
 
-- **You.com advantages**: Higher quality results, real-time crawling, better relevance ranking  
+- **You.com advantages**: Higher quality results, real-time crawling, better relevance ranking
 - **WebSearch advantages**: No API dependency, always available, deeply integrated
 - **Use You.com for**: Research tasks, fact-checking, current events, specific queries
-- **Use WebSearch for**: Fallback scenarios, broad discovery, when API quotas are exhausted
+- **Use WebSearch for**: Built-in search flows elsewhere in Aeon
 
 ### Scheduling Recommendations
 
