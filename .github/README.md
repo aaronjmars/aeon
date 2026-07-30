@@ -87,13 +87,13 @@ The prompt *is* the skill, judgment and all. You schedule it, hand it a `var`, c
 | --- | --- | --- | --- |
 | **Core** - fleet coordination, self-config, liveness; shown by default | `core` | 11 | `fleet-control`, `spawn-instance`, `auto-workflow` |
 | **Evolution** - authors, evolves, installs & heals its own skills; shown by default | `evolution` | 8 | `create-skill`, `autoresearch`, `aeon-doctor` |
-| **Basics** - simple, immediately-runnable skills; shown by default | `basics` | 15 | `digest`, `token-movers`, `pr-review` |
+| **Basics** - simple, immediately-runnable skills; shown by default | `basics` | 16 | `digest`, `token-movers`, `pr-review`, `you-web-search` |
 | **Dev & Code** | `dev` | 8 | `github-monitor`, `feature`, `deploy-prototype` |
 | **Crypto & Markets** | `crypto` | 13 | `token-pick`, `defi-overview`, `robinhood-mcp` |
 | **Productivity** | `productivity` | 8 | `mention-radar`, `send-email`, `okf-export` |
 
 <details>
-<summary><strong>Full catalog (all 63 skills by pack)</strong></summary>
+<summary><strong>Full catalog (all 64 skills by pack)</strong></summary>
 
 Three packs are shown by default (**Core**, **Evolution**, **Basics**); the rest are revealed on demand.
 
@@ -101,7 +101,7 @@ Three packs are shown by default (**Core**, **Evolution**, **Basics**); the rest
 |------|--------|
 | **Core** (`core`, 11) | `auto-merge`,`auto-workflow`,`fleet-control`,`fork-fleet`,`heartbeat`,`memory-flush`,`narrative-convergence`,`shiplog`,`soul-builder`,`spawn-instance`,`strategy-builder` |
 | **Evolution** (`evolution`, 8) | `aeon-doctor`,`autoresearch`,`create-skill`,`install-skill`,`search-skill`,`self-improve`,`skill-health`,`skill-repair` |
-| **Basics** (`basics`, 15) | `action-converter`,`article`,`bd-radar`,`digest`,`executor-mcp`,`fetch-tweets`,`github-trending`,`glim-mcp`,`idea-forge`,`last30`,`pr-review`,`price-alert`,`token-movers`,`tx-explain`,`write-tweet` |
+| **Basics** (`basics`, 16) | `action-converter`,`article`,`bd-radar`,`digest`,`executor-mcp`,`fetch-tweets`,`github-trending`,`glim-mcp`,`idea-forge`,`last30`,`pr-review`,`price-alert`,`token-movers`,`tx-explain`,`write-tweet`,`you-web-search` |
 | **Dev & Code** (`dev`, 8) | `changelog`,`deploy-prototype`,`feature`,`github-monitor`,`inbox-triage`,`pr-triage`,`vuln-scanner`,`vuln-tracker` |
 | **Crypto & Markets** (`crypto`, 13) | `base-mcp`,`defi-overview`,`distribute-tokens`,`finance-district-mcp`,`investigation-report`,`monitor-polymarket`,`narrative-tracker`,`onchain-monitor`,`picks-tracker`,`pm-manipulation`,`robinhood-mcp`,`token-pick`,`unlock-monitor` |
 | **Productivity** (`productivity`, 8) | `idea-pipeline`,`mention-radar`,`okf-export`,`okf-ingest`,`operator-scorecard`,`reply-maker`,`schedule-ads`,`send-email` |
