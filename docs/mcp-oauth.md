@@ -50,6 +50,7 @@ discovery notes) and their companion skills:
 | glim.sh (`glim`) | `glim.sh/mcp` | `openid offline_access` | yes — **verified live 2026-07-16** | `glim-mcp` |
 | Executor (`executor`) | `executor.sh/mcp` | `openid offline_access` | yes — **verified live 2026-07-16** | `executor-mcp` |
 | Finance District Agent Wallet (`finance-district`) | `wallet-mcp.fd.xyz` | `openid offline_access api://fd-agent-wallet-mcp/mcp:tools` (resource scope gates tool access) | yes | `finance-district-mcp` |
+| PostHog (`posthog`) | `mcp.posthog.com/mcp` | `openid user:read organization:read project:read error_tracking:read` (read scopes only; `user:read` is required or the session 403s on init) | unverified — assume yes (no `offline_access`; refresh via the `refresh_token` grant) | `posthog-errors` |
 
 The glim and Executor loops were verified end-to-end on a live instance
 (Connect → per-run refresh → PAT-persisted rotation → refresh off the persisted
