@@ -21,6 +21,11 @@
  * Required vars/secrets (the deploy wizard prompts for them; see .dev.vars.example):
  *   TELEGRAM_BOT_TOKEN        bot token from @BotFather
  *   TELEGRAM_CHAT_ID          the only chat allowed to command the agent
+ *   TELEGRAM_ALLOWED_USER_ID  (optional) the only USER allowed to command the agent.
+ *                             Defaults to TELEGRAM_CHAT_ID (correct for a 1:1 DM). Set
+ *                             it to your numeric user id when TELEGRAM_CHAT_ID is a
+ *                             group, so a non-owner member can't drive the bot by
+ *                             tapping a posted button. Buttons fail closed until set.
  *   TELEGRAM_WEBHOOK_SECRET   shared secret for setWebhook(secret_token) — required
  *   GITHUB_REPO               "owner/repo" of your Aeon fork
  *   GITHUB_TOKEN              GitHub PAT — fine-grained with Contents: read/write
@@ -50,13 +55,20 @@ export default {
     }
 
     const owner = String(env.TELEGRAM_CHAT_ID);
+    // Owner *user* id. `owner` above gates the chat; this gates the tapping/sending
+    // user. Defaults to the chat id, which is exactly the owner's id in a 1:1 DM
+    // (chat.id == user.id there), so DM setups need no extra config. In a group the
+    // negative chat id never equals a positive user id, so buttons fail closed until
+    // TELEGRAM_ALLOWED_USER_ID is set — stopping any group member from commanding
+    // the bot just by tapping a posted button.
+    const ownerUid = String(env.TELEGRAM_ALLOWED_USER_ID || env.TELEGRAM_CHAT_ID);
 
     // --- Inline button tap -------------------------------------------------
     const cb = update?.callback_query;
     if (cb) {
       // Stop the client's spinner regardless of who sent it.
       await answerCallback(env, cb.id);
-      if (String(cb.message?.chat?.id) !== owner) {
+      if (String(cb.message?.chat?.id) !== owner || String(cb.from?.id) !== ownerUid) {
         return new Response("ignored", { status: 200 });
       }
       return dispatch(env, "telegram-callback", {
@@ -72,10 +84,12 @@ export default {
     if (!message?.text) {
       return new Response("ignored", { status: 200 });
     }
-    if (String(message.chat?.id) !== owner) {
+    if (String(message.chat?.id) !== owner || String(message.from?.id) !== ownerUid) {
       // Keep the bot's reply rate high (BotFather flags "too few replies") without
       // acting on strangers. Private chats only, to avoid replying into groups.
-      if (message.chat?.type === "private") {
+      // The reply only goes out when the whole chat is a non-owner private DM — never
+      // to a non-owner member inside the owner's own group (that would be chat noise).
+      if (message.chat?.type === "private" && String(message.chat?.id) !== owner) {
         await sendMessage(env, message.chat.id, "This bot is private.");
       }
       return new Response("ignored", { status: 200 });

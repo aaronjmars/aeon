@@ -40,6 +40,7 @@ them via the CLI:
 ```bash
 npx wrangler secret put TELEGRAM_BOT_TOKEN        # bot token from @BotFather
 npx wrangler secret put TELEGRAM_CHAT_ID          # your chat id (only this chat is allowed)
+npx wrangler secret put TELEGRAM_ALLOWED_USER_ID  # optional; your user id (required for group chats — see table)
 npx wrangler secret put TELEGRAM_WEBHOOK_SECRET   # shared secret for webhook verification (required)
 npx wrangler secret put GITHUB_REPO               # owner/repo of your Aeon fork
 npx wrangler secret put GITHUB_TOKEN              # GitHub PAT (see scopes below)
@@ -49,6 +50,7 @@ npx wrangler secret put GITHUB_TOKEN              # GitHub PAT (see scopes below
 |--------|----------|-------|
 | `TELEGRAM_BOT_TOKEN` | yes | From [@BotFather](https://t.me/BotFather). |
 | `TELEGRAM_CHAT_ID` | yes | Only messages from this chat are relayed; everything else is dropped. |
+| `TELEGRAM_ALLOWED_USER_ID` | for groups | The only **user** allowed to command the bot. Defaults to `TELEGRAM_CHAT_ID`, which is correct for a 1:1 DM (there `chat.id == user.id`). If `TELEGRAM_CHAT_ID` is a **group**, set this to your numeric user id — otherwise any group member can drive the bot by tapping a posted button. Left unset in a group, buttons fail closed. Get your id from [@userinfobot](https://t.me/userinfobot). |
 | `TELEGRAM_WEBHOOK_SECRET` | yes | Random string; pass the **same** value to `setWebhook` as `secret_token`. The Worker rejects every update with `403` until it's set. |
 | `GITHUB_REPO` | yes | `owner/repo` of your Aeon fork, e.g. `aeonfun/aeon` — not the worker repo the deploy button creates. |
 | `GITHUB_TOKEN` | yes | Fine-grained PAT scoped to your fork with **Contents: read/write** and **Actions: read/write**, or a classic token with `repo`. |
@@ -95,7 +97,7 @@ retries).
 Telegram → POST update → Worker
   ├─ verify method + secret token
   ├─ callback_query (button tap) → answerCallbackQuery → dispatch telegram-callback
-  ├─ ignore (200) anything not from TELEGRAM_CHAT_ID (private chats get "This bot is private.")
+  ├─ ignore (200) anything not from the owner chat AND owner user (a stranger's private DM gets "This bot is private.")
   ├─ reply to a [skill::intent] prompt   → dispatch telegram-reply
   ├─ /slash command or /start deep link  → dispatch telegram-command
   └─ plain text                          → dispatch telegram-message

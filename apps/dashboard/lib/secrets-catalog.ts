@@ -31,6 +31,7 @@ export const BUILTIN_SECRETS: Omit<Secret, 'isSet'>[] = [
   { name: 'SURPLUS_API_KEY', group: 'Core', description: 'Surplus Intelligence API key (inf_...) - routes Claude through surplusintelligence.ai via a local translator' },
   { name: 'TELEGRAM_BOT_TOKEN', group: 'Telegram', description: 'Bot token from @BotFather' },
   { name: 'TELEGRAM_CHAT_ID', group: 'Telegram', description: 'Your chat ID' },
+  { name: 'TELEGRAM_ALLOWED_USER_ID', group: 'Telegram', description: 'Optional - your numeric Telegram user ID (from @userinfobot). Only needed when TELEGRAM_CHAT_ID is a group/public chat: it restricts who can command the bot to this one user, so a random group member cannot dispatch skills or schedule crons by tapping a button. Defaults to TELEGRAM_CHAT_ID, which is correct for a 1:1 DM. In a group, button taps and messages fail closed until this is set.' },
   { name: 'DISCORD_BOT_TOKEN', group: 'Discord', description: 'Discord bot token' },
   { name: 'DISCORD_CHANNEL_ID', group: 'Discord', description: 'Channel ID for messages' },
   { name: 'DISCORD_WEBHOOK_URL', group: 'Discord', description: 'Webhook URL for notifications' },

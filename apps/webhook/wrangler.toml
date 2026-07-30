@@ -8,6 +8,7 @@ compatibility_date = "2025-01-01"
 #
 #   wrangler secret put TELEGRAM_BOT_TOKEN
 #   wrangler secret put TELEGRAM_CHAT_ID
+#   wrangler secret put TELEGRAM_ALLOWED_USER_ID   # optional; required for group chats
 #   wrangler secret put TELEGRAM_WEBHOOK_SECRET
 #   wrangler secret put GITHUB_REPO
 #   wrangler secret put GITHUB_TOKEN

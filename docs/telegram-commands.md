@@ -15,8 +15,12 @@ The shared router **[`scripts/telegram-route.sh`](../scripts/telegram-route.sh)*
 single source of truth for turning an inbound update into an action — no LLM in the
 loop for commands, buttons, or replies.
 
-> Prereq: `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` are set. Aeon is already scoped to
-> that single chat, so only you can command the bot.
+> Prereq: `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` are set. Aeon is scoped to that
+> single chat. In a **1:1 DM** that's enough — the chat id *is* your user id, so only
+> you can command the bot. In a **group/public chat** the chat id is shared by every
+> member, so also set **`TELEGRAM_ALLOWED_USER_ID`** to your numeric user id (from
+> [@userinfobot](https://t.me/userinfobot)); until you do, button taps and messages
+> from anyone in the group are ignored (fail-closed). See [Owner gate](#owner-gate).
 
 ---
 
@@ -129,6 +133,25 @@ The skill parses `var` as `intent:value`.
 
 ---
 
+## Owner gate
+
+`TELEGRAM_CHAT_ID` gates the **chat**; `TELEGRAM_ALLOWED_USER_ID` gates the **user**.
+Both the poller and the webhook Worker now require an inbound update to satisfy *both*:
+the chat must be `TELEGRAM_CHAT_ID` **and** the sender/tapper (`from.id`) must be the
+owner user.
+
+- **Why both.** A button posted into a group is tappable by every member, and Telegram
+  delivers `callback_query` updates even when BotFather group-privacy mode is on (which
+  otherwise hides plain group messages from the bot). Gating on chat alone let any member
+  dispatch skills or schedule crons by tapping. Gating on user closes that.
+- **Default.** `TELEGRAM_ALLOWED_USER_ID` defaults to `TELEGRAM_CHAT_ID`. In a 1:1 DM
+  `chat.id == user.id`, so the default *is* the owner and nothing new is needed. In a
+  group the negative chat id never equals a positive user id, so the gate **fails closed**
+  — every tap/message is ignored until you set `TELEGRAM_ALLOWED_USER_ID`.
+- **Set it.** Repo var/secret `TELEGRAM_ALLOWED_USER_ID` (poller + `route` job) and the
+  Worker env of the same name (instant mode). Find your id via
+  [@userinfobot](https://t.me/userinfobot).
+
 ## Operational notes
 
 - **Offset.** The poller now requests `allowed_updates=["message","callback_query"]`
@@ -140,8 +163,10 @@ The skill parses `var` as `intent:value`.
   short reference key in `callback_data`.
 - **Instant mode.** After editing `apps/webhook/src/worker.js`, **redeploy the
   Worker** to pick up command/button/reply routing (`npx wrangler deploy`).
-- **Non-owner messages.** The Worker replies "This bot is private." to strangers in
-  private chats (keeps the bot's reply rate high) and never acts on them.
+- **Non-owner messages.** The Worker replies "This bot is private." to strangers who
+  DM the bot in a *private* chat (keeps the bot's reply rate high) and never acts on
+  them. A non-owner tapping/messaging inside the owner's own group is dropped silently
+  (no reply, to avoid group noise) — see [Owner gate](#owner-gate).
 
 ## Testing on a scratch bot
 
