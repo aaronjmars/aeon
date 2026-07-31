@@ -49,6 +49,11 @@ WRITE_TOOLS="Write,Edit,Bash(gh:*),Bash(git:*),Bash(python3:*),Bash(python:*)"
 # a live-test showed the run logging that denial as "Blocked by sandbox". These are
 # read-only static-analysis tools (no repo/network mutation of their own).
 WRITE_TOOLS="$WRITE_TOOLS,Bash(semgrep:*),Bash(osv-scanner:*),Bash(trufflehog:*),Bash(slither:*)"
+# Foundry bare-names + the key-safe runner for deploy-uni-hook. Foundry is staged by
+# scripts/stage-deploy-uni-hook.sh (the sandbox denies in-run installs); the skill then
+# builds/simulates/broadcasts by bare name. `./hook-deploy.sh` hides the deployer key
+# from the command line (secretcurl pattern). Without this grant the invocation is denied.
+WRITE_TOOLS="$WRITE_TOOLS,Bash(forge:*),Bash(cast:*),Bash(./hook-deploy.sh:*)"
 
 resolve_mode() {
   # `mode:` frontmatter scalar via the shared _fm reader (strips inline comment,
