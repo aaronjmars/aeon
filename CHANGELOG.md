@@ -11,6 +11,17 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Added
 
+- **New skill: `deploy-uni-hook`** - turns a one-line brief into a live Uniswap
+  v4 hook + test pool on any v4 chain. Generates from a pre-audited template
+  (`dynamic`/`noop`/`skim`) or a from-scratch freeform hook, auto-derives the
+  hook-address flag bits (CREATE2-mined), and gates every deploy behind a static
+  audit, a dangerous-pattern scan, a behavioral `forge` test, and a fork
+  simulation. Dry-run by default; an explicit `arm:` broadcasts. Testnet-only
+  unless `arm:` + an explicit `chain:` + a `HOOK_MAINNET_OK=1` lock all line up
+  (a mainnet triple-lock). Foundry + a built v4 project are staged in a workflow
+  step; the deploy receipt and best-effort explorer verification round it out.
+  `crypto` pack, Opus-pinned, disabled by default; brings the catalog to
+  **66 skills** (65 -> 66). (#805)
 - **New skills: `seo-audit` + `posthog-errors`** - a daily on-page and technical
   SEO audit of every page on a site (sitemap-first discovery, per-page scoring,
   cross-page checks for duplicate titles/canonicals/sitemap gaps, day-over-day
