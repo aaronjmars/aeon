@@ -28,12 +28,12 @@ This skill provides web search functionality via You.com's Search API, offering 
 
 Check if `YDC_API_KEY` is available:
 ```bash
-[ -n "${YDC_API_KEY:+x}" ] && echo "KEY_PRESENT" || echo "KEY_UNSET"
+[ -n "${YDC_API_KEY:-}" ] && echo "KEY_PRESENT" || echo "KEY_UNSET"
 ```
 
 If it is unset, stop immediately with a clear error:
 ```bash
-[ -n "${YDC_API_KEY:+x}" ] || { echo "YDC_API_KEY is required for this skill"; exit 1; }
+[ -n "${YDC_API_KEY:-}" ] || { echo "YDC_API_KEY is required for this skill"; exit 1; }
 ```
 
 ### API Call
@@ -44,13 +44,9 @@ If it is unset, stop immediately with a clear error:
 QUERY="${var:-current notable developments in AI, crypto, and technology}"
 COUNT="10"
 
-FRESHNESS="${YOUCOM_FRESHNESS:-}"
+FRESHNESS="${YOUCOM_FRESHNESS:-week}"
 LIVECRAWL="${YOUCOM_LIVECRAWL:-}"
-SEARCH_URL="https://api.you.com/v1/search?query=$(echo "$QUERY" | jq -Rr @uri)&count=$COUNT&safesearch=strict"
-
-if [ -n "${FRESHNESS:+x}" ]; then
-  SEARCH_URL="$SEARCH_URL&freshness=$(echo "$FRESHNESS" | jq -Rr @uri)"
-fi
+SEARCH_URL="https://api.you.com/v1/search?query=$(echo "$QUERY" | jq -Rr @uri)&count=$COUNT&safesearch=strict&freshness=$(echo "$FRESHNESS" | jq -Rr @uri)"
 
 if [ -n "${LIVECRAWL:+x}" ]; then
   SEARCH_URL="$SEARCH_URL&livecrawl=$(echo "$LIVECRAWL" | jq -Rr @uri)"
