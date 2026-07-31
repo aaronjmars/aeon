@@ -4,6 +4,7 @@ import { useState } from 'react'
 import type { Skill, Run, Secret, DashboardView } from '../lib/types'
 import { packGroups, keyProvidedByHarness } from '../lib/constants'
 import { displayName, initials, getSkillStatus, statusDot } from '../lib/utils'
+import { SkillGlyph, hasSkillGlyph } from './ui/SkillGlyph'
 
 interface LeftSidebarProps {
   view: DashboardView
@@ -154,8 +155,10 @@ export function LeftSidebar({ view, setView, selectedSkill, skills, runs, secret
                 return (
                   <button key={s.name} onClick={() => onSkillSelect(s.name)}
                     className={`w-full flex items-center gap-2.5 px-4 py-2 transition-all text-left ${sel ? 'bg-aeon-bg selected-indicator' : 'hover:bg-aeon-bg'}`}>
-                    <div className="w-7 h-7 flex items-center justify-center text-[10px] font-bold shrink-0 text-white" style={{ backgroundColor: s.enabled ? cat.color : 'rgba(250,250,250,0.15)' }}>
-                      {initials(s.name)}
+                    <div className="w-7 h-7 flex items-center justify-center shrink-0 text-white" style={{ backgroundColor: s.enabled ? cat.color : 'rgba(250,250,250,0.15)' }}>
+                      {hasSkillGlyph(s.name)
+                        ? <SkillGlyph slug={s.name} className="w-4 h-4" />
+                        : <span className="text-[10px] font-bold">{initials(s.name)}</span>}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-xs font-medium text-primary-100 truncate">{displayName(s.name)}</div>

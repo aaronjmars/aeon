@@ -5,6 +5,7 @@ import type { Pack, CommunityPack, Skill } from '../lib/types'
 import { displayName } from '../lib/utils'
 import { FIRST_PARTY_KEYS, DEFAULT_VISIBLE_PACKS } from '../lib/constants'
 import { Section } from './ui/Section'
+import { SkillGlyph, hasSkillGlyph } from './ui/SkillGlyph'
 
 interface PacksPanelProps {
   firstParty: Pack[]
@@ -213,7 +214,9 @@ export function PacksPanel({ firstParty, community, skills, enabledPacks, loadin
                             {sb ? '…' : s.enabled ? 'on' : 'off'}
                           </button>
                           <button onClick={() => onSelectSkill(s.slug)} className="flex items-center gap-2.5 flex-1 min-w-0 text-left cursor-target">
-                            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: s.enabled ? pack.color : 'rgba(250,250,250,0.18)' }} />
+                            {hasSkillGlyph(s.slug)
+                              ? <span className="shrink-0 inline-flex" style={{ color: s.enabled ? pack.color : 'rgba(250,250,250,0.4)' }} aria-hidden="true"><SkillGlyph slug={s.slug} className="w-4 h-4" /></span>
+                              : <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: s.enabled ? pack.color : 'rgba(250,250,250,0.18)' }} />}
                             <span className="text-xs text-primary-100 truncate">{displayName(s.slug)}</span>
                           </button>
                         </div>
