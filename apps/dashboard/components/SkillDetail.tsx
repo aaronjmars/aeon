@@ -336,6 +336,9 @@ export function SkillDetail({ skill, runs, model, harness, secrets, mcpServers, 
       )}
 
       <Section label="Skill settings">
+        {skill.varHint && (
+          <p className="text-xs text-primary-40 font-mono mb-3 leading-relaxed max-w-2xl">{skill.varHint}</p>
+        )}
         {editingVar ? (
           <div className="flex gap-2 flex-wrap">
             <input

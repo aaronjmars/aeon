@@ -5,6 +5,7 @@ export interface Frontmatter {
   name: string
   category: string
   description: string
+  varHint: string
   tags: string[]
   requires: SkillKeyRef[]
   mcp: SkillMcpRef[]
@@ -53,6 +54,11 @@ export function parseFrontmatter(content: string): Frontmatter {
     }
   }
 
+  // `var:` is an optional per-skill hint for the run input - a one-line grammar /
+  // example of what to type (e.g. deploy-uni-hook's "arm:/template:/chain:" prefixes).
+  // Surfaced under the Skill-settings input as help text; empty for most skills.
+  const varHint = unquote(block.match(/^var:\s*(.+)/m)?.[1] ?? '')
+
   const tags = parseList(block.match(/tags:\s*\[([^\]]*)\]/)?.[1])
 
   // `requires:` declares the third-party credentials a skill needs to function.
@@ -79,7 +85,7 @@ export function parseFrontmatter(content: string): Frontmatter {
     })
     .filter(r => /^[a-z][a-z0-9-]+$/.test(r.slug))
 
-  return { name, category, description, tags, requires, mcp }
+  return { name, category, description, varHint, tags, requires, mcp }
 }
 
 function parseList(inner: string | undefined): string[] {

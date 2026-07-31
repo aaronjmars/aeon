@@ -68,6 +68,8 @@ const DOMAINS: Record<string, string> = {
 // Non-brand entries - no logo exists, so show a meaningful glyph instead.
 const GLYPHS: Record<string, ServiceGlyph> = {
   NOTIFY_EMAIL_TO: 'mail',
+  HOOK_DEPLOYER_PRIVATE_KEY: 'key',
+  HOOK_MAINNET_OK: 'key',
 }
 
 // MCP server credentials (MCP_<SLUG>_TOKEN / _OAUTH) carry their server's brand,

@@ -174,6 +174,16 @@ ${longLine}`;
     const content = `---\nname: Foo\ndescription: y\n---\nbody`;
     assert.equal(parseFrontmatter(content).category, "");
   });
+
+  it("parses the var hint, including colons and pipes", () => {
+    const content = `---\nname: Foo\nvar: "arm: to broadcast, template:dynamic|noop, then the brief"\n---\nbody`;
+    assert.equal(parseFrontmatter(content).varHint, "arm: to broadcast, template:dynamic|noop, then the brief");
+  });
+
+  it("returns an empty var hint when absent", () => {
+    const content = `---\nname: Foo\ndescription: y\n---\nbody`;
+    assert.equal(parseFrontmatter(content).varHint, "");
+  });
 });
 
 // ── setFrontmatterCategory ───────────────────────────────────────────

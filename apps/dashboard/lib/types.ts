@@ -2,7 +2,7 @@ import { GATEWAY_SLUGS, type GatewaySlug } from './gateway-registry'
 
 export interface SkillKeyRef { key: string; optional: boolean }
 export interface SkillMcpRef { slug: string; optional: boolean }
-export interface Skill { name: string; description: string; tags: string[]; category: string; pack: string; packName: string; enabled: boolean; schedule: string; var: string; model: string; harness: string; requires: SkillKeyRef[]; mcp: SkillMcpRef[] }
+export interface Skill { name: string; description: string; tags: string[]; category: string; pack: string; packName: string; enabled: boolean; schedule: string; var: string; varHint: string; model: string; harness: string; requires: SkillKeyRef[]; mcp: SkillMcpRef[] }
 export interface Run { id: number; workflow: string; status: string; conclusion: string | null; created_at: string; url: string }
 // Result of a Telegram setup probe (webhook registration / chat-id lookup), shown inline in the Telegram credential helpers.
 export interface TelegramStatus { ok: boolean; msg: string }
