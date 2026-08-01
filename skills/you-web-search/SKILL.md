@@ -46,7 +46,7 @@ COUNT="10"
 
 FRESHNESS="${YOUCOM_FRESHNESS:-week}"
 LIVECRAWL="${YOUCOM_LIVECRAWL:-}"
-SEARCH_URL="https://api.you.com/v1/search?query=$(echo "$QUERY" | jq -Rr @uri)&count=$COUNT&safesearch=strict&freshness=$(echo "$FRESHNESS" | jq -Rr @uri)"
+SEARCH_URL="https://ydc-index.io/v1/search?query=$(echo "$QUERY" | jq -Rr @uri)&count=$COUNT&safesearch=strict&freshness=$(echo "$FRESHNESS" | jq -Rr @uri)"
 
 if [ -n "${LIVECRAWL:+x}" ]; then
   SEARCH_URL="$SEARCH_URL&livecrawl=$(echo "$LIVECRAWL" | jq -Rr @uri)"
