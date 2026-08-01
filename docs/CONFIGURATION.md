@@ -48,6 +48,19 @@ schedule:
 
 Claude only installs and runs when a skill actually matches - non-matching ticks cost ~10s.
 
+## Circuit breaker (outage protection)
+
+The scheduler trips a per-skill circuit breaker once a skill logs **3 consecutive failures** (`consecutive_failures` in `memory/cron-state.json`). While tripped it stops dispatching that skill every tick - so a dead upstream API or a revoked key can't burn a run every `*/5` for hours - and instead lets **one probe run through every 6 hours** (half-open). A probe that succeeds resets the counter and the skill resumes its normal schedule automatically; a probe that fails re-arms the 6h cooldown. It is auto-recovering, not a kill switch, so an outage self-heals with no operator action. `skill-health` already reports CRITICAL at the same threshold, so a tripped breaker is visible.
+
+Tune with repo variables (both optional):
+
+```
+BREAKER_THRESHOLD      failures in a row before tripping (default 3; 0 disables)
+BREAKER_COOLDOWN_MIN   minutes between half-open probes while tripped (default 360)
+```
+
+The decision logic lives in `scripts/breaker.sh` (unit-tested in `scripts/tests/test_breaker.sh`); the scheduler calls it, no inline copy. To hard-disable a skill instead, set `enabled: false` in `aeon.yml`.
+
 ## Capability tiers (read-only skills)
 
 A skill declares its write blast-radius in SKILL.md frontmatter:
@@ -69,7 +82,7 @@ cp docs/examples/mcp/.mcp.json.example .mcp.json   # then edit, commit, push
 
 The example ships two working servers — `github` (uses the runner's built-in `GITHUB_TOKEN`) and `sequential-thinking` (no-auth stdio). On the next run the runner loads `.mcp.json` and auto-allows every server's tools, so a skill can just say *"use the github MCP server to …"*. Reference a server's secret with `${VAR}` (never commit the value) and set it in the dashboard — the runner resolves it from the repo's secrets with zero workflow editing, and skips a server (with a warning) when its secret is missing rather than breaking the skill.
 
-Or skip the file entirely: the dashboard's **MCP** tab writes `.mcp.json` for you, lists **Featured** servers ([Base](https://mcp.base.org), [Robinhood Trading](https://agent.robinhood.com), [glim.sh](https://glim.sh), [Executor](https://executor.sh), [Finance District](https://wallet-mcp.fd.xyz)) for one-click install, and tells you which secret each server needs. The featured servers are OAuth-gated: **Connect** opens your browser to authorize, then keeps the tokens fresh across headless runs — including saving rotated refresh tokens, which needs a secrets-write PAT (`GH_SECRETS_PAT`). Flow, PAT setup, and limits: [`docs/mcp-oauth.md`](mcp-oauth.md). Each featured server has a matching on-demand skill (`base-mcp`, `robinhood-mcp`, `glim-mcp`, `executor-mcp`, `finance-district-mcp`) — dispatch it with a `var` to use the server from a run.
+Or skip the file entirely: the dashboard's **MCP** tab writes `.mcp.json` for you, lists **Featured** servers ([Base](https://mcp.base.org), [Robinhood Trading](https://agent.robinhood.com), [glim.sh](https://glim.sh), [Executor](https://executor.sh), [Finance District](https://wallet-mcp.fd.xyz), [PostHog](https://posthog.com)) for one-click install, and tells you which secret each server needs. The featured servers are OAuth-gated: **Connect** opens your browser to authorize, then keeps the tokens fresh across headless runs — including saving rotated refresh tokens, which needs a secrets-write PAT (`GH_SECRETS_PAT`). Flow, PAT setup, and limits: [`docs/mcp-oauth.md`](mcp-oauth.md). Each featured server has a matching skill (`base-mcp`, `robinhood-mcp`, `glim-mcp`, `executor-mcp`, `finance-district-mcp`, and the scheduled `posthog-errors` digest) — dispatch it with a `var` to use the server from a run.
 
 ## Cross-repo access
 

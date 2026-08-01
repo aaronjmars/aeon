@@ -11,6 +11,29 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Added
 
+- **New skill: `deploy-uni-hook`** - turns a one-line brief into a live Uniswap
+  v4 hook + test pool on any v4 chain. Generates from a pre-audited template
+  (`dynamic`/`noop`/`skim`) or a from-scratch freeform hook, auto-derives the
+  hook-address flag bits (CREATE2-mined), and gates every deploy behind a static
+  audit, a dangerous-pattern scan, a behavioral `forge` test, and a fork
+  simulation. Dry-run by default; an explicit `arm:` broadcasts. Testnet-only
+  unless `arm:` + an explicit `chain:` + a `HOOK_MAINNET_OK=1` lock all line up
+  (a mainnet triple-lock). Foundry + a built v4 project are staged in a workflow
+  step; the deploy receipt and best-effort explorer verification round it out.
+  `crypto` pack, Opus-pinned, disabled by default; brings the catalog to
+  **66 skills** (65 -> 66). (#805)
+- **New skills: `seo-audit` + `posthog-errors`** - a daily on-page and technical
+  SEO audit of every page on a site (sitemap-first discovery, per-page scoring,
+  cross-page checks for duplicate titles/canonicals/sitemap gaps, day-over-day
+  diff, and a standing `FIXES.md` work list), and a weekly cross-project PostHog
+  error digest over the PostHog MCP server (ranks issues by impact across every
+  project the OAuth grant covers, flags new vs ongoing, links a full committed
+  report). PostHog joins the featured MCP servers with one-click dashboard
+  Connect (a sixth `MCP_CATALOG` entry). Both `dev` pack, disabled by default;
+  brings the catalog to **65 skills** (63 -> 65). (#802)
+- **Auto-recovering circuit breaker for failing skills** - the scheduler now
+  trips a breaker on a skill that fails repeatedly, pausing it and auto-recovering
+  once it succeeds again, so one broken skill cannot burn every run. (#801)
 - **New skill: `finance-district-mcp`** — a multichain non-custodial agent
   wallet over MCP (contributed by @raul1stdigital). Checks balances and prices,
   discovers the best DeFi yields, swaps, moves funds, and makes x402 paid API
@@ -49,6 +72,12 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Changed
 
+- **Dashboard catalogs the `PAGESPEED_API_KEY` secret** - seo-audit's optional
+  Core Web Vitals key now appears in the Skill Keys group with its brand icon and
+  where-to-get-it copy, instead of a bare initials-badge catch-all row. (#803)
+- **Docs: MCP catalog drift fixed and harness framing flattened** - plus a README
+  catalog drift-guard and a `finance-district` row added to the mcp-oauth catalog
+  table. (#794, #796)
 - **Secret rename** — `BASESCAN_KEY` → `BASESCAN_API_KEY`, to follow the
   `<PROVIDER>_API_KEY` convention every sibling explorer/provider key uses.
   Operators who set the old secret should re-add it under the new name (or rely
@@ -62,6 +91,9 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Fixed
 
+- **`finance-district-mcp` registered in `aeon.yml`.** The skill shipped in #791
+  but had no schedule entry, so it never ran; it is now present (disabled by
+  default). (#800)
 - **Read-only skills ran in write mode on the MCP-server path.**
   `apps/mcp-server`'s `skill-executor.ts` hardcoded `--mode write` and never
   consulted `scripts/skill_mode.sh`, so all twelve `mode: read-only` skills ran
@@ -290,12 +322,18 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Security
 
+- **Telegram inbound gated on the owner's user ID.** In a group or public chat
+  any member could command the bot by tapping a button; inbound is now restricted
+  to `TELEGRAM_ALLOWED_USER_ID` (defaults to the chat ID for a 1:1 DM), failing
+  closed otherwise. (#797)
 - Patched two high-severity CVE classes in the dashboard — `sharp`/`libvips`,
   and Next.js `16.2.10 → 16.2.11`. (#758, #759)
 - Bumped the dashboard `postcss` override past `GHSA-r28c-9q8g-f849`. (#783)
 
 ### Maintenance
 
+- CI green-up after the Telegram owner-gate, plus a dashboard PacksPanel
+  unique-key fix. (#798, #799)
 - Repo-wide cleanup pass across 8 dimensions (dead code, weak types,
   duplication, circular deps). (#757)
 - Second code-quality sweep across the dashboard, CLI, mcp-server, and

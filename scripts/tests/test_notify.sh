@@ -89,7 +89,7 @@ ABS_NOTIFY="$ROOT/scripts/notify.sh"
 
 # 7. --buttons attaches an inline_keyboard to the Telegram payload
 reset
-TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 NOTIFY_DRY_RUN=1 \
+TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 AEON_MESSAGES_WF_STATE=active NOTIFY_DRY_RUN=1 \
   bash "$NOTIFY" "Alert body long enough to clear the probe filter here" \
   --buttons '[[{"text":"Snooze","callback_data":"snooze:x:y:60"}]]' >/dev/null 2>&1
 if [ -f "$WORK/tg-payload.jsonl" ] && \
@@ -101,7 +101,7 @@ fi
 
 # 8. --force-reply + --context set force_reply and prefix the [skill::intent] marker
 reset
-TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 NOTIFY_DRY_RUN=1 \
+TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 AEON_MESSAGES_WF_STATE=active NOTIFY_DRY_RUN=1 \
   bash "$NOTIFY" "Which repository should I track for you" \
   --force-reply --placeholder "owner/repo" --context "github-monitor::add-repo" >/dev/null 2>&1
 if [ -f "$WORK/tg-payload.jsonl" ] && \
@@ -142,7 +142,7 @@ rm -rf "$MK"
 
 # 12. a normal skill notification gets the global Run again + Schedule weekly row
 reset
-TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 NOTIFY_DRY_RUN=1 SKILL_NAME=token-movers \
+TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 AEON_MESSAGES_WF_STATE=active NOTIFY_DRY_RUN=1 SKILL_NAME=token-movers \
   bash "$NOTIFY" "A normal skill digest long enough to clear the probe filter here" >/dev/null 2>&1
 if [ -f "$WORK/tg-payload.jsonl" ] && \
    jq -e '.reply_markup.inline_keyboard[-1][0].callback_data=="run:token-movers"' "$WORK/tg-payload.jsonl" >/dev/null 2>&1 && \
@@ -154,7 +154,7 @@ fi
 
 # 13. skill --buttons rows are kept, with the global quick-action row appended beneath
 reset
-TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 NOTIFY_DRY_RUN=1 SKILL_NAME=pr-review \
+TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 AEON_MESSAGES_WF_STATE=active NOTIFY_DRY_RUN=1 SKILL_NAME=pr-review \
   bash "$NOTIFY" "Digest body long enough to clear the probe filter comfortably" \
   --buttons '[[{"text":"Open","url":"https://example.com"}]]' >/dev/null 2>&1
 if [ -f "$WORK/tg-payload.jsonl" ] && \
@@ -167,7 +167,7 @@ fi
 
 # 14. a force_reply prompt never carries inline buttons (mutual exclusivity), even with SKILL_NAME set
 reset
-TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 NOTIFY_DRY_RUN=1 SKILL_NAME=github-monitor \
+TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 AEON_MESSAGES_WF_STATE=active NOTIFY_DRY_RUN=1 SKILL_NAME=github-monitor \
   bash "$NOTIFY" "Which repository should I track for you now" \
   --force-reply --placeholder "owner/repo" --context "github-monitor::add-repo" >/dev/null 2>&1
 if [ -f "$WORK/tg-payload.jsonl" ] && \
@@ -187,6 +187,55 @@ if [ -f "$WORK/tg-payload.jsonl" ] && \
   pass "no SKILL_NAME -> no global buttons"
 else
   bad "no SKILL_NAME -> no global buttons"
+fi
+
+# 15b. inbound Messages workflow disabled -> interactive buttons auto-suppressed, but
+#      the message still delivers. Neither the global row nor custom --buttons attach.
+#      (AEON_MESSAGES_WF_STATE short-circuits the GitHub API lookup.)
+reset
+TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 AEON_MESSAGES_WF_STATE=disabled_manually NOTIFY_DRY_RUN=1 SKILL_NAME=token-movers \
+  bash "$NOTIFY" "A broadcast body long enough to clear the probe filter here now" \
+  --buttons '[[{"text":"Snooze","callback_data":"snooze:token-movers:BTC:60"}]]' >/dev/null 2>&1
+if [ -f "$WORK/tg-payload.jsonl" ] && \
+   jq -e '.|has("reply_markup")|not' "$WORK/tg-payload.jsonl" >/dev/null 2>&1; then
+  pass "messages.yml disabled -> interactive buttons suppressed (message still sent)"
+else
+  bad "messages.yml disabled -> interactive buttons suppressed (message still sent)"
+fi
+
+# 15c. force_reply is also suppressed when inbound is disabled (its answer can't route)
+reset
+TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 AEON_MESSAGES_WF_STATE=disabled_manually NOTIFY_DRY_RUN=1 SKILL_NAME=github-monitor \
+  bash "$NOTIFY" "Which repository should I track for you now" \
+  --force-reply --placeholder "owner/repo" --context "github-monitor::add-repo" >/dev/null 2>&1
+if [ -f "$WORK/tg-payload.jsonl" ] && \
+   jq -e '.|has("reply_markup")|not' "$WORK/tg-payload.jsonl" >/dev/null 2>&1 && \
+   jq -e '.text|startswith("[github-monitor::add-repo]")' "$WORK/tg-payload.jsonl" >/dev/null 2>&1; then
+  pass "messages.yml disabled -> force_reply sent as plain text (no reply markup)"
+else
+  bad "messages.yml disabled -> force_reply sent as plain text (no reply markup)"
+fi
+
+# 15d. workflow active -> buttons attach as normal
+reset
+TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 AEON_MESSAGES_WF_STATE=active NOTIFY_DRY_RUN=1 SKILL_NAME=token-movers \
+  bash "$NOTIFY" "A broadcast body long enough to clear the probe filter here now" >/dev/null 2>&1
+if [ -f "$WORK/tg-payload.jsonl" ] && \
+   jq -e '.reply_markup.inline_keyboard[-1][0].callback_data=="run:token-movers"' "$WORK/tg-payload.jsonl" >/dev/null 2>&1; then
+  pass "messages.yml active -> buttons attached"
+else
+  bad "messages.yml active -> buttons attached"
+fi
+
+# 15e. disabled workflow + TELEGRAM_FORCE_BUTTONS=1 override -> buttons come back
+reset
+TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 AEON_MESSAGES_WF_STATE=disabled_manually TELEGRAM_FORCE_BUTTONS=1 NOTIFY_DRY_RUN=1 SKILL_NAME=token-movers \
+  bash "$NOTIFY" "A broadcast body long enough to clear the probe filter here now" >/dev/null 2>&1
+if [ -f "$WORK/tg-payload.jsonl" ] && \
+   jq -e '.reply_markup.inline_keyboard[-1][0].callback_data=="run:token-movers"' "$WORK/tg-payload.jsonl" >/dev/null 2>&1; then
+  pass "TELEGRAM_FORCE_BUTTONS=1 overrides disabled workflow"
+else
+  bad "TELEGRAM_FORCE_BUTTONS=1 overrides disabled workflow"
 fi
 
 reset

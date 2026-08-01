@@ -181,18 +181,63 @@ DELIVERED=false
 # Skipped when there's no skill context ($SKILL_NAME unset), when the skill name is
 # too long to fit callback_data's 64-byte budget, or on a force_reply prompt (Telegram
 # forbids inline buttons + force_reply on one message — the deliberate ask wins).
+# Interactive controls — inline callback buttons AND force_reply prompts — only do
+# anything if the inbound Messages workflow is running to receive the tap/reply:
+# .github/workflows/messages.yml. If the operator DISABLED that workflow, every tap is
+# dead and every force_reply answer routes nowhere, so notify must not attach them —
+# a "Run again" button that silently does nothing (or, in a shared chat, invites a
+# stranger to tap it) is worse than no button. The message body still sends.
+#
+# We resolve the workflow's state (best-effort, cached once per run) and drop
+# interactive markup only when it is DEFINITIVELY disabled:
+#   • active                                  -> attach (inbound is live)
+#   • disabled_manually / disabled_inactivity -> suppress (operator turned it off)
+#   • unknown / unreachable                   -> attach (fail open: never silently
+#                                                drop controls when we can't prove off)
+# Overrides: TELEGRAM_FORCE_BUTTONS=1 forces attach; AEON_MESSAGES_WF_STATE=<state>
+# skips the API call (operator override + test hook). The owner-user gate in
+# messages.yml still governs WHO may act on a tap when the workflow IS enabled — that
+# is a separate defence and stays in force regardless of this.
+INBOUND_OK=true
+if [ "${TELEGRAM_FORCE_BUTTONS:-}" != "1" ]; then
+  MSG_WF_STATE="${AEON_MESSAGES_WF_STATE:-}"
+  if [ -z "$MSG_WF_STATE" ]; then
+    WF_STATE_CACHE="${TMPDIR:-/tmp}/.aeon-messages-wf-state-${GITHUB_RUN_ID:-$$}"
+    if [ -f "$WF_STATE_CACHE" ]; then
+      MSG_WF_STATE=$(cat "$WF_STATE_CACHE" 2>/dev/null || echo "")
+    elif [ -n "${GITHUB_REPOSITORY:-}" ]; then
+      _WF_API="https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/messages.yml"
+      _WF_TOK="${GH_TOKEN:-${GITHUB_TOKEN:-${GH_GLOBAL:-}}}"
+      if [ -n "$_WF_TOK" ]; then
+        MSG_WF_STATE=$(curl -s --max-time 6 -H "Authorization: Bearer $_WF_TOK" \
+          -H "Accept: application/vnd.github+json" "$_WF_API" 2>/dev/null \
+          | jq -r '.state // "unknown"' 2>/dev/null || echo "unknown")
+      else
+        MSG_WF_STATE=$(curl -s --max-time 6 -H "Accept: application/vnd.github+json" "$_WF_API" 2>/dev/null \
+          | jq -r '.state // "unknown"' 2>/dev/null || echo "unknown")
+      fi
+      printf '%s' "$MSG_WF_STATE" > "$WF_STATE_CACHE" 2>/dev/null || true
+    fi
+  fi
+  case "$MSG_WF_STATE" in
+    disabled_manually|disabled_inactivity) INBOUND_OK=false ;;
+  esac
+fi
+
 GLOBAL_ROW=""
-if [ -n "${SKILL_NAME:-}" ] && [ -z "$FORCE_REPLY" ] && [ "${#SKILL_NAME}" -le 48 ]; then
+if [ "$INBOUND_OK" = true ] && [ -n "${SKILL_NAME:-}" ] && [ -z "$FORCE_REPLY" ] && [ "${#SKILL_NAME}" -le 48 ]; then
   GLOBAL_ROW=$(jq -n --arg s "$SKILL_NAME" \
     '[{text:"🔁 Run again",       callback_data:("run:"+$s)},
       {text:"📅 Schedule weekly", callback_data:("schedule:"+$s+":weekly")}]')
 fi
 
 REPLY_MARKUP="null"
-if [ -n "$FORCE_REPLY" ]; then
+if [ -n "$FORCE_REPLY" ] && [ "$INBOUND_OK" = true ]; then
   REPLY_MARKUP=$(jq -n --arg p "$PLACEHOLDER" \
     '{force_reply:true} + (if $p != "" then {input_field_placeholder:$p} else {} end)')
-else
+elif [ -n "$FORCE_REPLY" ]; then
+  echo "notify: inbound Messages workflow disabled — force-reply prompt sent as plain text (no reply routing)" >&2
+elif [ "$INBOUND_OK" = true ]; then
   # inline_keyboard = optional skill --buttons rows, then the global quick-action row.
   KB="[]"
   if [ -n "$BUTTONS_JSON" ]; then
@@ -208,6 +253,8 @@ else
   if [ "$KB" != "[]" ]; then
     REPLY_MARKUP=$(jq -n --argjson kb "$KB" '{inline_keyboard:$kb}')
   fi
+elif [ -n "$BUTTONS_JSON" ]; then
+  echo "notify: inbound Messages workflow disabled — suppressing inline buttons (set TELEGRAM_FORCE_BUTTONS=1 to keep them)" >&2
 fi
 
 # Telegram — fence-safe chunks (parse_mode Markdown, fallback to none)

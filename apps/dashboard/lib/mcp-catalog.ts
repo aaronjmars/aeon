@@ -103,6 +103,31 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     oauth: true,
     oauthScopes: ['openid', 'offline_access', 'api://fd-agent-wallet-mcp/mcp:tools'],
   },
+  {
+    slug: 'posthog',
+    name: 'PostHog',
+    url: 'https://mcp.posthog.com/mcp',
+    logo: 'https://avatars.githubusercontent.com/u/60330232?s=200&v=4',
+    description: 'PostHog - product analytics from the agent: insights & HogQL/SQL queries, dashboards, feature flags, experiments, error tracking, and session replays. Hosted streamable-HTTP MCP with one-click OAuth Connect.',
+    // Standard OAuth, probed live 2026-07-21: the 401 on /mcp carries a WWW-Authenticate
+    // resource_metadata pointer to PRM at /.well-known/oauth-protected-resource/mcp,
+    // which names AS https://oauth.posthog.com (full metadata: authorization_code +
+    // refresh_token grants, PKCE S256, DCR registration_endpoint, public client via
+    // auth method "none"). PostHog does NOT advertise offline_access (like Robinhood) —
+    // refresh tokens come from the refresh_token grant by default, so don't request it.
+    // Durable refresh (rotated-token persistence via GH_SECRETS_PAT) is handled
+    // generically by scripts/mcp-oauth-refresh.sh — see docs/mcp-oauth.md.
+    // Scope the grant to the read access these skills need: the flow otherwise falls
+    // back to ALL scopes_supported, which includes every :write scope. Widen oauthScopes
+    // when a skill needs more. Streamable HTTP (transport defaults to 'http').
+    // NOTE: 'user:read' is REQUIRED even for read-only use — the MCP server calls a
+    // whoami on session init and 403s the whole connection ("insufficient_scope,
+    // scope=user:read") without it (verified 2026-07-21 against a live token). Missing
+    // it makes every tool invisible: the handshake fails, so Claude Code sees no
+    // mcp__posthog__* tools at all.
+    oauth: true,
+    oauthScopes: ['openid', 'user:read', 'organization:read', 'project:read', 'error_tracking:read'],
+  },
 ]
 
 export const MCP_BY_SLUG: Record<string, McpCatalogEntry> =

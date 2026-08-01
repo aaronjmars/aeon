@@ -36,6 +36,7 @@ const DOMAINS: Record<string, string> = {
   // Channels
   TELEGRAM_BOT_TOKEN: 'telegram.org',
   TELEGRAM_CHAT_ID: 'telegram.org',
+  TELEGRAM_ALLOWED_USER_ID: 'telegram.org',
   DISCORD_BOT_TOKEN: 'discord.com',
   DISCORD_CHANNEL_ID: 'discord.com',
   DISCORD_WEBHOOK_URL: 'discord.com',
@@ -58,6 +59,7 @@ const DOMAINS: Record<string, string> = {
   GH_READ_PAT: 'github.com',
   GH_SECRETS_PAT: 'github.com',
   BASE_RPC_URL: 'base.org',
+  PAGESPEED_API_KEY: 'google.com',
   // Observability
   LANGFUSE_PUBLIC_KEY: 'langfuse.com',
   LANGFUSE_SECRET_KEY: 'langfuse.com',
@@ -66,6 +68,8 @@ const DOMAINS: Record<string, string> = {
 // Non-brand entries - no logo exists, so show a meaningful glyph instead.
 const GLYPHS: Record<string, ServiceGlyph> = {
   NOTIFY_EMAIL_TO: 'mail',
+  HOOK_DEPLOYER_PRIVATE_KEY: 'key',
+  HOOK_MAINNET_OK: 'key',
 }
 
 // MCP server credentials (MCP_<SLUG>_TOKEN / _OAUTH) carry their server's brand,

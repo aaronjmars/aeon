@@ -55,6 +55,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_GLOBAL || secrets.GITHUB_TOKEN }}
           STATE_BACKEND: ${{ vars.STATE_BACKEND }}
+          BREAKER_THRESHOLD_OVERRIDE: ${{ vars.BREAKER_THRESHOLD }}
+          BREAKER_COOLDOWN_OVERRIDE: ${{ vars.BREAKER_COOLDOWN_MIN }}
         run: |
           NOW_ISO=$(date -u +%FT%TZ)
           NOW_EPOCH=$(date -u +%s)
@@ -68,6 +70,21 @@ jobs:
           # 12h covers a bad half-day tick outage while staying same-day (a daily
           # skill's slots are 24h apart, so this can never double-fire). Tune here.
           CATCHUP_HOURS=12
+
+          # Circuit breaker: once a skill has failed BREAKER_THRESHOLD times in a
+          # row (consecutive_failures, folded by scripts/state_reduce.py), stop
+          # dispatching it every tick so a real outage (a dead upstream API, a
+          # revoked key) doesn't burn a run every */5 for hours. The breaker is
+          # auto-recovering, not a kill switch: while open it still lets ONE probe
+          # run through every BREAKER_COOLDOWN_MIN minutes (half-open). A probe
+          # that succeeds resets consecutive_failures to 0 and the skill resumes
+          # its normal schedule on the next tick; a probe that fails re-arms the
+          # cooldown. This supersedes the flat 30-min failed-skill retry below for
+          # skills that have crossed the threshold. skill-health already reports
+          # CRITICAL at consecutive_failures >= 3, so a tripped breaker is visible.
+          # Set BREAKER_THRESHOLD=0 to disable. Tune via repo vars if desired.
+          BREAKER_THRESHOLD="${BREAKER_THRESHOLD_OVERRIDE:-3}"
+          BREAKER_COOLDOWN_MIN="${BREAKER_COOLDOWN_OVERRIDE:-360}"
 
           # (Cron matching + the due/skip decision live in scripts/cron-due.sh,
           # called by both the per-skill and per-chain loops below.)
@@ -171,6 +188,27 @@ jobs:
             LAST_DISPATCH=$(echo "$STATE" | jq -r --arg s "$SKILL" '.[$s].last_dispatch // "1970-01-01T00:00:00Z"')
             LAST_DISPATCH_EPOCH=$(date -u -d "$LAST_DISPATCH" +%s 2>/dev/null || echo 0)
             MINUTES_SINCE=$(( (NOW_EPOCH - LAST_DISPATCH_EPOCH) / 60 ))
+
+            # --- Circuit breaker (auto-recovering) ---
+            # A skill that has failed BREAKER_THRESHOLD+ times in a row is likely
+            # hitting an outage, not a one-off. scripts/breaker.sh decides whether
+            # to skip it this tick (open) or let one probe through (half-open) so a
+            # real outage can't burn a run every */5 for hours. A successful probe
+            # resets consecutive_failures (state_reduce.py), closing the breaker so
+            # the normal schedule resumes next tick. This gate sits before both the
+            # 30-min retry and cron matching, so once tripped it governs the skill
+            # until it recovers. BREAKER_THRESHOLD=0 disables it (breaker.sh returns
+            # "closed"). The decision logic is the script's, not inlined here.
+            CONSEC=$(echo "$STATE" | jq -r --arg s "$SKILL" '.[$s].consecutive_failures // 0')
+            case "$(bash scripts/breaker.sh "$CONSEC" "$MINUTES_SINCE" "$BREAKER_THRESHOLD" "$BREAKER_COOLDOWN_MIN")" in
+              probe)
+                echo "Circuit breaker HALF-OPEN: $SKILL ($CONSEC consecutive failures) — probing after ${MINUTES_SINCE}m"
+                MATCHED+=("$SKILL")
+                continue ;;
+              open)
+                echo "Circuit breaker OPEN: $SKILL ($CONSEC consecutive failures) — skip, next probe in $(( BREAKER_COOLDOWN_MIN - MINUTES_SINCE ))m"
+                continue ;;
+            esac
 
             # --- Retry failed skills (after 30 min cooldown) ---
             if [ "$LAST_STATUS" = "failed" ] && [ "$MINUTES_SINCE" -ge 30 ]; then

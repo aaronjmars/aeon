@@ -405,6 +405,17 @@ jobs:
         if: steps.work.outputs.mode != '' && steps.skill.outputs.name == 'vuln-scanner'
         run: bash scripts/stage-vuln-scanner.sh "${{ steps.skill.outputs.name }}"
 
+      - name: Stage deploy-uni-hook toolchain
+        # Installs Foundry + a pre-built Uniswap v4 project (v4 libs + templates) for
+        # the deploy-uni-hook skill, appends ~/.foundry/bin to the PATH file so
+        # forge/cast resolve in the later claude -p step (the sandbox denies in-run
+        # toolchain installs, and an in-run `export PATH` doesn't survive Claude's
+        # per-call shells), and copies the key-safe ./hook-deploy.sh + chains.tsv to
+        # the repo root. In-run tool use is separately gated by the write-tier grant
+        # in scripts/skill_mode.sh. Best-effort: self-guards to the skill, never fails.
+        if: steps.work.outputs.mode != '' && steps.skill.outputs.name == 'deploy-uni-hook'
+        run: bash scripts/stage-deploy-uni-hook.sh "${{ steps.skill.outputs.name }}"
+
       # Single-source standing instructions. AGENTS.md is the full, self-contained
       # mirror of CLAUDE.md (operating manual + @STRATEGY.md inlined) that the
       # non-claude harnesses read — they load instruction files verbatim and don't

@@ -61,6 +61,14 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_GLOBAL || secrets.GITHUB_TOKEN }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          # Owner user gate. TELEGRAM_CHAT_ID gates the *chat*; in a group/public
+          # chat that lets any member command the bot (chat.id matches, but they
+          # aren't the owner). This gates the *user*: it defaults to TELEGRAM_CHAT_ID,
+          # which is exactly the owner's id in a 1:1 DM (chat.id == user.id there),
+          # so DM setups need no new config. In a group a negative chat id never
+          # equals a positive user id, so buttons fail closed until the operator
+          # sets TELEGRAM_ALLOWED_USER_ID to their own numeric Telegram user id.
+          TELEGRAM_ALLOWED_USER_ID: ${{ vars.TELEGRAM_ALLOWED_USER_ID || secrets.TELEGRAM_ALLOWED_USER_ID }}
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
           DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID }}
           DISCORD_ALLOWED_AUTHOR_ID: ${{ vars.DISCORD_ALLOWED_AUTHOR_ID || secrets.DISCORD_ALLOWED_AUTHOR_ID }}
@@ -72,6 +80,10 @@ jobs:
 
           # --- Telegram (collect ALL pending updates) ---
           if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
+            # Owner user id: whoever is allowed to command the bot. Defaults to the
+            # chat id (correct for a 1:1 DM, where chat.id == user.id); in a group set
+            # TELEGRAM_ALLOWED_USER_ID so a button tap by a non-owner member is ignored.
+            TG_OWNER_UID="${TELEGRAM_ALLOWED_USER_ID:-$TELEGRAM_CHAT_ID}"
             # A webhook and getUpdates are mutually exclusive: once a webhook is
             # set (instant mode, see webhook/), getUpdates returns 409. Detect it
             # and skip polling — the Worker delivers via repository_dispatch.
@@ -97,12 +109,18 @@ jobs:
                 CB_DATA=$(echo "$RESPONSE" | jq -r ".result[$i].callback_query.data // empty")
                 if [ -n "$CB_DATA" ]; then
                   CB_CHAT=$(echo "$RESPONSE" | jq -r ".result[$i].callback_query.message.chat.id // empty")
+                  CB_FROM=$(echo "$RESPONSE" | jq -r ".result[$i].callback_query.from.id // empty")
                   CB_ID=$(echo "$RESPONSE" | jq -r ".result[$i].callback_query.id // empty")
                   # Stop the client's spinner immediately (safe pre-ack — no action taken yet).
                   [ -n "$CB_ID" ] && curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/answerCallbackQuery" -d "callback_query_id=$CB_ID" >/dev/null 2>&1 || true
-                  if [ "$CB_CHAT" = "$TELEGRAM_CHAT_ID" ]; then
+                  # Gate on chat AND user: the chat must be the owner's, and the tapping
+                  # user must be the owner — otherwise any member of a group chat could
+                  # dispatch skills / schedule crons just by tapping a posted button.
+                  if [ "$CB_CHAT" = "$TELEGRAM_CHAT_ID" ] && [ "$CB_FROM" = "$TG_OWNER_UID" ]; then
                     TG_CALLBACKS=$(echo "$TG_CALLBACKS" | jq --arg d "$CB_DATA" '. + [$d]')
                     echo "Telegram callback: $CB_DATA"
+                  elif [ "$CB_CHAT" = "$TELEGRAM_CHAT_ID" ]; then
+                    echo "::warning::Telegram callback from non-owner user '$CB_FROM' ignored (set TELEGRAM_ALLOWED_USER_ID to your id to command from a group)"
                   fi
                   continue
                 fi
@@ -110,8 +128,12 @@ jobs:
                 # Message
                 TEXT=$(echo "$RESPONSE" | jq -r ".result[$i].message.text // empty")
                 CHAT=$(echo "$RESPONSE" | jq -r ".result[$i].message.chat.id // empty")
+                FROM=$(echo "$RESPONSE" | jq -r ".result[$i].message.from.id // empty")
                 [ -z "$TEXT" ] && continue
+                # Same owner gate as callbacks: right chat AND the owner user. In a 1:1
+                # DM both equal TELEGRAM_CHAT_ID; in a group a non-owner member is dropped.
                 [ "$CHAT" != "$TELEGRAM_CHAT_ID" ] && continue
+                [ "$FROM" != "$TG_OWNER_UID" ] && continue
 
                 REPLY_TO=$(echo "$RESPONSE" | jq -r ".result[$i].message.reply_to_message.text // empty")
                 if [[ "$REPLY_TO" =~ \[[a-zA-Z0-9_-]+::[a-zA-Z0-9_-]+\] ]]; then
@@ -281,6 +303,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_GLOBAL || secrets.GITHUB_TOKEN }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_ALLOWED_USER_ID: ${{ vars.TELEGRAM_ALLOWED_USER_ID || secrets.TELEGRAM_ALLOWED_USER_ID }}
           _ACTION: ${{ github.event.action }}
           # Payload fields via env (not template interpolation) so untrusted text
           # can never break out into the shell. Each is JSON-encoded by toJSON.
@@ -288,11 +311,18 @@ jobs:
           _P_DATA: ${{ toJSON(github.event.client_payload.data) }}
           _P_REPLY_TO: ${{ toJSON(github.event.client_payload.reply_to_text) }}
           _P_CHAT_ID: ${{ toJSON(github.event.client_payload.chat_id) }}
+          _P_FROM_ID: ${{ toJSON(github.event.client_payload.from_id) }}
         run: |
           CHAT_ID=$(printf '%s' "$_P_CHAT_ID" | jq -r 'tostring' 2>/dev/null || echo "null")
-          # Defence in depth — the Worker already gates on chat id; re-check here.
+          FROM_ID=$(printf '%s' "$_P_FROM_ID" | jq -r 'tostring' 2>/dev/null || echo "null")
+          OWNER_UID="${TELEGRAM_ALLOWED_USER_ID:-$TELEGRAM_CHAT_ID}"
+          # Defence in depth — the Worker already gates on chat + user; re-check both.
           if [ -n "${TELEGRAM_CHAT_ID:-}" ] && [ "$CHAT_ID" != "null" ] && [ "$CHAT_ID" != "$TELEGRAM_CHAT_ID" ]; then
-            echo "::warning::route: chat_id '$CHAT_ID' is not the owner — ignoring"
+            echo "::warning::route: chat_id '$CHAT_ID' is not the owner chat — ignoring"
+            exit 0
+          fi
+          if [ -n "$OWNER_UID" ] && [ "$FROM_ID" != "null" ] && [ "$FROM_ID" != "$OWNER_UID" ]; then
+            echo "::warning::route: from_id '$FROM_ID' is not the owner user — ignoring (set TELEGRAM_ALLOWED_USER_ID to command from a group)"
             exit 0
           fi
           TEXT=$(printf '%s' "$_P_TEXT" | jq -r 'if . == null then "" else . end')

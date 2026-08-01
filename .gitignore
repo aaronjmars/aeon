@@ -28,6 +28,12 @@
 .pending-*.md
 apps/dashboard/outputs/.pending-*.md
 
+# deploy-uni-hook stages its key-safe runner + chain registry at the repo root
+# (like ./notify / ./secretcurl) from skills/deploy-uni-hook/templates/; these are
+# run-time copies, not sources, so they must never be committed.
+/hook-deploy.sh
+/chains.tsv
+
 # Skill provenance lock (per-repo, not committed)
 skills.lock
 

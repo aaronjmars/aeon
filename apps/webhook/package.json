@@ -28,6 +28,6 @@
     }
   },
   "devDependencies": {
-    "wrangler": "4.112.0"
+    "wrangler": "4.115.0"
   }
 }

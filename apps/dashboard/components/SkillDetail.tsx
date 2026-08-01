@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import type { Skill, Run, Secret, SkillKeyRef, SkillMcpRef, McpServers } from '../lib/types'
-import { modelsForHarness, keyProvidedByHarness } from '../lib/constants'
+import { modelsForHarness, keyProvidedByHarness, CATEGORIES } from '../lib/constants'
+import { SkillGlyph, hasSkillGlyph } from './ui/SkillGlyph'
 import { MCP_BY_SLUG } from '../lib/mcp-catalog'
 import { displayName, getSkillStatus, cronLabel, statusDot, inputCls, runStatusColor, runStatusGlyph } from '../lib/utils'
 import { ScheduleEditor } from './ScheduleEditor'
@@ -163,6 +164,7 @@ export function SkillDetail({ skill, runs, model, harness, secrets, mcpServers, 
   // token (e.g. "INVESTIGATION", 13 chars) can't wrap and would overflow the
   // hero box. Scale the max font-size down by the longest word so it always fits.
   const title = displayName(skill.name)
+  const catColor = CATEGORIES.find(c => c.key === skill.category)?.color || '#8B8B8B'
   const longestWord = title.split(' ').reduce((m, w) => Math.max(m, w.length), 0)
   const titleMaxPx = longestWord >= 13 ? 50 : longestWord >= 11 ? 60 : longestWord >= 9 ? 72 : 88
 
@@ -185,6 +187,11 @@ export function SkillDetail({ skill, runs, model, harness, secrets, mcpServers, 
               )}
             </span>
           </div>
+          {hasSkillGlyph(skill.name) && (
+            <span className="inline-flex mb-4 border border-[rgba(250,250,250,0.12)] bg-aeon-bg p-2.5" style={{ color: catColor }} aria-hidden="true">
+              <SkillGlyph slug={skill.name} className="w-8 h-8" />
+            </span>
+          )}
           <h1 className="font-display uppercase leading-[0.92] tracking-tight text-aeon-fg break-words"
               style={{ fontSize: `clamp(32px, 6vw, ${titleMaxPx}px)` }}>
             <Scramble key={skill.name} text={title} />
@@ -336,6 +343,9 @@ export function SkillDetail({ skill, runs, model, harness, secrets, mcpServers, 
       )}
 
       <Section label="Skill settings">
+        {skill.varHint && (
+          <p className="text-xs text-primary-40 font-mono mb-3 leading-relaxed max-w-2xl">{skill.varHint}</p>
+        )}
         {editingVar ? (
           <div className="flex gap-2 flex-wrap">
             <input
