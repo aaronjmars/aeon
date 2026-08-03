@@ -200,7 +200,7 @@
     },
     {
       "repo": "richard7463/ai2human-aeon-skill-pack",
-      "name": "AI2Human Handoff",
+      "name": "AI2Human Create Task",
       "description": "Human execution for Aeon - dispatch blocked human steps to AI2Human and follow proof -> verify -> settle.",
       "author": "richard7463",
       "license": "MIT",
