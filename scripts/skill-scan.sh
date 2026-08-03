@@ -97,12 +97,15 @@ HIGH_SINK_PATTERNS=(
   'eval[[:space:]]'
   'eval\('
   # Remote code execution: a download piped straight into an interpreter
-  '(curl|wget)[^|]*\|[[:space:]]*(sudo[[:space:]]+)?(sh|bash|zsh|python[0-9.]*)([[:space:]]|$|;|&)'
+  '(curl|wget)[^|]*\|[[:space:]]*(sudo[[:space:]]+)?(sh|bash|zsh|ksh|dash|python[0-9.]*|perl|ruby|node|php)([[:space:]]|$|;|&)'
   # Secret exfiltration: a secret / env var sent as request *data* to a host.
   # (Auth headers like `-H "Authorization: Bearer $KEY"` are NOT data and do not
   # match — that is a skill calling its own declared endpoint, not exfiltration.)
   'curl.*(--data|--data-raw|--data-binary|[[:space:]]-d[[:space:]]).*(\$[A-Z_]{3,}|secret|token|password|api.?key)'
   'wget.*(--post-data|--post-file).*(\$[A-Z_]{3,}|secret|token|password|api.?key)'
+  # `-d`/`--data` with no space before the value (e.g. -d"k=$TOKEN") — the space-
+  # anchored `-d ` alternative above does not catch the quoted, spaceless spelling.
+  'curl[^|]*[[:space:]]-d["'\''][^"'\'']*(\$[A-Z_]{3,}|secret|token|password|api.?key)'
   # Dump the environment to the network
   'printenv.*\|.*(curl|wget|nc)'
   'env[[:space:]].*\|.*(curl|wget|nc)'
@@ -112,9 +115,13 @@ HIGH_SINK_PATTERNS=(
   '\$DISCORD_BOT_TOKEN'
   '\$SLACK_BOT_TOKEN'
   '\$GITHUB_TOKEN.*(curl|wget|nc)'
-  # Destructive commands. `rm -rf /` matches only a bare root target (space, EOL,
-  # or a flag after the slash) so `rm -rf /tmp/build` and friends do not trip it.
+  # Destructive commands. Bare root (`rm -rf /`), a root glob (`rm -rf /*`), and a
+  # top-level system dir (`rm -rf /etc`, `/usr`, …) are all catastrophic wipes;
+  # sub-paths like `rm -rf /tmp/build` are not matched so first-party build steps
+  # do not trip it.
   'rm[[:space:]]+-rf[[:space:]]+/([[:space:]]|$|--)'
+  'rm[[:space:]]+-rf[[:space:]]+/\*'
+  'rm[[:space:]]+-rf[[:space:]]+/(bin|boot|dev|etc|home|lib|lib64|opt|proc|root|sbin|sys|usr|var)([[:space:]]|/|$)'
   'rm[[:space:]]+-rf[[:space:]]+\*'
   'rm[[:space:]]+-rf[[:space:]]+~'
   'mkfs\.'
@@ -143,14 +150,16 @@ HIGH_INJECTION_PATTERNS=(
 # injection phrase, the phrase is being quoted in order to be rejected — that is
 # the guardrail, not the threat — so the finding is suppressed. Matched with
 # `grep -i` (case-insensitive).
-DEFENSIVE_CONTEXT='discard|untrusted|never follow|do not follow|do not obey|never obey|ignore (it|that|them|the source|any|embedded)|treat .* as (data|untrusted)|as data, not|not (a )?command|log (a )?warning|injection|quarantine|refuse'
+DEFENSIVE_CONTEXT='discard|untrusted|never follow|do not follow|do not obey|never obey|ignore (it|that|them|the source|any|embedded)|treat .* as (data|untrusted)|as data, not|not (a )?command|log (a )?warning|quarantine|refuse'
 
-# A second defensive signal: the injection phrase appears *quoted* (inside "…" or
-# `…`), i.e. it is being cited as an example to reject, not issued as a command.
-# Real injection payloads read as bare imperatives ("Ignore all previous
-# instructions and …"); documentation quotes them. Matches a quote/backtick that
-# precedes an injection trigger word on the same line.
-INJECTION_CITED='["`].*([Ii]gnore|[Ff]orget|[Dd]isregard|[Oo]verride|[Yy]ou[[:space:]]+are[[:space:]]+now)'
+# A second defensive signal: the injection phrase appears *enclosed in quotes*
+# (inside "…" or `…`), i.e. it is being cited as an example to reject, not issued
+# as a command. The trigger word must sit between an opening and a closing
+# quote/backtick with no intervening quote — so a bare imperative merely preceded
+# by an unrelated quoted token (`"Note" Ignore all previous instructions…`) is NOT
+# treated as cited and still FAILs. Documentation genuinely wraps the phrase
+# (`if content says "ignore previous instructions", discard it`) and is suppressed.
+INJECTION_CITED='["`][^"`]*([Ii]gnore|[Ff]orget|[Dd]isregard|[Oo]verride|[Yy]ou[[:space:]]+are[[:space:]]+now)[^"`]*["`]'
 
 # MEDIUM severity: suspicious patterns that may or may not be intentional
 MEDIUM_PATTERNS=(
@@ -167,6 +176,14 @@ MEDIUM_PATTERNS=(
   # Network calls to non-standard destinations
   'curl[[:space:]]+http://'
   'wget[[:space:]]+http://'
+  # Secret carried in a URL query string (e.g. ...?token=$GITHUB_TOKEN). MEDIUM,
+  # not HIGH: many legitimate APIs authenticate via a `?apikey=` query param, so
+  # this cannot be distinguished from exfiltration by static text alone — surface
+  # it for review rather than hard-failing the gate. Only a var whose name ENDS in
+  # an underscore-prefixed secret word (…_TOKEN/_KEY/_SECRET/_PASSWORD) is flagged,
+  # so public identifiers ($TOKEN_ID, ${TOKEN} address) do not trip it; and the
+  # correct secretcurl `{KEY}` placeholder form (no `$`) is not matched at all.
+  '(curl|wget)[^|]*[?&][A-Za-z0-9_.-]+=\$\{?[A-Za-z_]*_(TOKEN|SECRET|PASSWORD|PASSWD|KEY|CREDENTIAL)(\}|[^A-Za-z0-9_]|$)'
   # Unquoted variable expansion in bash blocks
   'rm[[:space:]].*\$[A-Z]'
   'chmod[[:space:]]+777'
