@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated": "2026-07-03",
+  "updated": "2026-08-03",
   "description": "Machine-readable registry of community skill packs installable via bin/install-skill-pack. Mirrors the human-readable table in README.md.",
   "packs": [
     {
@@ -196,6 +196,19 @@
         "read_only",
         "external_api",
         "sends_notifications"
+      ]
+    },
+    {
+      "repo": "richard7463/ai2human-aeon-skill-pack",
+      "name": "AI2Human Human Fallback",
+      "description": "Human fallback for Aeon - dispatch blocked human steps to AI2Human and follow proof -> verify -> settle.",
+      "author": "richard7463",
+      "license": "MIT",
+      "homepage": "https://ai2human.io",
+      "category": "crypto",
+      "trust_level": "community",
+      "skills": [
+        "ai2human-handoff"
       ]
     }
   ]
