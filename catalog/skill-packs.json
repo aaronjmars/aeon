@@ -200,8 +200,8 @@
     },
     {
       "repo": "richard7463/ai2human-aeon-skill-pack",
-      "name": "AI2Human Human Fallback",
-      "description": "Human fallback for Aeon - dispatch blocked human steps to AI2Human and follow proof -> verify -> settle.",
+      "name": "AI2Human Handoff",
+      "description": "Human execution for Aeon - dispatch blocked human steps to AI2Human and follow proof -> verify -> settle.",
       "author": "richard7463",
       "license": "MIT",
       "homepage": "https://ai2human.io",
