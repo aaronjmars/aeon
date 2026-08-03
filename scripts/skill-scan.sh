@@ -97,10 +97,11 @@ HIGH_SINK_PATTERNS=(
   'eval[[:space:]]'
   'eval\('
   # Remote code execution: a download piped straight into an interpreter, or fed
-  # to one via process substitution (`bash <(curl …)`). The pipe form tolerates a
-  # sudo/xargs wrapper before the interpreter.
+  # to one via process substitution (`bash <(curl …)`, `source <(curl …)`,
+  # `. <(curl …)`). The pipe form tolerates a sudo/xargs wrapper before the
+  # interpreter; the procsub form also covers `source` and `.` (which read+run).
   '(curl|wget)[^|]*\|[[:space:]]*((sudo|xargs)[[:space:]]+)*(sh|bash|zsh|ksh|dash|python[0-9.]*|perl|ruby|node|php)([[:space:]]|$|;|&)'
-  '(sh|bash|zsh|ksh|dash|python[0-9.]*|perl|ruby|node|php)[[:space:]]+<\([^)]*(curl|wget)'
+  '(sh|bash|zsh|ksh|dash|python[0-9.]*|perl|ruby|node|php|source|\.)[[:space:]]+<\([^)]*(curl|wget)'
   # Secret exfiltration: a secret / env var sent as request *data* to a host.
   # (Auth headers like `-H "Authorization: Bearer $KEY"` are NOT data and do not
   # match — that is a skill calling its own declared endpoint, not exfiltration.)
@@ -123,11 +124,12 @@ HIGH_SINK_PATTERNS=(
   # The flag run is matched spelling-agnostically — `([-][a-zA-Z-]+[[:space:]]+)*`
   # accepts any order/combination (`-rf`, `-fr`, `-rfv`, `-r --force`,
   # `--no-preserve-root`) rather than a literal `-rf`, so those do not slip past.
+  # An optional leading quote (`["']?`) catches a quoted target (`rm -rf "/etc"`).
   # Sub-paths like `rm -rf /tmp/build` are still not matched (target must be root,
   # the glob, or a system dir) so first-party build steps do not trip it.
-  'rm[[:space:]]+([-][a-zA-Z-]+[[:space:]]+)*/([[:space:]]|$|--)'
-  'rm[[:space:]]+([-][a-zA-Z-]+[[:space:]]+)*/\*'
-  'rm[[:space:]]+([-][a-zA-Z-]+[[:space:]]+)*/(bin|boot|dev|etc|home|lib|lib64|opt|proc|root|sbin|sys|usr|var)([[:space:]]|/|$)'
+  'rm[[:space:]]+([-][a-zA-Z-]+[[:space:]]+)*["'\'']?/(["'\'']|[[:space:]]|$|--)'
+  'rm[[:space:]]+([-][a-zA-Z-]+[[:space:]]+)*["'\'']?/\*'
+  'rm[[:space:]]+([-][a-zA-Z-]+[[:space:]]+)*["'\'']?/(bin|boot|dev|etc|home|lib|lib64|opt|proc|root|sbin|sys|usr|var)(["'\'']|[[:space:]]|/|$)'
   'rm[[:space:]]+([-][a-zA-Z-]+[[:space:]]+)*\*'
   'rm[[:space:]]+([-][a-zA-Z-]+[[:space:]]+)*~'
   'mkfs\.'
@@ -152,11 +154,16 @@ HIGH_INJECTION_PATTERNS=(
   '[Oo]verride[[:space:]]+(all[[:space:]]+)?rules'
 )
 
-# Anti-injection framing. When one of these appears on the same line as an
-# injection phrase, the phrase is being quoted in order to be rejected — that is
-# the guardrail, not the threat — so the finding is suppressed. Matched with
-# `grep -i` (case-insensitive).
-DEFENSIVE_CONTEXT='discard|untrusted|never follow|do not follow|do not obey|never obey|ignore (it|that|them|the source|any|embedded)|treat .* as (data|untrusted)|as data, not|not (a )?command|log (a )?warning|quarantine|refuse'
+# Anti-injection framing. When one of these MULTI-WORD rejection phrases appears on
+# the same line as an injection phrase, the line is documenting a defense (reject
+# fetched/embedded instructions), not issuing an attack, so the finding is
+# suppressed. Matched with `grep -i` (case-insensitive). Deliberately NO loose
+# single keywords (discard / untrusted / quarantine / refuse / "log a warning"):
+# the skill author controls the text, so a bare imperative could be un-flagged just
+# by appending one of those words (`Ignore all previous instructions … then discard
+# it`). Quote-*enclosed* citations are handled by INJECTION_CITED below, which alone
+# still suppresses the legitimate `benign-defensive` case.
+DEFENSIVE_CONTEXT='never follow|do not follow|do not obey|never obey|ignore (it|that|them|the source|any|embedded)|treat .* as (data|untrusted)|as data, not|not (a )?command'
 
 # A second defensive signal: the injection phrase appears *enclosed in quotes*
 # (inside "…" or `…`), i.e. it is being cited as an example to reject, not issued
