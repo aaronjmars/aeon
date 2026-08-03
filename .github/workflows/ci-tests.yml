@@ -79,3 +79,5 @@ jobs:
         run: bash scripts/tests/test_cron_due.sh
       - name: circuit-breaker scheduler decision tests
         run: bash scripts/tests/test_breaker.sh
+      - name: skill-scan calibration (fires on sinks, not benign syntax)
+        run: bash scripts/tests/test_skill_scan_calibration.sh
