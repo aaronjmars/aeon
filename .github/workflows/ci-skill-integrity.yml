@@ -1,0 +1,59 @@
+name: ci-skill-integrity
+
+# Capability-integrity gate for the skill catalog.
+#
+# scripts/skill-scan.sh answers "does this skill's TEXT contain a dangerous
+# pattern?" — static, point-in-time. skills.lock records where a skill came from
+# (commit_sha) but never hashes its content or its reach, so a skill edited AFTER
+# admission (a "rug pull": an added exfil endpoint) passes silently.
+#
+# eyebrow closes that gap WITHOUT becoming a noisy gate. eyebrowlock.json
+# fingerprints every skills/<slug>/SKILL.md: its content hash AND its declared
+# egress (the hosts it reaches from ./secretcurl / curl / WebFetch lines). Per
+# eyebrow.policy.json this job fails only when a skill, relative to the lockfile:
+#   - gains new reach (a new egress host) — the actual rug-pull signal, or
+#   - introduces a new CRITICAL finding.
+# A skill's wording can change freely (allowContentDrift) — prose edits are
+# reported but do not fail the build. That is deliberate: gating on every byte
+# would fire on the routine skill edits this repo sees daily and get disabled,
+# exactly like an over-broad scanner. It complements skill-scan.sh; it does not
+# replace it.
+#
+# Refresh the lockfile when a skill legitimately changes its reach:
+#   eyebrow scan --path . --lockfile eyebrowlock.json
+# and commit eyebrowlock.json in the same PR. The diff on that file is the audit
+# trail of what reach changed and who approved it. See docs/skill-integrity.md.
+#
+# eyebrow is pinned by tag; the tag pins the action AND the checksum-verified
+# binary it installs (action/action.yml). eyebrow.policy.json is picked up
+# automatically (the action's default --policy path). Same shape/permissions as
+# the other ci-*.yml.
+on:
+  pull_request:
+    paths:
+      - 'skills/**'
+      - 'eyebrowlock.json'
+      - '.github/workflows/ci-skill-integrity.yml'
+      - 'eyebrow.policy.json'
+  push:
+    branches: [main]
+    paths:
+      - 'skills/**'
+      - 'eyebrowlock.json'
+      - 'eyebrow.policy.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: eyebrow verify (drift / rug-pull gate)
+        uses: alexverify/eyebrow/action@v0.4.1
+        with:
+          version: v0.4.1
+          path: .
+          lockfile: eyebrowlock.json

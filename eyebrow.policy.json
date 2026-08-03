@@ -1,0 +1,5 @@
+{
+  "failOnCapabilityExpansion": true,
+  "allowContentDrift": true,
+  "failOnSeverity": "critical"
+}
