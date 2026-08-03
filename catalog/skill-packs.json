@@ -209,6 +209,13 @@
       "trust_level": "community",
       "skills": [
         "ai2human-handoff"
+      ],
+      "secrets_required": [
+        "AI2HUMAN_AGENT_KEY"
+      ],
+      "capabilities": [
+        "external_api",
+        "sends_notifications"
       ]
     }
   ]
