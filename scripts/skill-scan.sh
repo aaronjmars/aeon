@@ -96,8 +96,11 @@ HIGH_SINK_PATTERNS=(
   # Arbitrary code execution
   'eval[[:space:]]'
   'eval\('
-  # Remote code execution: a download piped straight into an interpreter
-  '(curl|wget)[^|]*\|[[:space:]]*(sudo[[:space:]]+)?(sh|bash|zsh|ksh|dash|python[0-9.]*|perl|ruby|node|php)([[:space:]]|$|;|&)'
+  # Remote code execution: a download piped straight into an interpreter, or fed
+  # to one via process substitution (`bash <(curl …)`). The pipe form tolerates a
+  # sudo/xargs wrapper before the interpreter.
+  '(curl|wget)[^|]*\|[[:space:]]*((sudo|xargs)[[:space:]]+)*(sh|bash|zsh|ksh|dash|python[0-9.]*|perl|ruby|node|php)([[:space:]]|$|;|&)'
+  '(sh|bash|zsh|ksh|dash|python[0-9.]*|perl|ruby|node|php)[[:space:]]+<\([^)]*(curl|wget)'
   # Secret exfiltration: a secret / env var sent as request *data* to a host.
   # (Auth headers like `-H "Authorization: Bearer $KEY"` are NOT data and do not
   # match — that is a skill calling its own declared endpoint, not exfiltration.)
@@ -116,14 +119,17 @@ HIGH_SINK_PATTERNS=(
   '\$SLACK_BOT_TOKEN'
   '\$GITHUB_TOKEN.*(curl|wget|nc)'
   # Destructive commands. Bare root (`rm -rf /`), a root glob (`rm -rf /*`), and a
-  # top-level system dir (`rm -rf /etc`, `/usr`, …) are all catastrophic wipes;
-  # sub-paths like `rm -rf /tmp/build` are not matched so first-party build steps
-  # do not trip it.
-  'rm[[:space:]]+-rf[[:space:]]+/([[:space:]]|$|--)'
-  'rm[[:space:]]+-rf[[:space:]]+/\*'
-  'rm[[:space:]]+-rf[[:space:]]+/(bin|boot|dev|etc|home|lib|lib64|opt|proc|root|sbin|sys|usr|var)([[:space:]]|/|$)'
-  'rm[[:space:]]+-rf[[:space:]]+\*'
-  'rm[[:space:]]+-rf[[:space:]]+~'
+  # top-level system dir (`rm -rf /etc`, `/usr`, …) are all catastrophic wipes.
+  # The flag run is matched spelling-agnostically — `([-][a-zA-Z-]+[[:space:]]+)*`
+  # accepts any order/combination (`-rf`, `-fr`, `-rfv`, `-r --force`,
+  # `--no-preserve-root`) rather than a literal `-rf`, so those do not slip past.
+  # Sub-paths like `rm -rf /tmp/build` are still not matched (target must be root,
+  # the glob, or a system dir) so first-party build steps do not trip it.
+  'rm[[:space:]]+([-][a-zA-Z-]+[[:space:]]+)*/([[:space:]]|$|--)'
+  'rm[[:space:]]+([-][a-zA-Z-]+[[:space:]]+)*/\*'
+  'rm[[:space:]]+([-][a-zA-Z-]+[[:space:]]+)*/(bin|boot|dev|etc|home|lib|lib64|opt|proc|root|sbin|sys|usr|var)([[:space:]]|/|$)'
+  'rm[[:space:]]+([-][a-zA-Z-]+[[:space:]]+)*\*'
+  'rm[[:space:]]+([-][a-zA-Z-]+[[:space:]]+)*~'
   'mkfs\.'
   'dd[[:space:]]+if=.*of=/dev/'
   ':\(\)[[:space:]]*\{.*\};[[:space:]]*:'

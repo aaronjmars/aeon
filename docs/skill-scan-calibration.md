@@ -30,13 +30,18 @@ HIGH is split into two intents.
 
 **`HIGH_SINK_PATTERNS` — real operations.** Code execution (`eval`, a download
 piped into an interpreter — `curl … | sh`, and also `bash`/`zsh`/`ksh`/`dash`/
-`python`/`perl`/`ruby`/`node`/`php`), secret exfiltration (a secret/env var sent as
-request *data* via `--data`/`-d` in either the spaced `-d "…"` or spaceless `-d"…"`
-spelling, or `printenv | curl`), and destruction (`rm -rf /`, the root glob
+`python`/`perl`/`ruby`/`node`/`php`, tolerating a `sudo`/`xargs` wrapper, plus the
+process-substitution form `bash <(curl …)`), secret exfiltration (a secret/env var
+sent as request *data* via `--data`/`-d` in either the spaced `-d "…"` or spaceless
+`-d"…"` spelling, or `printenv | curl`), and destruction (`rm -rf /`, the root glob
 `rm -rf /*`, a top-level system dir `rm -rf /etc|/usr|…`, `mkfs`, `dd … of=/dev/…`,
 fork bomb, force-push to main). These match the dangerous act itself, so they fire
-wherever the text appears — an attacker can't evade them by removing a code fence,
-swapping `sh` for `perl`, closing the space after `-d`, or wiping `/*` instead of `/`.
+wherever the text appears. The interpreter list and the `rm` flag run are matched
+*spelling-agnostically* — the `rm` patterns accept any flag order/combination
+(`-rf`, `-fr`, `-rfv`, `-r --force`, `--no-preserve-root`) via
+`([-][a-zA-Z-]+[[:space:]]+)*` rather than a literal `-rf` — so an attacker can't
+evade them by removing a code fence, swapping `sh` for `perl`, wrapping in `xargs`,
+reordering `rm` flags, closing the space after `-d`, or wiping `/*` instead of `/`.
 
 Deliberately *not* flagged, because they are normal and safe:
 - Template interpolation — `${today}`, `${var}` — is the runner's own token, not
@@ -85,8 +90,11 @@ the boundary with fixtures in `scripts/tests/skill-scan-fixtures/`:
   prompt-injection imperative, and the adversarial variants that probe the edges of
   each rule: `malicious-rmrf-glob` (`rm -rf /*`, `/etc`), `malicious-curlperl`
   (`| perl`, `| node`), `malicious-injection-quoted` (a quoted-token prefix and a
-  `Prompt injection:` keyword prefix, both attempts to trigger the suppression), and
-  `malicious-exfil-query` (spaceless `-d"…"` body exfil, plus a query-string secret).
+  `Prompt injection:` keyword prefix, both attempts to trigger the suppression),
+  `malicious-exfil-query` (spaceless `-d"…"` body exfil, plus a query-string secret),
+  `malicious-rmrf-flags` (`rm -fr`, `rm -rfv`, `rm -rf --no-preserve-root /` — flag
+  spellings a literal `-rf` match would miss), and `malicious-rce-procsub`
+  (`bash <(curl …)` process substitution and `curl … | xargs sh`).
 
 Note the RCE fixture: `curl … | sh` was **not caught by the old ruleset at all** —
 the recalibration removes false positives *and* closes that gap. Add a fixture here
