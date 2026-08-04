@@ -135,7 +135,7 @@ Two exemptions: **reserved `index.md`/`log.md`** stay untyped (OKF §6/§7), and
 
 ## Tools
 
-- **`./notify "message"`** — Send to all configured channels (Telegram, Discord, Slack, Resend email, json-render). Unconfigured channels are skipped silently.
+- **`./notify "message"`** — Send to all configured channels (Telegram, Discord, Slack, Buzz, Resend email, json-render). Unconfigured channels are skipped silently.
   - **Multi-line content: `./notify -f path/to/file.md`** (`--file`/`--body` also accepted). Do NOT use `./notify "$(cat file.md)"` — long multi-line argv trips the sandbox; the `-f` flag reads the file inside the script so argv stays short.
   - Optional flags: `--title`, `--severity {info|success|warn|critical}`, `--link`. Note: short messages containing `test`/`ping`/`debug`/`trace` are suppressed as diagnostic probes, and `NOTIFY_MIN_SEVERITY` gates low-severity sends — so don't rely on a "test" ping to confirm delivery.
   - **Formatting is global — just write ordinary Markdown.** `notify` renders each channel for you: `##` headings, `**bold**`, `- bullets`, `| tables |`, `` `code` ``, ```` ``` ```` fences, and `[label](url)` links all render correctly on Telegram (normalized to HTML by `scripts/notify_format.py`), Discord, and Slack. Don't hand-format for Telegram, don't cap length for "Telegram limits" (it auto-chunks at ~3900 chars with `[i/N]`), and don't worry about stray `*`/`_`/`<` breaking the message. Keep messages tight for **signal**, not for the transport. (Editorial choices are still yours: use `x.com/handle` not `@handle` to avoid pinging users; `./notify` bodies are the only channel where email renders as plain text — see the send-email/vuln-scanner notes.)
