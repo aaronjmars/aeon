@@ -1,24 +1,28 @@
 ---
-type: Skill
-name: Schedule Ads
-category: productivity
+name: schedule-ads
 description: Manage paid ads on AdManage.ai from declarative config - default schedules launches across Meta/TikTok/Snapchat/Pinterest/LinkedIn (always PAUSED); create provisions Meta campaigns and ad sets.
-var: |
-  Selects which flow runs (parse from ${var}):
-  - empty / unset (default) → SCHEDULE branch: read config.yaml, pick schedule
-    entries matching today, and launch those ads in-run via AdManage.ai.
-    Launches PAUSED by default; dailySpendCap circuit-breaker; never auto-activates
-    live spend.
-  - "create" → CREATE branch: read config.create.yaml, diff against
-    .admanage-state/campaigns.json, and create the missing Meta campaigns + ad sets
-    in-run. On-demand; creates entities PAUSED; returned IDs are written back into
-    state so the schedule branch can launch into them.
-schedule: "0 8 * * *"
-commits: true
-permissions:
-  - contents:write
-tags: [growth, ads]
-requires: [ADMANAGE_API_KEY]
+metadata:
+  title: Schedule Ads
+  category: productivity
+  var: |
+    Selects which flow runs (parse from ${var}):
+    - empty / unset (default) → SCHEDULE branch: read config.yaml, pick schedule
+      entries matching today, and launch those ads in-run via AdManage.ai.
+      Launches PAUSED by default; dailySpendCap circuit-breaker; never auto-activates
+      live spend.
+    - "create" → CREATE branch: read config.create.yaml, diff against
+      .admanage-state/campaigns.json, and create the missing Meta campaigns + ad sets
+      in-run. On-demand; creates entities PAUSED; returned IDs are written back into
+      state so the schedule branch can launch into them.
+  schedule: "0 8 * * *"
+  commits: true
+  permissions:
+    - contents:write
+  tags:
+    - growth
+    - ads
+  requires:
+    - ADMANAGE_API_KEY
 ---
 
 > **${var}** selects the flow. Empty/unset = **schedule** (launch ads into existing ad sets). `create` = **create-campaign** (provision Meta campaigns + ad sets). Both are config-driven, PAUSED-by-default, and make the AdManage API calls **in-run** via `./secretcurl` (the `{ADMANAGE_API_KEY}` placeholder keeps the key off the command line), behind fail-closed spend guardrails.

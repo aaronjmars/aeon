@@ -1,5 +1,4 @@
 ---
-type: Reference
 layout: default
 title: The Core
 ---
@@ -43,7 +42,7 @@ It files issues into `memory/issues/ISS-NNN.md`, resolves them when a skill reco
 
 ### <img src="assets/skill-icons/aeon-doctor.svg" width="20" height="20" align="top" alt=""> [`aeon-doctor`](../skills/aeon-doctor/SKILL.md) — the config linter · weekly Mon 15:00 · opt-in
 
-The config-side complement to `skill-health`. Where `skill-health` reads *run outcomes*, `aeon-doctor` reads the **config itself** — before anything runs — for the silent-misconfig class that never produces a failed run to detect: an unquoted `schedule:` the scheduler regex skips (never fires, no error, nothing in the Actions tab), a duplicate `aeon.yml` key, a `mode:` typo that silently grants write, a `requires:` block list that injects no keys, an `.mcp.json` `${VAR}` that blacks out every MCP server, or a daily-log entry written under `## <Name>` instead of the contracted `### <slug>` the health loop keys on. Twelve static checks, all local file reads.
+The config-side complement to `skill-health`. Where `skill-health` reads *run outcomes*, `aeon-doctor` reads the **config itself** — before anything runs — for the silent-misconfig class that never produces a failed run to detect: an unquoted `schedule:` the scheduler regex skips (never fires, no error, nothing in the Actions tab), a duplicate `aeon.yml` key, a `mode:` typo that silently grants write, a `requires:` entry the allowlist filter silently drops, an `.mcp.json` `${VAR}` that blacks out every MCP server, or a daily-log entry written under `## <Name>` instead of the contracted `### <slug>` the health loop keys on. Twelve static checks, all local file reads.
 
 It is **read-only by contract** — a diagnostic that inspects config must not mutate it. It surfaces precise findings (file, line, one-command fix) and points the fix at `skill-repair` / the `./aeon` CLI; it does **not** file issues or enter the repair loop below. Notifies only on findings, silent on a clean config. Disabled by default.
 

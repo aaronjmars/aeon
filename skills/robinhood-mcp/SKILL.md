@@ -1,13 +1,21 @@
 ---
-type: Skill
-mode: read-only
-name: Robinhood MCP
-category: crypto
+name: robinhood-mcp
 description: Read your Robinhood Agentic brokerage account via the Robinhood Trading MCP - portfolio, buying power, positions, and order history - and place a single operator-instructed trade. OAuth Connect via the dashboard MCP panel.
-var: ""
-tags: [markets, trading, mcp]
-mcp: [robinhood-trading]
-capabilities: [external_api, writes_external_host, sends_notifications]
+metadata:
+  capabilities:
+    - external_api
+    - writes_external_host
+    - sends_notifications
+  title: Robinhood MCP
+  mode: read-only
+  category: crypto
+  tags:
+    - markets
+    - trading
+    - mcp
+  var: ""
+  mcp:
+    - robinhood-trading
 ---
 > **${var}** — empty = portfolio report (read-only). `orders[:N]` = last N orders (default 10). `trade:<instruction>` = place **one** order, e.g. `trade: buy $50 of AAPL` — the only branch that writes. Anything else = treat as a question about the account and answer it read-only.
 

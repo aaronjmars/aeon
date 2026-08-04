@@ -111,8 +111,12 @@ _fm() {
   [ -f "$f" ] || return 0
   awk -v k="$key" '
     /^---$/{n++; next}
-    n==1 && $0 ~ "^"k":" {
-      v=$0; sub("^"k":[ \t]*","",v); sub(/[ \t]*#.*$/,"",v);
+    n!=1{next}
+    /^[^ \t]/{inmeta=0}
+    /^metadata:/{inmeta=1}
+    # legacy top-level scalar, or the Agent Skills spec form nested under metadata:
+    $0 ~ "^"k":" || (inmeta && $0 ~ "^[ \t]+"k":") {
+      v=$0; sub("^[ \t]*"k":[ \t]*","",v); sub(/[ \t]*#.*$/,"",v);
       gsub(/^[ \t"'"'"']+|[ \t"'"'"']+$/,"",v); print v; exit
     }' "$f"
 }

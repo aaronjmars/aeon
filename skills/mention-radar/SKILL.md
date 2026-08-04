@@ -1,14 +1,17 @@
 ---
-type: Skill
-name: Mention Radar
-category: productivity
+name: mention-radar
 description: Monitor external web and social mentions of the operator's active projects - surface what people are discovering, where they're confused, and where to engage
-schedule: "25 7 2/2 * *"
-commits: false
-permissions: []
-var: ""
-tags: [social, dev]
-requires: [XAI_API_KEY?]
+metadata:
+  title: Mention Radar
+  category: productivity
+  schedule: "25 7 2/2 * *"
+  commits: false
+  var: ""
+  tags:
+    - social
+    - dev
+  requires:
+    - XAI_API_KEY?
 ---
 > **${var}** — Comma-separated project names to track (e.g. "MyApp, my-lib"). If empty, derives targets from MEMORY.md and memory/topics/projects.md.
 

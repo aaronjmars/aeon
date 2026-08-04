@@ -1,12 +1,17 @@
 ---
-type: Skill
-mode: read-only
-name: You.com Web Search
-category: basics
+name: you-web-search
 description: Web search using You.com Search API with high-quality, cited results and optional real-time web crawling
-var: ""
-tags: [web, search, research]
-requires: [YDC_API_KEY]
+metadata:
+  title: You.com Web Search
+  mode: read-only
+  category: basics
+  var: ""
+  tags:
+    - web
+    - search
+    - research
+  requires:
+    - YDC_API_KEY
 ---
 
 > **${var}** — Search query or topic. When empty, uses a general search for current notable developments across tracked areas.

@@ -1,12 +1,23 @@
 ---
-type: Skill
-name: Deploy Uni Hook
-category: crypto
-description: Generate, simulate, audit, and deploy a Uniswap v4 hook + test pool from a brief, on any Uniswap v4 chain (every testnet and mainnet) - pre-audited templates or a from-scratch freeform hook (flags auto-derived; static audit + dangerous-pattern scan + a behavioral forge test + fork sim gate the deploy). Dry-run by default; explicit arm: to broadcast; testnet default, mainnet behind a double opt-in; records the deploy to main.
-var: "arm: to broadcast (default is a dry-run), template:dynamic|noop|skim to force a mode, chain:<name> to pick a chain (default base-sepolia), then the hook brief. Empty prints the grammar."
-tags: [crypto, dev, onchain]
-requires: [HOOK_DEPLOYER_PRIVATE_KEY?, ALCHEMY_API_KEY?, ETHERSCAN_API_KEY?, HOOK_MAINNET_OK?]
-capabilities: [onchain_writes, writes_external_host, sends_notifications]
+name: deploy-uni-hook
+description: "Generate, simulate, audit, and deploy a Uniswap v4 hook + test pool from a brief, on any Uniswap v4 chain (every testnet and mainnet) - pre-audited templates or a from-scratch freeform hook (flags auto-derived; static audit + dangerous-pattern scan + a behavioral forge test + fork sim gate the deploy). Dry-run by default; explicit arm: to broadcast; testnet default, mainnet behind a double opt-in; records the deploy to main."
+metadata:
+  title: Deploy Uni Hook
+  category: crypto
+  var: "arm: to broadcast (default is a dry-run), template:dynamic|noop|skim to force a mode, chain:<name> to pick a chain (default base-sepolia), then the hook brief. Empty prints the grammar."
+  tags:
+    - crypto
+    - dev
+    - onchain
+  requires:
+    - HOOK_DEPLOYER_PRIVATE_KEY?
+    - ALCHEMY_API_KEY?
+    - ETHERSCAN_API_KEY?
+    - HOOK_MAINNET_OK?
+  capabilities:
+    - onchain_writes
+    - writes_external_host
+    - sends_notifications
 ---
 
 > **${var}** — the hook brief. Grammar: `[arm:][template:<name>] [chain:<name>] <brief>`

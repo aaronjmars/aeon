@@ -1,10 +1,13 @@
 ---
-type: Skill
-name: Create Skill
-category: evolution
+name: create-skill
 description: Generate a complete new skill from a one-line prompt and ship it as a PR
-var: ""
-tags: [dev, meta]
+metadata:
+  title: Create Skill
+  category: evolution
+  var: ""
+  tags:
+    - dev
+    - meta
 ---
 > **${var}** — A natural-language description of the skill to create. **Required.** Example: `"monitor Hacker News for AI papers and send a summary"` or `"track gas prices on Ethereum and alert when below 10 gwei"`.
 
@@ -74,11 +77,14 @@ Today is ${today}. Your task is to generate a complete, production-ready skill f
 
    ```markdown
    ---
-   name: {Display Name}
-   category: {category}
+   name: {skill-name}
    description: {One-sentence description starting with a verb}
-   var: ""
-   tags: [{tags}]
+   metadata:
+     title: {Display Name}
+     category: {category}
+     var: ""
+     tags:
+       - {tag}
    ---
    > **${var}** — {What the variable controls}. {If-empty behavior}.
 

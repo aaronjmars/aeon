@@ -1,5 +1,4 @@
 ---
-type: Reference
 title: Harnesses — advanced behavior
 description: Deep reference for Aeon's harness axis (Claude Code, Grok Build, and the four run-harness harnesses) — token accounting, capability-mode mapping, MCP and grok's folder-trust gate, per-skill grok knobs, and per-surface harness selection.
 ---

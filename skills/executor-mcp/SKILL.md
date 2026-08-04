@@ -1,13 +1,21 @@
 ---
-type: Skill
-mode: read-only
-name: Executor MCP
-category: basics
+name: executor-mcp
 description: Run a task through your Executor Cloud tool catalog - one MCP endpoint proxying every integration you connected (MCP servers, OpenAPI specs, GraphQL APIs), with per-tool allow/approve/block policies. OAuth Connect via the dashboard MCP panel.
-var: ""
-tags: [tools, integrations, mcp]
-mcp: [executor]
-capabilities: [external_api, writes_external_host, sends_notifications]
+metadata:
+  title: Executor MCP
+  mode: read-only
+  category: basics
+  var: ""
+  tags:
+    - tools
+    - integrations
+    - mcp
+  mcp:
+    - executor
+  capabilities:
+    - external_api
+    - writes_external_host
+    - sends_notifications
 ---
 > **${var}** — the task to run against the Executor catalog, e.g. `list my open Linear issues and summarize by project` or `what integrations are connected?`. Required. If empty, log `EXEC_NO_TASK` and exit cleanly (no notify).
 

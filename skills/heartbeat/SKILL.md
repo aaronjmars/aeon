@@ -1,11 +1,14 @@
 ---
-type: Skill
-name: Heartbeat
-category: core
+name: heartbeat
 description: Ambient fleet-health check that surfaces anything worth attention (default), or an on-demand priority brief - the 3 things to focus on, why now, and what moved (var=brief)
-var: ""  # ""=ambient fleet check (LIVE scheduled path, unchanged); "brief"/"brief:<area>"=priority brief; any other value=ambient check focused on that area
-tags: [meta]
-requires: [RESEND_API_KEY?]
+metadata:
+  title: Heartbeat
+  category: core
+  var: ""  # ""=ambient fleet check (LIVE scheduled path, unchanged); "brief"/"brief:<area>"=priority brief; any other value=ambient check focused on that area
+  tags:
+    - meta
+  requires:
+    - RESEND_API_KEY?
 ---
 > **${var}** — selector. **Empty (default)** = the ambient fleet check — the live path a cron runs once a day; leave it empty for the scheduled run. **`brief`** = the priority brief. See the grammar below.
 

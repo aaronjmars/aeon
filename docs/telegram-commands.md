@@ -1,7 +1,3 @@
----
-type: Reference
----
-
 # Telegram commands, buttons & deep links
 
 Beyond plain-text chat, Aeon's Telegram integration supports slash commands,

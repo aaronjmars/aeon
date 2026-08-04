@@ -25,9 +25,12 @@ export function setFrontmatterCategory(content: string, category: string): strin
   if (!m) return content
   const [, open, body, close] = m
   const lines = body.split('\n')
-  const ci = lines.findIndex(l => /^category:/.test(l))
+  // Match `category:` whether top-level (legacy) or indented under `metadata:`
+  // (spec form); preserve its existing indentation on replace.
+  const ci = lines.findIndex(l => /^[ \t]*category:/.test(l))
   if (ci !== -1) {
-    lines[ci] = `category: ${category}`
+    const indent = lines[ci].match(/^[ \t]*/)?.[0] ?? ''
+    lines[ci] = `${indent}category: ${category}`
   } else {
     const ni = lines.findIndex(l => /^name:/.test(l))
     lines.splice(ni === -1 ? 0 : ni + 1, 0, `category: ${category}`)
@@ -40,8 +43,16 @@ export function setFrontmatterCategory(content: string, category: string): strin
 export function parseFrontmatter(content: string): Frontmatter {
   const block = content.match(/^---\s*\n([\s\S]*?)\n---/)?.[1] ?? ''
 
-  const name = unquote(block.match(/name:\s*(.+)/)?.[1] ?? '')
-  const category = unquote(block.match(/^category:\s*(.+)/m)?.[1] ?? '')
+  // Display name: the Agent Skills spec form puts the human title under
+  // `metadata: title:` (top-level `name:` is the lowercase slug identifier).
+  // Prefer the title; fall back to the legacy top-level `name:`.
+  const title = unquote(block.match(/^[ \t]*title:\s*(.+)/m)?.[1] ?? '')
+  const name = title || unquote(block.match(/^name:\s*(.+)/m)?.[1] ?? '')
+  // `category:` / `var:` may be top-level (legacy) or nested under `metadata:`
+  // (spec form). `^[ \t]*` matches either. tags/requires/mcp below use
+  // `extractList`, which handles both inline `[...]` and block `- item` lists at
+  // any indentation.
+  const category = unquote(block.match(/^[ \t]*category:\s*(.+)/m)?.[1] ?? '')
 
   let description = unquote(block.match(/description:\s*(.+)/)?.[1] ?? '')
   if (!description) {
@@ -59,15 +70,18 @@ export function parseFrontmatter(content: string): Frontmatter {
   // Surfaced under the Skill-settings input as help text; empty for most skills.
   const varHint = unquote(block.match(/^var:\s*(.+)/m)?.[1] ?? '')
 
-  const tags = parseList(block.match(/tags:\s*\[([^\]]*)\]/)?.[1])
+  const tags = extractList(block, 'tags')
 
   // `requires:` declares the third-party credentials a skill needs to function.
-  // Format mirrors `tags:` - an inline list of env-var names. A trailing `?`
-  // marks a key as optional (the skill still runs without it, just degraded /
-  // rate-limited). Names reference the central credential registry surfaced in
-  // the dashboard's Settings → Access Keys vault.
+  // A list of env-var names; a trailing `?` marks a key as optional (the skill
+  // still runs without it, just degraded / rate-limited). Names reference the
+  // central credential registry surfaced in the dashboard's Settings → Access
+  // Keys vault. Inline or block form:
   //   requires: [XAI_API_KEY, COINGECKO_API_KEY?]
-  const requires: SkillKeyRef[] = parseList(block.match(/requires:\s*\[([^\]]*)\]/)?.[1])
+  //   requires:
+  //     - XAI_API_KEY
+  //     - COINGECKO_API_KEY?
+  const requires: SkillKeyRef[] = extractList(block, 'requires')
     .map(raw => {
       const optional = raw.endsWith('?')
       return { key: raw.replace(/\?$/, '').trim(), optional }
@@ -78,7 +92,7 @@ export function parseFrontmatter(content: string): Frontmatter {
   // `requires:` (trailing `?` = "works better with"), but slugs reference the
   // MCP catalog (lib/mcp-catalog.ts) surfaced on the dashboard's MCP page.
   //   mcp: [base, glim?]
-  const mcp: SkillMcpRef[] = parseList(block.match(/mcp:\s*\[([^\]]*)\]/)?.[1])
+  const mcp: SkillMcpRef[] = extractList(block, 'mcp')
     .map(raw => {
       const optional = raw.endsWith('?')
       return { slug: raw.replace(/\?$/, '').trim().toLowerCase(), optional }
@@ -88,8 +102,25 @@ export function parseFrontmatter(content: string): Frontmatter {
   return { name, category, description, varHint, tags, requires, mcp }
 }
 
-function parseList(inner: string | undefined): string[] {
-  return inner ? inner.split(',').map(t => t.trim()).filter(Boolean) : []
+// Extract a frontmatter list value (`key:`) as trimmed string items. Handles
+// both the inline flow form `key: [a, b]` and the block form (`key:` on its own
+// line followed by `- item` lines), at any indentation - so the Agent Skills
+// spec form (lists nested under `metadata:` in block style) parses correctly.
+function extractList(block: string, key: string): string[] {
+  const inline = block.match(new RegExp(`^[ \\t]*${key}:\\s*\\[([^\\]]*)\\]`, 'm'))
+  if (inline) return inline[1].split(',').map(t => t.trim()).filter(Boolean)
+  const lines = block.split('\n')
+  const keyRe = new RegExp(`^[ \\t]*${key}:\\s*(#.*)?$`)
+  const idx = lines.findIndex(l => keyRe.test(l))
+  if (idx === -1) return []
+  const out: string[] = []
+  for (let i = idx + 1; i < lines.length; i++) {
+    const m = lines[i].match(/^[ \t]*-\s*(.+?)\s*(?:#.*)?$/)
+    if (!m) break
+    const v = m[1].trim()
+    if (v) out.push(v)
+  }
+  return out
 }
 
 function unquote(value: string): string {

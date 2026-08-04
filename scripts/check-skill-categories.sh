@@ -24,7 +24,15 @@ for skill_file in "$SKILLS_DIR"/*/SKILL.md; do
   [[ -f "$skill_file" ]] || continue
   slug="$(basename "$(dirname "$skill_file")")"
 
-  cat=$(awk '/^---$/{n++; next} n==1 && /^category:/{sub(/^category:[[:space:]]*/,""); gsub(/"/,""); gsub(/[[:space:]]*$/,""); print; exit}' "$skill_file")
+  # Accept either the legacy top-level `category:` or the Agent Skills spec form
+  # nested under `metadata:` (indented). First match wins.
+  cat=$(awk '
+    /^---$/{n++; next}
+    n!=1{next}
+    /^metadata:/{inmeta=1}
+    /^category:/{sub(/^category:[[:space:]]*/,""); gsub(/"/,""); gsub(/[[:space:]]*$/,""); print; exit}
+    inmeta && /^[[:space:]]+category:/{sub(/^[[:space:]]+category:[[:space:]]*/,""); gsub(/"/,""); gsub(/[[:space:]]*$/,""); print; exit}
+  ' "$skill_file")
 
   if [[ -z "$cat" ]]; then
     missing+=("$slug")

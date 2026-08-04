@@ -1,12 +1,14 @@
 ---
-type: Skill
-name: Aeon Doctor
-category: evolution
+name: aeon-doctor
 description: Static config-correctness linter for this instance - catches the silent-failure class (unquoted schedules, duplicate keys, unconfigured skills, mode typos, broken requires/MCP refs) that no run-based health skill can see. Notifies only on problems.
-var: ""  # ""=lint the whole instance config | <skill-slug>=lint one skill's entry + SKILL.md
-tags: [meta, health]
-mode: read-only
-requires: []
+metadata:
+  title: Aeon Doctor
+  category: evolution
+  var: ""  # ""=lint the whole instance config | <skill-slug>=lint one skill's entry + SKILL.md
+  tags:
+    - meta
+    - health
+  mode: read-only
 ---
 
 > **${var}** — scope. **Empty (default)** = lint the entire instance config (`aeon.yml` + every `skills/*/SKILL.md` + `.mcp.json`). A **skill slug** (e.g. `digest`) = lint just that one skill's `aeon.yml` entry and its `SKILL.md`.
@@ -53,19 +55,27 @@ Each printed name exists on disk but has no config entry. **warn** — list them
 ### 4 · Enabled skill with no `SKILL.md` — broken entry (critical)
 The inverse: an `aeon.yml` entry pointing at a skill dir that doesn't exist. For every `enabled: true` key, confirm `skills/<key>/SKILL.md` is present. Missing → **critical** (the run fails or no-ops).
 
-### 5 · `requires:` as a block list — injects nothing (warn)
-`requires:` parses an **inline array only**. `requires: [KEY?]` works; a YAML block list (`- KEY` on the next line) silently injects **no keys**, so the skill runs without the credentials it declares and fails or degrades with a confusing auth error.
+### 5 · `requires:` entry the allowlist silently drops (warn)
+Both list forms parse — inline (`requires: [KEY?]`) and block (`- KEY` on its own line), top-level or nested under `metadata:`. What still bites is the *value*: `scripts/skill_requires.sh` injects only names matching `^[A-Z][A-Z0-9_]{2,}$` (a trailing `?` = "works better with" is allowed). An entry that fails the filter — lowercase, fewer than 3 chars, a leading digit, or stray punctuation — is silently dropped, so the skill declares a credential it never receives and fails or degrades with a confusing auth error.
 ```bash
-for f in skills/*/SKILL.md; do awk '/^requires:/ && $0 !~ /\[/ {print FILENAME": block-style requires: (injects nothing)"}' "$f"; done
+for f in skills/*/SKILL.md; do awk '
+  /^---$/{n++; next} n!=1{next}
+  function chk(x){ sub(/\?$/,"",x); if(x!="" && x !~ /^[A-Z][A-Z0-9_]{2,}$/) print FILENAME": requires entry \""x"\" is dropped by the allowlist filter" }
+  collecting { if ($0 ~ /^[ \t]*-[ \t]*/){ it=$0; sub(/^[ \t]*-[ \t]*/,"",it); sub(/[ \t]*#.*/,"",it); gsub(/[ \t]/,"",it); chk(it); next } collecting=0 }
+  /^[^ \t]/{im=0} /^metadata:/{im=1}
+  /^requires:/ || (im && /^[ \t]+requires:/){
+    if ($0 ~ /\[/){ line=$0; sub(/.*\[/,"",line); sub(/\].*/,"",line); k=split(line,a,","); for(i=1;i<=k;i++){gsub(/[ \t]/,"",a[i]); chk(a[i])} }
+    else collecting=1
+  }' "$f"; done
 ```
-Flag any `SKILL.md` whose `requires:` isn't a same-line `[...]`. **warn**. Fix: collapse to `requires: [KEY, KEY2?]`.
+Flag any entry that fails the filter. **warn**. Fix: use the exact env-var name (uppercase, `^[A-Z][A-Z0-9_]{2,}$`), with a trailing `?` only to mark it optional.
 
 ### 6 · `mode:` typo — silent write grant (critical)
 An unknown `mode:` value falls back to **`write`**, never to the safer tier. The only valid strings are `read-only` and `write`.
 ```bash
-grep -rn '^mode:' skills/*/SKILL.md | grep -vE ':\s*(read-only|write)\s*$'
+grep -rnE '^[[:space:]]*mode:' skills/*/SKILL.md | grep -vE ':\s*(read-only|write)\s*$'
 ```
-Any printed line is a typo (`readonly`, `read only`, `readOnly`, …) that silently grants full write / `gh` / `git`. **critical** — least-privilege is broken. Fix: the exact string `read-only`. (A skill with *no* `mode:` line is intentionally `write` — not a finding.)
+`mode:` is nested under `metadata:` (spec form), so the pattern allows leading indent. Any printed line is a typo (`readonly`, `read only`, `readOnly`, …) that silently grants full write / `gh` / `git`. **critical** — least-privilege is broken. Fix: the exact string `read-only`. (A skill with *no* `mode:` line is intentionally `write` — not a finding.)
 
 ### 7 · `.mcp.json` unresolved `${VAR}` — kills ALL MCP (warn)
 On the Claude harness a **single** `${VAR}` in `.mcp.json` that resolves to no secret disables **every** MCP server that run (`Skipping MCP this run.`), not just the broken one. List the referenced vars so the operator can confirm each is set:
@@ -84,9 +94,9 @@ Each hit is a split entry → **warn**. Fix: collapse it to one inline `{ … }`
 ### 9 · Misleading `schedule:` / `cron:` in SKILL.md frontmatter (warn)
 Schedules live in `aeon.yml` only; `scheduler.yml` never reads `SKILL.md`. A `schedule:` / `cron:` line in frontmatter looks load-bearing but does nothing — a trap for anyone editing the skill.
 ```bash
-grep -rnE '^(schedule|cron):' skills/*/SKILL.md
+grep -rnE '^[[:space:]]*(schedule|cron):' skills/*/SKILL.md
 ```
-Report as **warn** (informational): these lines are inert; the real schedule is the `aeon.yml` entry.
+Report as **warn** (informational): these lines are inert; the real schedule is the `aeon.yml` entry (the pattern allows leading indent, since spec-form frontmatter nests these under `metadata:`).
 
 ### 10 · Unquoted per-skill `harness:` / `model:` override (warn)
 Same quoting rule as `schedule:` — the override grep requires double quotes. An unquoted `harness: grok` or `model: …` is silently ignored and the skill keeps running the global default.

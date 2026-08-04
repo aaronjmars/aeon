@@ -1,10 +1,12 @@
 ---
-type: Skill
-name: Price Alert
-category: basics
+name: price-alert
 description: Fire when the tracked token does something - new ATH, sharp 1h move, or operator-set target crossed. Silent on normal days.
-var: ""
-tags: [crypto]
+metadata:
+  title: Price Alert
+  category: basics
+  var: ""
+  tags:
+    - crypto
 ---
 > **${var}** — Optional. Pass one or more `target_price` levels (comma-separated USD numbers, scientific notation allowed) to fire a one-time alert when the price crosses any of them. Empty = only ATH and sharp-move gates run. Pass `dry-run` to skip notify (state still updates). Pass `set-target:<price>` — the shape the Telegram force-reply sends (step 7) — to register a target and get a one-line confirmation.
 

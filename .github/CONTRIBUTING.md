@@ -134,7 +134,7 @@ bin/                     ← operator + maintainer CLI (run from repo root, e.g.
   generate-skills-json   ← regenerate catalog/skills.json from SKILL.md files
   generate-packs-json    ← regenerate catalog/packs.json from the two configs above
 docs/                    ← reference docs, community registries, adopter examples
-  CORE.md · CAPABILITIES.md · OKF.md · harnesses.md · skill-packs.md · telegram-* · help/status
+  CORE.md · CAPABILITIES.md · harnesses.md · skill-packs.md · telegram-* · help/status
   ECOSYSTEM.md           ← products & agents built on Aeon (community-curated)
   SHOWCASE.md            ← leaderboard of active forks
   examples/              ← MCP quickstart, portable workflow templates, skill templates
@@ -148,14 +148,14 @@ apps/                    ← standalone sub-projects, each with its own package.
   cli/                   ← headless CLI (`./aeon <command>`) — the dashboard's features as commands
   mcp-server/            ← MCP server — exposes skills as Claude tools
   webhook/               ← Telegram instant-mode Cloudflare Worker (~1s delivery)
-memory/                  ← native OKF v0.1 bundle: every .md carries a type: (see docs/OKF.md)
-  MEMORY.md              ← goals, active topics, pointers (type: Index)
+memory/                  ← durable memory the agent reads/writes across runs
+  MEMORY.md              ← goals, active topics, pointers
   cron-state.json        ← per-skill execution metrics (status, success rate, quality)
   skill-health/          ← rolling quality scores per skill (last 30 runs)
   token-usage.csv        ← token cost tracking per run
-  issues/                ← structured issue tracker for skill failures (type: Issue)
-  topics/                ← OKF concepts by topic — tokens, protocols, narratives, repos…
-  logs/                  ← daily activity logs (YYYY-MM-DD.md; type: Log)
+  issues/                ← structured issue tracker for skill failures
+  topics/                ← durable knowledge notes by topic - tokens, protocols, narratives, repos
+  logs/                  ← daily activity logs (YYYY-MM-DD.md)
 output/                  ← everything skills produce, committed to the repo
   articles/ · images/    ← published deliverables
   .chains/               ← transient chain-step handoff (consumed by downstream steps)
@@ -164,8 +164,6 @@ scripts/
   notify-jsonrender.sh   ← source for ./notify-jsonrender (feed cards via Haiku)
   secretcurl.sh          ← source for ./secretcurl (auth'd curl; {ENV} placeholders keep secrets off the command line)
   skill-runs             ← audit recent GitHub Actions skill runs
-  okf-validate.mjs       ← assert OKF conformance (the ci-okf gate); okf-backfill.mjs stamps a missing type:
-  okf-config.json        ← OKF scope: roots, exclusions, per-family types
 .github/workflows/
   aeon.yml               ← skill runner (workflow_dispatch, issues, quality scoring)
   chain-runner.yml       ← skill chain executor (parallel + sequential pipelines)
@@ -187,7 +185,6 @@ protect:
 | `ci-skill-packs` | `catalog/skill-packs.json` is well-formed **and** matches the README's Community Packs table |
 | `ci-apps` | each app in `apps/**` typechecks, tests, and builds |
 | `ci-tests` | the `scripts/tests/` suites pass |
-| `ci-okf` | the knowledge bundle stays OKF-conformant |
 | `ci-agents-md` | `AGENTS.md` is regenerated from `STRATEGY.md` |
 
 Run the checks locally before pushing:

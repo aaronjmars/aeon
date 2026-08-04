@@ -1,7 +1,3 @@
----
-type: Article
----
-
 # Workflow Security Audit — 2026-04-11
 
 **Repo:** [aeonfun/aeon](https://github.com/aeonfun/aeon)

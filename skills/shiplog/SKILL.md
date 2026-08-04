@@ -1,11 +1,16 @@
 ---
-type: Skill
-name: Shiplog
-category: core
+name: shiplog
 description: Recap of everything shipped since the last run - cross-repo PRs, security fixes, star deltas, and X traction, synthesized into a digest article and a ready-to-post shiplog in your voice.
-var: ""
-requires: [XAI_API_KEY?, GH_GLOBAL?]
-tags: [content, social]
+metadata:
+  title: Shiplog
+  category: core
+  var: ""
+  requires:
+    - XAI_API_KEY?
+    - GH_GLOBAL?
+  tags:
+    - content
+    - social
 ---
 > **${var}** — Optional, space-separated flags:
 > - `since:YYYY-MM-DD` — override the window start (default: when this skill last ran).

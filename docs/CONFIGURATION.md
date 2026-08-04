@@ -1,5 +1,4 @@
 ---
-type: Reference
 title: Configuration & advanced reference
 description: Runtime and configuration reference for Aeon — scheduling, chaining, reactive triggers, capability modes, MCP, LLM gateways, strategy and soul, and the security/access controls. Moved out of the README to keep it readable.
 ---

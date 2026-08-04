@@ -1,5 +1,4 @@
 ---
-type: Reference
 title: "Tone"
 description: "Skill reference for the language and tone rules an agent should follow when using Base MCP."
 ---

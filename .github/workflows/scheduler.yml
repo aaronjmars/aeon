@@ -241,10 +241,21 @@ jobs:
           for SKILL in "${MATCHED[@]}"; do
             SKILL_FILE="skills/${SKILL}/SKILL.md"
             if [ -f "$SKILL_FILE" ]; then
-              DEPS=$(sed -n '/^---/,/^---/p' "$SKILL_FILE" | \
-                grep -oP 'depends_on:\s*\[([^\]]*)\]' | \
-                sed 's/depends_on:\s*\[//;s/\]//' | \
-                tr -d ' ' || true)
+              # depends_on may be inline (`[a, b]`) or block (`- a` lines), top-level
+              # or nested under `metadata:` (Agent Skills spec form). Emit comma-joined.
+              DEPS=$(awk '
+                /^---$/{n++; next} n!=1{next}
+                collecting {
+                  if ($0 ~ /^[ \t]*-[ \t]*/) { it=$0; sub(/^[ \t]*-[ \t]*/,"",it); sub(/[ \t]*#.*/,"",it); gsub(/[ \t]/,"",it); if(it!="") acc=(acc==""?it:acc","it); next }
+                  collecting=0; print acc; exit
+                }
+                /^[^ \t]/{im=0} /^metadata:/{im=1}
+                /^depends_on:/ || (im && /^[ \t]+depends_on:/){
+                  if ($0 ~ /\[/) { line=$0; sub(/^[ \t]*depends_on:[ \t]*\[/,"",line); sub(/\].*/,"",line); gsub(/[ \t]/,"",line); print line; exit }
+                  collecting=1; next
+                }
+                END { if (collecting) print acc }
+              ' "$SKILL_FILE" || true)
               [ -n "$DEPS" ] && SKILL_DEPS["$SKILL"]="$DEPS"
             fi
           done

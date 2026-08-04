@@ -1,16 +1,24 @@
 ---
-type: Skill
-name: DeFi Overview
-category: crypto
+name: defi-overview
 description: One-pass crypto read - tracked-protocol positions and health plus macro context, with regime take, DeFi verdict, biggest movers, yields, fees, breadth, Fear & Greed, and prediction markets.
-var: ""
-tags: [crypto, defi, macro, positions]
-mode: write
-requires: [COINGECKO_API_KEY?]
-commits: true
-permissions:
-  - contents:write
-capabilities: [external_api, sends_notifications]
+metadata:
+  title: DeFi Overview
+  category: crypto
+  var: ""
+  tags:
+    - crypto
+    - defi
+    - macro
+    - positions
+  mode: write
+  requires:
+    - COINGECKO_API_KEY?
+  commits: true
+  permissions:
+    - contents:write
+  capabilities:
+    - external_api
+    - sends_notifications
 ---
 <!-- autoresearch: variation B — sharper output via regime verdict + Market Take + sustainable-vs-incentive yield split + fees fundamentals + per-mover "why it matters". Consolidated: folds in defi-monitor (tracked-protocol positions/health) and market-context (broad crypto macro + memory/topics/market-context.md refresh) so one run covers positions + macro in a single pass. -->
 

@@ -1,13 +1,22 @@
 ---
-type: Skill
-mode: read-only
-name: Finance District MCP
-category: crypto
+name: finance-district-mcp
 description: Multichain non-custodial agent wallet via Finance District - check balances, prices, and best DeFi yields, move funds, swap, and make x402 paid API calls across EVM, Solana, Bitcoin, and Sui. Keys never leave a secure enclave (TEE); spend caps are enforced at the wallet. OAuth Connect via the dashboard MCP panel.
-var: ""
-tags: [crypto, wallet, mcp]
-mcp: [finance-district]
-capabilities: [external_api, writes_external_host, onchain_writes, sends_notifications]
+metadata:
+  title: Finance District MCP
+  mode: read-only
+  category: crypto
+  var: ""
+  tags:
+    - crypto
+    - wallet
+    - mcp
+  mcp:
+    - finance-district
+  capabilities:
+    - external_api
+    - writes_external_host
+    - onchain_writes
+    - sends_notifications
 ---
 > **${var}** — what to do with the wallet. Empty → a daily wallet brief (balances + notable price moves + top stablecoin yield). Or a specific instruction, e.g. `best USDC yield on Base`, `swap 5 USDC to ETH on Base`, `pay <x402-url> for <data>`.
 

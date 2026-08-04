@@ -1,13 +1,20 @@
 ---
-type: Skill
-mode: read-only
-name: Glim MCP
-category: basics
+name: glim-mcp
 description: Live-data research via the glim.sh MCP - web search, full page extraction, X/Twitter, Reddit, GitHub, Amazon, and YouTube transcripts - synthesized into a cited digest. Pay-per-call from the connected account balance; OAuth Connect via the dashboard MCP panel.
-var: ""
-tags: [research, data, mcp]
-mcp: [glim]
-capabilities: [external_api, sends_notifications]
+metadata:
+  title: Glim MCP
+  mode: read-only
+  category: basics
+  var: ""
+  tags:
+    - research
+    - data
+    - mcp
+  mcp:
+    - glim
+  capabilities:
+    - external_api
+    - sends_notifications
 ---
 > **${var}** — the research question or task, e.g. `what are people saying about MCP servers this week` or `pull the top HN + Reddit takes on <topic>`. Append `--deep` for a wider sweep. Required. If empty, log `GLIM_NO_QUERY` and exit cleanly (no notify).
 
@@ -54,7 +61,7 @@ This skill is `read-only`, so it can't write the repo during the run (the sandbo
 - Calls: N (budget 10|25) | sources cited: M
 ```
 
-If the answer is durable knowledge about a tracked topic (a token, a protocol, a watched repo), it can't be folded into `memory/topics/` from a read-only run — surface it clearly in the output so the operator (or a write-mode skill) can persist it per the OKF rules.
+If the answer is durable knowledge about a tracked topic (a token, a protocol, a watched repo), it can't be folded into `memory/topics/` from a read-only run — surface it clearly in the output so the operator (or a write-mode skill) can persist it to `memory/topics/`.
 
 ## Constraints
 

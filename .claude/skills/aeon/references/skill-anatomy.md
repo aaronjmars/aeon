@@ -7,11 +7,12 @@ Surveyed across all 65 skills in `aeonfun/aeon`. Frequencies are real counts —
 Universal — **all 65 skills** carry these five:
 
 ```yaml
-type: Skill          # required by ci-okf; every .md under skills/ needs a type:
-name: My Skill       # human-readable, not the slug
-category: basics     # core | evolution | basics | dev | crypto | productivity
+name: my-skill       # the slug (matches the skills/<slug>/ directory)
 description: One line — what it does and what it sends.
-tags: [content]
+metadata:
+  title: My Skill    # human-readable display name
+  category: basics   # core | evolution | basics | dev | crypto | productivity
+  tags: [content]
 ```
 
 Then, in descending real-world use:
@@ -21,26 +22,24 @@ Then, in descending real-world use:
 | `var:` | 56 | the operator-tunable knob (topic, filter, mode). Default value; `./aeon skills set <name> --var` overrides at run time |
 | `requires:` | 28 | API keys to inject. **This is an allowlist** — see the trap below |
 | `mode:` | 17 | `read-only` (10) or `write` (7). **Absent = `write`** |
-| `permissions:` | 12 | GitHub token scopes, e.g. `[contents:write, pull-requests:write]` |
+| `permissions:` | 12 | GitHub token scopes, e.g. `contents:write`, `pull-requests:write` |
 | `commits:` | 12 | `true` (9) / `false` (3) — whether the run may commit |
-| `capabilities:` | 10 | declared blast radius, e.g. `[external_api, sends_notifications]`. Taxonomy locked by `ci-capabilities-parity` |
+| `capabilities:` | 10 | declared blast radius, e.g. `external_api`, `sends_notifications`. Taxonomy locked by `ci-capabilities-parity` |
 | `mcp:` | 4 | MCP servers the skill needs — **catalog metadata only, gates nothing at run time** (`references/mcp.md`) |
 | `depends_on:` | 3 | other skills, for chain ordering |
 
-### Trap 1 — `requires:` parses one format only
+### Trap 1 — `requires:` injects only names that pass the filter
 
-`scripts/skill_requires.sh` reads it with awk, matching an **inline array on one line**, then filters each name through `^[A-Z][A-Z0-9_]{2,}$`:
-
-```yaml
-requires: [COINGECKO_API_KEY?, ALCHEMY_API_KEY?]   # ✅ parses
-```
+`scripts/skill_requires.sh` reads it with awk and injects only entries matching `^[A-Z][A-Z0-9_]{2,}$` (a trailing `?` marks "works better with"; bare means required). Both list forms parse — inline or block, top-level or nested under `metadata:` (the spec form):
 
 ```yaml
-requires:                                           # ❌ silently yields nothing
-  - COINGECKO_API_KEY
+metadata:
+  requires:
+    - COINGECKO_API_KEY?
+    - ALCHEMY_API_KEY?
 ```
 
-This is **least-privilege secret injection**: the run exports only the keys listed here — a skill sees nothing else from the secret store. A YAML-list `requires:` isn't a syntax error, it just injects zero secrets, and the skill fails at run time as if the key were never set. `?` marks "works better with" (degrades quietly); bare means required.
+This is **least-privilege secret injection**: the run exports only the keys listed here — a skill sees nothing else from the secret store. The trap is the *value*, not the list style — a lowercase, too-short, or otherwise malformed entry is silently dropped, so the skill declares a credential it never receives and fails at run time as if the key were never set.
 
 ### Trap 2 — a typo'd `mode:` silently grants write
 
@@ -136,10 +135,6 @@ Long-lived facts, not run history. Skills read it for context; the `memory-flush
 ### Domain state files
 
 Skills that track things across runs own a file: `memory/watched-repos.md`, `memory/products.md`, `memory/instances.json`, `memory/on-chain-watches`, `memory/pending-disclosures/`, `memory/issues/INDEX.md`. Read-modify-write the one your skill owns; don't invent a parallel store.
-
-### `memory/topics/` is an OKF bundle — mind the gate
-
-Files here (and anywhere under `memory/`, `docs/`, `skills/`, `output/articles/`) must carry a non-empty `type:` frontmatter field or `ci-okf` fails the PR. If a skill writes a new `.md` into `memory/`, it must stamp a `type:` — `Log` for `memory/logs/`, `Issue` for `memory/issues/`, `Reference` otherwise. See `references/ci.md`.
 
 ### Not for skills: `memory/cron-state.json`
 

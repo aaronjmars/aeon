@@ -217,11 +217,10 @@ They just did something in Claude Code and want it to happen on a schedule.
 
    This is the one sanctioned exception to "never hand-edit the YAML". Validate after: `node scripts/validate-config.js` — but note it only checks structure, and will not catch an unquoted value.
 
-5. **Regenerate BOTH catalogs, then ship it as a PR.** A new skill trips four CI gates. Run them locally — **nothing blocks a merge on red**, `main` is unprotected and has no rulesets, so an unrun gate just fails after the fact:
+5. **Regenerate BOTH catalogs, then ship it as a PR.** A new skill trips three CI gates. Run them locally — **nothing blocks a merge on red**, `main` is unprotected and has no rulesets, so an unrun gate just fails after the fact:
 
    ```bash
    bash scripts/check-skill-categories.sh   # category is one of the six
-   node scripts/okf-validate.mjs            # SKILL.md carries type: Skill
    bin/generate-skills-json                 # catalog/skills.json
    bin/generate-packs-json                  # catalog/packs.json — NOT optional
    ```
@@ -264,7 +263,7 @@ Bodies run 133–757 lines (~306 median) — a skill is a prompt in prose, not a
 
 Four things that bite when authoring — full detail in `references/skill-anatomy.md`:
 
-- **`requires:` parses an inline array only.** `requires: [KEY?]` works; a YAML list (`- KEY` on its own line) silently injects **nothing**. It's a least-privilege allowlist — the run exports only what's named here.
+- **`requires:` is a least-privilege allowlist — the run exports only the keys named here.** Inline (`requires: [KEY?]`) and block (`- KEY` lines) both parse, top-level or nested under `metadata:`. The catch is the value: only names matching `^[A-Z][A-Z0-9_]{2,}$` (trailing `?` = optional) are injected; a lowercase or malformed entry is silently dropped.
 - **A typo'd `mode:` grants write.** Unknown values fall back to `write`, never to the safer tier. The exact string is `read-only`.
 - **`${today}` / `${var}` are not templated.** Nothing rewrites `SKILL.md`; the workflow puts the date and var in the surrounding prompt and the model resolves them in context. Inventing `${my_thing}` yields a literal `${my_thing}`.
 - **Never put a secret on a command line.** Use `./secretcurl` with a `{ENV_NAME}` placeholder in braces — Claude Code's permission analyzer blocks `$SECRET` expansions at run time.
@@ -366,8 +365,6 @@ By default Aeon has no personality. `soul/SOUL.md` (identity, worldview, opinion
 `XAI_API_KEY` gives the richest read of a real X timeline; without it, `soul-builder` falls back to web search. There's also a gallery of complete example souls at github.com/aeonfun/soul.md to start from.
 
 **The quality bar: specific enough to be wrong.** *"I think most AI safety discourse is galaxy-brained cope"* is useful. *"I have nuanced views on AI safety"* is not. Push for the first kind — a soul that can't offend anyone won't sound like anyone.
-
-Neither file takes `type:` frontmatter — both are outside the OKF scope.
 
 ---
 

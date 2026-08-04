@@ -63,7 +63,7 @@ soul/              SOUL.md + STYLE.md + examples/ — voice, read on every run (
 memory/            durable state between runs:
   logs/<date>.md     per-run append under `### <skill-name>`. The dedup substrate.
   MEMORY.md          the durable index — long-lived facts, not run history.
-  issues/, topics/   OKF knowledge bundle; every .md needs a `type:` (ci-okf).
+  issues/, topics/   durable memory: issue tracker + knowledge notes by topic.
   cron-state.json    scheduler bookkeeping. Infrastructure — no skill touches it.
 output/            what skills produce: articles/, images/.
 catalog/           generated manifests — skills.json, packs.json (+ .config), skill-packs.json.
@@ -72,7 +72,7 @@ bin/               operator tools: add-skill, install-skill-pack, generate-*-jso
 scripts/           runtime helpers + validators. notify.sh and secretcurl.sh are copied
                    to ./notify and ./secretcurl at run time — that's why they're not at root.
 apps/              dashboard (Next.js), cli, mcp-server, webhook (Cloudflare Worker).
-docs/              CONFIGURATION.md, CAPABILITIES.md, OKF.md, skill-packs.md, harnesses.md.
+docs/              CONFIGURATION.md, CAPABILITIES.md, skill-packs.md, harnesses.md.
 .github/workflows/ 14 workflows: aeon.yml (the runner), scheduler.yml (cron matcher),
                    chain-runner.yml, and 9 ci-*.yml gates (see references/ci.md).
 ```

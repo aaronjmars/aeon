@@ -1,14 +1,16 @@
 ---
-type: Skill
 name: strategy-builder
-category: core
 description: Draft STRATEGY.md from a goal - read the operator's brief (goal, repo, links) plus the repo README and memory, then write a tight north-star/priorities/audience/constraints strategy.
-schedule: "workflow_dispatch"
-commits: true
-permissions:
-  - contents:write
-var: ""
-tags: [meta, productivity]
+metadata:
+  category: core
+  schedule: "workflow_dispatch"
+  commits: true
+  permissions:
+    - contents:write
+  var: ""
+  tags:
+    - meta
+    - productivity
 ---
 
 > **${var}** — a brief. Two accepted shapes:

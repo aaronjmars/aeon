@@ -41,11 +41,19 @@ Every template is a single directory under `templates/` containing one `SKILL.md
 ---
 name: [REPLACE: SKILL_NAME]
 description: One-line description of what this skill does
-var: ""
-tags: [...]
-requires: [SOME_API_KEY, OTHER_API_KEY?]
+metadata:
+  var: ""
+  tags:
+    - some-tag
+  requires:
+    - SOME_API_KEY
+    - OTHER_API_KEY?
 ---
 ```
+
+Only `name` (the lowercase slug) and `description` are top-level, per the
+[Agent Skills spec](https://agentskills.io/specification). Everything else
+(`category`, `var`, `tags`, `requires`, `mcp`, `mode`, …) lives under `metadata:`.
 
 ### Declaring API keys (`requires:`)
 
@@ -56,7 +64,9 @@ section, an inline "key missing" flag in the roster, and a reverse "used by"
 index under each key in Settings → Access Keys).
 
 ```yaml
-requires: [XAI_API_KEY, COINGECKO_API_KEY?]
+requires:
+  - XAI_API_KEY
+  - COINGECKO_API_KEY?
 ```
 
 - Each entry is the exact env-var name the skill reads (e.g. `XAI_API_KEY`).
@@ -77,7 +87,8 @@ its run, declare it in the `mcp:` frontmatter list. Same two-tier semantics as
 with**. Slugs reference the MCP catalog (`apps/dashboard/lib/mcp-catalog.ts`).
 
 ```yaml
-mcp: [base]        # this skill needs the Base MCP server (mcp.base.org)
+mcp:
+  - base           # this skill needs the Base MCP server (mcp.base.org)
 ```
 
 The dashboard shows a per-skill **MCP servers** panel (install state pulled from

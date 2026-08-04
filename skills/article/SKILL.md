@@ -1,11 +1,15 @@
 ---
-type: Skill
-name: Article
-category: basics
+name: article
 description: Write a publication-ready article in one of three angles - a trending long-form piece, a watched-repo thesis, or a project-through-a-lens essay. Optional Replicate hero image with --visual.
-var: ""
-tags: [content, dev]
-requires: [REPLICATE_API_TOKEN?]
+metadata:
+  title: Article
+  category: basics
+  var: ""
+  tags:
+    - content
+    - dev
+  requires:
+    - REPLICATE_API_TOKEN?
 ---
 > **${var}** — Selector: `[angle:arg] [--visual]`. The **angle** prefix picks the article type; append **`--visual`** (or `visual`) anywhere to also generate a Replicate hero image.
 >

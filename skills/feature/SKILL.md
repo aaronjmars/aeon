@@ -1,14 +1,21 @@
 ---
-type: Skill
-name: Feature
-category: dev
+name: feature
 description: Build, enhance, or revive GitHub repos - ship one feature PR per watched repo (watched), make the best single enhancement on one external repo (external), or revive the top dormant repo (dormant).
-var: ""
-mode: write
-commits: true
-permissions: [contents: write, pull-requests: write]
-requires: [GH_GLOBAL?]
-tags: [dev, build, growth]
+metadata:
+  title: Feature
+  category: dev
+  var: ""
+  mode: write
+  commits: true
+  permissions:
+    - contents:write
+    - pull-requests:write
+  requires:
+    - GH_GLOBAL?
+  tags:
+    - dev
+    - build
+    - growth
 ---
 > **${var}** — Selector `target[:arg] [--fix-issues]`, `target ∈ {watched, external, dormant}`. Empty or `watched` = build a feature on every watched repo (one PR each); `external:<owner/repo>` = one best enhancement on that external repo; `dormant` = revive the highest-scoring dormant repo. A leading `build:<owner/repo | issue-url | free-text instruction>` — the shape the Telegram "ship which opportunity?" force-reply sends via `repo-scanner`'s offer — is intercepted **first** and routed into the **external** branch on that target/instruction. `--fix-issues` biases the chosen branch toward fixing an open GitHub issue. Full grammar below.
 

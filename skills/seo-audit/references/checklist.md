@@ -1,5 +1,4 @@
 ---
-type: Reference
 title: "SEO Audit — Fix Reference"
 description: "Target values and copy-paste markup patterns for every check the SEO auditor runs."
 ---

@@ -1,13 +1,20 @@
 ---
-type: Skill
-name: Vuln Tracker
-category: dev
+name: vuln-tracker
 description: One lifecycle poll over everything vuln-scanner produces - PR and advisory status, PVR triage transitions, and pending-disclosure aging, with a stars-secured impact headline and one action queue.
-var: ""
-mode: write
-tags: [meta, security, github]
-depends_on: [vuln-scanner]
-requires: [GH_TOKEN?, GH_GLOBAL?]
+metadata:
+  title: Vuln Tracker
+  category: dev
+  var: ""
+  mode: write
+  tags:
+    - meta
+    - security
+    - github
+  depends_on:
+    - vuln-scanner
+  requires:
+    - GH_TOKEN?
+    - GH_GLOBAL?
 ---
 
 > **${var}** — Scope selector for the lifecycle poll:

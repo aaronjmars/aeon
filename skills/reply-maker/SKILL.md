@@ -1,13 +1,16 @@
 ---
-type: Skill
-name: Reply Maker
-category: productivity
+name: reply-maker
 description: Draft copy-paste-ready X replies - two options per reply-worthy tweet from tracked accounts, topics, or lists (default), or ready-to-post responses to engagement opps in recent logs (from-logs)
-var: "empty = auto-discover reply-worthy tweets and draft two options each; @handle / numeric X list ID / topic = scope the drafting to that; from-logs (or --from-logs [@handle|project]) = turn flagged engagement opps from recent logs into ready-to-post replies"
-commits: false
-permissions: []
-tags: [social, meta]
-requires: [XAI_API_KEY?]
+metadata:
+  title: Reply Maker
+  category: productivity
+  var: "empty = auto-discover reply-worthy tweets and draft two options each; @handle / numeric X list ID / topic = scope the drafting to that; from-logs (or --from-logs [@handle|project]) = turn flagged engagement opps from recent logs into ready-to-post replies"
+  commits: false
+  tags:
+    - social
+    - meta
+  requires:
+    - XAI_API_KEY?
 ---
 <!-- autoresearch: variation B — sharper output via specificity gates, anti-sycophancy lint, post-write self-edit, and skip-gate for low-leverage tweets -->
 

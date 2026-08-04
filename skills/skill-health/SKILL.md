@@ -1,10 +1,12 @@
 ---
-type: Skill
-name: Skill Health
-category: evolution
+name: skill-health
 description: Fleet skill observability with two views - health audits per-skill metrics and files/resolves issues in memory/issues/; analytics ranks the fleet by 7d runs, success rates, and anomaly flags.
-var: ""
-tags: [meta]
+metadata:
+  title: Skill Health
+  category: evolution
+  var: ""
+  tags:
+    - meta
 ---
 > **${var}** — View selector.
 > - **empty** → health check across all scheduled skills (default).

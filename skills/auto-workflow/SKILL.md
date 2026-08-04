@@ -1,13 +1,18 @@
 ---
-type: Skill
-name: Auto-Workflow Builder
-category: core
+name: auto-workflow
 description: Two-mode aeon.yml workflow builder - analyze inspects URLs and emits a tiered, signal-verified skill-enablement plan plus an aeon.yml diff; enable flips slugs to enabled:true and opens a PR.
-var: ""
-tags: [meta, dev]
-mode: write
-commits: true
-permissions: [contents:write, pull-requests:write]
+metadata:
+  title: Auto-Workflow Builder
+  category: core
+  var: ""
+  tags:
+    - meta
+    - dev
+  mode: write
+  commits: true
+  permissions:
+    - contents:write
+    - pull-requests:write
 ---
 <!-- autoresearch: variation B — sharper output (priority tiers + data-verification gates + delta-against-existing + exit taxonomy) + slug-enable execution branch (validate → commit → PR) -->
 > **${var}** — selects the mode:

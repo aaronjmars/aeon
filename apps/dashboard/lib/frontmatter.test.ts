@@ -151,6 +151,73 @@ tags: [meta]
     assert.deepEqual(result.mcp, []);
   });
 
+  it("parses block-style (non-inline) tags/requires/mcp lists", () => {
+    const content = `---
+name: block-style
+description: block lists
+tags:
+  - dev
+  - meta
+requires:
+  - XAI_API_KEY
+  - COINGECKO_API_KEY?
+mcp:
+  - base
+  - glim?
+---`;
+    const result = parseFrontmatter(content);
+    assert.deepEqual(result.tags, ["dev", "meta"]);
+    assert.deepEqual(result.requires, [
+      { key: "XAI_API_KEY", optional: false },
+      { key: "COINGECKO_API_KEY", optional: true },
+    ]);
+    assert.deepEqual(result.mcp, [
+      { slug: "base", optional: false },
+      { slug: "glim", optional: true },
+    ]);
+  });
+
+  it("parses the Agent Skills spec form: lists in block style nested under metadata", () => {
+    const content = `---
+name: spec-form
+description: nested block lists under metadata
+metadata:
+  title: Spec Form
+  category: crypto
+  tags:
+    - crypto
+    - defi
+  requires:
+    - COINGECKO_API_KEY?
+  mcp:
+    - base
+---`;
+    const result = parseFrontmatter(content);
+    assert.equal(result.name, "Spec Form");
+    assert.equal(result.category, "crypto");
+    assert.deepEqual(result.tags, ["crypto", "defi"]);
+    assert.deepEqual(result.requires, [
+      { key: "COINGECKO_API_KEY", optional: true },
+    ]);
+    assert.deepEqual(result.mcp, [{ slug: "base", optional: false }]);
+  });
+
+  it("stops a block list at the next key and ignores trailing comments", () => {
+    const content = `---
+name: block-stop
+description: d
+metadata:
+  requires:
+    - GOOD_KEY   # a comment
+  commits: true
+  tags:
+    - meta
+---`;
+    const result = parseFrontmatter(content);
+    assert.deepEqual(result.requires, [{ key: "GOOD_KEY", optional: false }]);
+    assert.deepEqual(result.tags, ["meta"]);
+  });
+
   it("truncates long fallback descriptions at 120 chars", () => {
     // Without description, the fallback scans all content for the first
     // non-heading/non-`---` line and truncates at 120 chars.

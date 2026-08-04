@@ -74,6 +74,26 @@ fm() {
   ' "$1"
 }
 
+# Read one key nested under the `metadata:` block (Agent Skills spec extension
+# point). Returns empty if there is no metadata block or no such key, so callers
+# fall back to the legacy top-level scalar — migrated and unmigrated skills
+# coexist.
+fmeta() {
+  awk -v k="$2" '
+    /^---$/{n++; next}
+    n!=1{next}
+    /^metadata:/{inmeta=1; next}
+    inmeta && /^[^ \t]/{inmeta=0}
+    inmeta && $0 ~ "^[ \t]+"k":" {
+      line=$0
+      sub("^[ \t]+"k": *", "", line)
+      gsub(/"/, "", line)
+      print line
+      exit
+    }
+  ' "$1"
+}
+
 # Start JSON output
 echo -n '{"version":"1.0","generated":"' > "$OUTPUT"
 echo -n "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$OUTPUT"
@@ -88,20 +108,38 @@ for skill_dir in "$SKILLS_DIR"/*/; do
 
   slug=$(basename "$skill_dir")
 
-  # Parse frontmatter (fm reads one scalar; `strip` drops double-quotes)
-  name=$(fm "$skill_file" name)
+  # Parse frontmatter. Display fields prefer the `metadata:` block (Agent Skills
+  # spec form) and fall back to the legacy top-level scalar. For a migrated skill
+  # the top-level `name:` is the slug (spec identifier) and the human title lives
+  # in metadata.title.
+  name=$(fmeta "$skill_file" title)
+  [[ -z "$name" ]] && name=$(fm "$skill_file" name)
   description=$(fm "$skill_file" description fold)
-  var=$(fm "$skill_file" var strip)
+  var=$(fmeta "$skill_file" var)
+  [[ -z "$var" ]] && var=$(fm "$skill_file" var strip)
 
   # Category is declared in each SKILL.md frontmatter — the single source of
   # truth. A skill with no category falls back to "other"; the packs generator
   # parks those in the Lab catch-all rather than failing.
-  category=$(fm "$skill_file" category strip)
+  category=$(fmeta "$skill_file" category)
+  [[ -z "$category" ]] && category=$(fm "$skill_file" category strip)
   [[ -z "$category" ]] && category="other"
 
   # requires: [KEY, KEY2?]  →  [{"key":"KEY","optional":false},{"key":"KEY2","optional":true}]
   # `?` suffix marks a "works better" (optional) credential; bare names are required.
-  requires_raw=$(awk '/^---$/{n++; next} n==1 && /^requires:/{sub(/^requires: *\[/, ""); sub(/\].*/, ""); print; exit}' "$skill_file")
+  requires_raw=$(awk '
+    /^---$/{n++; next} n!=1{next}
+    collecting {
+      if ($0 ~ /^[ \t]*-[ \t]*/) { it=$0; sub(/^[ \t]*-[ \t]*/,"",it); sub(/[ \t]*#.*/,"",it); gsub(/[ \t]/,"",it); if(it!="") acc=(acc==""?it:acc","it); next }
+      collecting=0; print acc; exit
+    }
+    /^[^ \t]/{im=0} /^metadata:/{im=1}
+    /^requires:/ || (im && /^[ \t]+requires:/){
+      if ($0 ~ /\[/) { line=$0; sub(/^[ \t]*requires:[ \t]*\[/,"",line); sub(/\].*/,"",line); print line; exit }
+      collecting=1; next
+    }
+    END { if (collecting) print acc }
+  ' "$skill_file")
   requires_json="["
   if [[ -n "$requires_raw" ]]; then
     rfirst=true
@@ -117,7 +155,19 @@ for skill_dir in "$SKILLS_DIR"/*/; do
   requires_json+="]"
 
   # mcp: [base, glim?]  →  [{"slug":"base","optional":false},{"slug":"glim","optional":true}]
-  mcp_raw=$(awk '/^---$/{n++; next} n==1 && /^mcp:/{sub(/^mcp: *\[/, ""); sub(/\].*/, ""); print; exit}' "$skill_file")
+  mcp_raw=$(awk '
+    /^---$/{n++; next} n!=1{next}
+    collecting {
+      if ($0 ~ /^[ \t]*-[ \t]*/) { it=$0; sub(/^[ \t]*-[ \t]*/,"",it); sub(/[ \t]*#.*/,"",it); gsub(/[ \t]/,"",it); if(it!="") acc=(acc==""?it:acc","it); next }
+      collecting=0; print acc; exit
+    }
+    /^[^ \t]/{im=0} /^metadata:/{im=1}
+    /^mcp:/ || (im && /^[ \t]+mcp:/){
+      if ($0 ~ /\[/) { line=$0; sub(/^[ \t]*mcp:[ \t]*\[/,"",line); sub(/\].*/,"",line); print line; exit }
+      collecting=1; next
+    }
+    END { if (collecting) print acc }
+  ' "$skill_file")
   mcp_json="["
   if [[ -n "$mcp_raw" ]]; then
     mfirst=true

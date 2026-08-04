@@ -1,11 +1,15 @@
 ---
-type: Skill
-name: Skill Repair
-category: evolution
+name: skill-repair
 description: Diagnose and fix failing or degraded skills automatically - systemic-first triage, per-category playbooks, and a verification plan
-var: ""
-tags: [meta, dev]
-depends_on: [skill-health]
+metadata:
+  title: Skill Repair
+  category: evolution
+  var: ""
+  tags:
+    - meta
+    - dev
+  depends_on:
+    - skill-health
 ---
 <!-- autoresearch: variation D — systemic-first triage + per-category playbooks + verification (folds A's regression hunter, B's structured PR + risk class + verdict, C's exit taxonomy + preflight + cooldown) -->
 

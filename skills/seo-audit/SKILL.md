@@ -1,13 +1,20 @@
 ---
-type: Skill
-mode: read-only
-name: SEO Audit
-category: dev
+name: seo-audit
 description: Daily on-page and technical SEO audit of every page on a site - discovers URLs from the sitemap, scores each page, adds cross-page checks (duplicate titles, canonicals, sitemap gaps), diffs against yesterday, and sends the score line plus any regressions
-var: ""
-tags: [monitoring, web]
-requires: [PAGESPEED_API_KEY?]
-capabilities: [external_api, read_only, sends_notifications]
+metadata:
+  title: SEO Audit
+  mode: read-only
+  category: dev
+  var: ""
+  tags:
+    - monitoring
+    - web
+  requires:
+    - PAGESPEED_API_KEY?
+  capabilities:
+    - external_api
+    - read_only
+    - sends_notifications
 ---
 
 Today is ${today}.
@@ -192,15 +199,11 @@ unset, Core Web Vitals are simply absent. That is a degraded run, not a failed o
    in full each run (shell redirection — no Write tool), preserving history from
    the previous copy.
 
-   It carries `type: Reference` frontmatter — `memory/` is an OKF root and CI
-   fails on any `.md` there without it.
-
    Structure, highest-impact first (site names below are placeholders — use the
    real hosts from `${var}`):
 
    ```markdown
    ---
-   type: Reference
    title: "SEO Fixes"
    description: "Standing list of open SEO fixes, refreshed by seo-audit each run."
    ---
@@ -289,9 +292,8 @@ unset, Core Web Vitals are simply absent. That is a degraded run, not a failed o
 
    **Write that body under `/tmp/`, never `memory/` or `output/`.** Those two are
    preserved by the read-only guard and committed by the post-run step, so a
-   scratch notify body written there ships as junk — and an untyped `.md` under
-   `memory/` (an OKF root) **fails the `ci-okf` check**, which is a red build on
-   `main`, not a cosmetic slip. This skill has no `rm`, so it cannot clean up
+   scratch notify body written there ships as junk on `main`, not a cosmetic
+   slip. This skill has no `rm`, so it cannot clean up
    after itself; the fix is to never write it there:
 
    ```bash

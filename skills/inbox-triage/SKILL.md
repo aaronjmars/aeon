@@ -1,11 +1,15 @@
 ---
-type: Skill
-name: Inbox Triage
-category: dev
+name: inbox-triage
 description: Daily GitHub notification inbox triage - surfaces aging vuln PR replies, security advisories, review requests, and mentions that need action
-var: ""
-tags: [github, security, meta]
-schedule: "30 11 * * *"
+metadata:
+  title: Inbox Triage
+  category: dev
+  var: ""
+  tags:
+    - github
+    - security
+    - meta
+  schedule: "30 11 * * *"
 ---
 
 Today is ${today}. Read `memory/MEMORY.md` before starting.

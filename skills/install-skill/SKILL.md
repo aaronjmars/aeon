@@ -1,10 +1,14 @@
 ---
-type: Skill
-name: Install Skill
-category: evolution
+name: install-skill
 description: Install a community skill pack into this fork from a GitHub repo and ship it as an auto-merged PR
-var: ""
-tags: [dev, meta, packs]
+metadata:
+  title: Install Skill
+  category: evolution
+  var: ""
+  tags:
+    - dev
+    - meta
+    - packs
 ---
 
 > **${var}** — The community pack to install: `owner/repo`, optionally followed by specific skill slugs to install only a subset, and optional flags. **Required.**

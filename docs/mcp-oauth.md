@@ -1,5 +1,4 @@
 ---
-type: Reference
 title: MCP OAuth — durable headless auth for OAuth-gated MCP servers
 description: How the dashboard captures an OAuth-gated MCP server's tokens and keeps them fresh for headless runs, the parallel to the grok X-account flow, and the known limits.
 ---

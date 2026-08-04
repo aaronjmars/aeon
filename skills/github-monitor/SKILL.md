@@ -1,12 +1,15 @@
 ---
-type: Skill
-name: GitHub Monitor
-category: dev
+name: github-monitor
 description: Watch your GitHub repos across four views - a combined urgency monitor (stale PRs, new issues, releases), a new-issue triage queue, a release upgrade digest, or your own opened-PR tracker.
-var: ""
-tags: [dev, meta, github]
-commits: false
-permissions: []
+metadata:
+  title: GitHub Monitor
+  category: dev
+  var: ""
+  tags:
+    - dev
+    - meta
+    - github
+  commits: false
 ---
 
 > **${var}** — View selector + optional scope.

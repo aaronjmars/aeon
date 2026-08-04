@@ -1,6 +1,6 @@
 # CI gates in `aeonfun/aeon`
 
-Nine `ci-*.yml` workflows. Every one is **path-filtered** and fires on `pull_request`, `push` to `main`, and `workflow_dispatch`.
+Eight `ci-*.yml` workflows. Every one is **path-filtered** and fires on `pull_request`, `push` to `main`, and `workflow_dispatch`.
 
 **None of them can block a merge.** `main` has no branch protection and the repo has zero rulesets — `gh api repos/aeonfun/aeon/branches/main/protection` returns 404. A red X is advisory. Nothing stops a broken PR from merging, and nothing stops a push straight to `main` (where the same gates run, and fail *after* the fact). So the only thing that actually keeps these respected is running them locally before pushing. Treat the checklist below as the enforcement.
 
@@ -11,7 +11,6 @@ Nine `ci-*.yml` workflows. Every one is **path-filtered** and fires on `pull_req
 | `ci-skill-category` | `skills/**` | every `SKILL.md` has a valid `category:` | `bash scripts/check-skill-categories.sh` |
 | `ci-skills-json` | `skills/**`, `bin/generate-skills-json`, `catalog/skills.json` | committed catalog == fresh regen | `bin/generate-skills-json` |
 | `ci-packs-json` | `catalog/packs.config.json`, **`catalog/skills.json`**, `bin/generate-packs-json`, `catalog/packs.json` | pack catalog == fresh regen; every skill in exactly one pack | `bin/generate-packs-json` |
-| `ci-okf` | `memory/**`, `output/articles/**`, `skills/**`, `docs/**` | every non-reserved `.md` under an OKF root has a non-empty `type:` | `node scripts/okf-validate.mjs` |
 | `ci-tests` | `scripts/**`, `aeon.yml` | the 13 `scripts/tests/` suites + config validation | see below |
 | `ci-capabilities-parity` | `bin/install-skill-pack`, `docs/CAPABILITIES.md` | capabilities taxonomy in sync across both | `bash scripts/check-capabilities-parity.sh` |
 | `ci-skill-packs` | `catalog/skill-packs.json`, `.github/README.md`, `bin/install-skill-pack`, `skills/security/trusted-sources.txt` | community registry well-formed + matches README table; no unbacked `trust_level: trusted` | `node scripts/validate-skill-packs.mjs` |
@@ -22,11 +21,10 @@ There is **no security-scan CI gate.** The pack security scan lives in `bin/inst
 
 ## Checklist: adding or editing a skill
 
-This is the common case (Modes 4 and 5), and it trips **four** gates, not one. Run all of it from the repo root before opening the PR:
+This is the common case (Modes 4 and 5), and it trips **three** gates, not one. Run all of it from the repo root before opening the PR:
 
 ```bash
 bash scripts/check-skill-categories.sh    # category is valid
-node scripts/okf-validate.mjs             # type: frontmatter present
 bin/generate-skills-json                  # refresh catalog/skills.json
 bin/generate-packs-json                   # REQUIRED — see the trap below
 node scripts/validate-config.js           # only if you touched aeon.yml
@@ -40,15 +38,6 @@ Both files carry a `generated` UTC timestamp that changes on every run — that'
 ### `category:` — the valid set
 
 `core evolution basics dev crypto productivity`. Anything else fails the gate. Category is the *only* thing deciding which pack a skill joins.
-
-### `type:` — the OKF requirement
-
-OKF roots are `memory`, `output/articles`, `skills`, `docs` (excluding `docs/examples` and `memory/skill-health`). Every non-reserved `.md` under those needs a non-empty `type:`:
-
-- `skills/<name>/SKILL.md` → `type: Skill`
-- any *other* `.md` you add beside it → `type: Reference`
-
-Deliberately out of scope: `CLAUDE.md`, `STRATEGY.md`, `README.md`, the generated `AGENTS.md`, and everything under `soul/`. That's why Mode 7's two files take no `type:`.
 
 ## `ci-tests` in full
 

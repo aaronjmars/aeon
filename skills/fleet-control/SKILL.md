@@ -1,12 +1,19 @@
 ---
-type: Skill
-name: Fleet Control
-category: core
+name: fleet-control
 description: Operate managed Aeon instances from memory/instances.json - health-check, dispatch, and status snapshots (control), plus a fleet scorecard of runs, tokens, cost, and reliability (scorecard).
-var: ""
-tags: [dev, meta, fleet, report, cost]
-requires: [GH_READ_PAT?]
-cron: "0 9,15 * * *"
+metadata:
+  title: Fleet Control
+  category: core
+  var: ""
+  tags:
+    - dev
+    - meta
+    - fleet
+    - report
+    - cost
+  requires:
+    - GH_READ_PAT?
+  cron: "0 9,15 * * *"
 ---
 <!-- autoresearch: variation B — sharper output: verdict line + delta vs prior + per-instance action column + state-change-gated notify -->
 

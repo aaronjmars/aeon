@@ -813,10 +813,6 @@ jobs:
           git config user.email "aeonframework@proton.me"
           rm -f ./notify
 
-          # OKF: stamp `type:` onto any in-scope markdown created bare this run
-          # (idempotent; ci-okf gates it). Best-effort — never fails the commit.
-          [ -f scripts/okf-backfill.mjs ] && node scripts/okf-backfill.mjs || true
-
           CURRENT_BRANCH=$(git branch --show-current)
           SOURCE="$_COMMIT_SOURCE"
 

@@ -1,10 +1,13 @@
 ---
 name: [REPLACE: SKILL_NAME]
-category: social
 description: Mention/keyword sweep on social platforms for [REPLACE: KEYWORDS] — trends, sentiment, top posts
-var: ""
-tags: [social]
-requires: [XAI_API_KEY?]
+metadata:
+  category: social
+  var: ""
+  tags:
+    - social
+  requires:
+    - XAI_API_KEY?
 ---
 
 > **${var}** — Optional. Pass alternative keywords (comma-separated) to override the default. If empty, monitors `[REPLACE: KEYWORDS]`.

@@ -1,11 +1,14 @@
 ---
-type: Skill
-mode: read-only
-name: GitHub Trending
-category: basics
+name: github-trending
 description: Curated trending across GitHub repos and the Hugging Face Hub (models, datasets, spaces) - filtered, clustered, and labeled by momentum with a one-line why-notable per pick.
-var: ""
-tags: [dev, research]
+metadata:
+  title: GitHub Trending
+  mode: read-only
+  category: basics
+  var: ""
+  tags:
+    - dev
+    - research
 ---
 <!-- autoresearch: variation B — sharper output via curation, clustering, "why notable" gate, momentum tags -->
 

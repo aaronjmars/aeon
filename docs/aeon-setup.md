@@ -1,5 +1,4 @@
 ---
-type: Reference
 title: The Aeon setup skill
 description: The operator-facing agent skill that sets up, schedules, edits, and debugs your Aeon instance from a chat — what it does, its modes, and how to install it in Claude Code or any agent tool that supports Agent Skills.
 ---

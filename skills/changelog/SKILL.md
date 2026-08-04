@@ -1,14 +1,21 @@
 ---
-type: Skill
-name: Changelog
-category: dev
+name: changelog
 description: Generate a user-facing changelog from recent commits/PRs across watched repos - write it in-repo (Keep a Changelog format) or open a cross-repo changelog PR on a docs/marketing repo.
-var: ""
-tags: [dev, content, build]
-mode: write
-commits: true
-permissions: [contents:write, pull-requests:write]
-requires: [GH_GLOBAL?]
+metadata:
+  title: Changelog
+  category: dev
+  var: ""
+  tags:
+    - dev
+    - content
+    - build
+  mode: write
+  commits: true
+  permissions:
+    - contents:write
+    - pull-requests:write
+  requires:
+    - GH_GLOBAL?
 ---
 <!-- autoresearch: variation B — sharper output: Keep a Changelog categories, breaking-change surfacing, plain-English rewrites, noise filtering -->
 

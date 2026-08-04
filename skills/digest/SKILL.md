@@ -1,12 +1,16 @@
 ---
-type: Skill
-mode: write
-name: Digest
-category: basics
+name: digest
 description: Generate and send a digest on a configurable topic, optionally pulling RSS/Atom feeds as an input source alongside web + X signal
-var: ""
-tags: [content, news]
-requires: [XAI_API_KEY?]
+metadata:
+  title: Digest
+  mode: write
+  category: basics
+  var: ""
+  tags:
+    - content
+    - news
+  requires:
+    - XAI_API_KEY?
 ---
 <!-- autoresearch: variation B — curatorial discipline (filter → distill → structure → sanity-check) folded with direct-curl xAI + web/RSS inputs and memory-aware dedup; RSS feed-reading + item-selection absorbed from rss-digest as an additional source class -->
 

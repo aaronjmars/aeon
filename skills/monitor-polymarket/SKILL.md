@@ -1,11 +1,14 @@
 ---
-type: Skill
-mode: read-only
-name: Monitor Prediction Markets
-category: crypto
+name: monitor-polymarket
 description: Monitor Polymarket and/or Kalshi prediction markets for 24h price moves, volume changes, fresh comments, and high-conviction alerts
-var: ""
-tags: [crypto, research]
+metadata:
+  title: Monitor Prediction Markets
+  mode: read-only
+  category: crypto
+  var: ""
+  tags:
+    - crypto
+    - research
 ---
 > **${var}** — Platform selector with an optional single-market override:
 > - **empty** (`""`) — run **both** platforms from their watchlists.

@@ -1,10 +1,12 @@
 ---
-type: Skill
 name: idea-pipeline
-category: productivity
 description: Execution-gap audit - cross-references the startup idea backlog against shipped skills, prototypes, and cross-repo PRs, surfacing the top 3 ideas to build next by narrative and operator fit.
-var: ""
-tags: [meta, creative]
+metadata:
+  category: productivity
+  var: ""
+  tags:
+    - meta
+    - creative
 ---
 > **${var}** — Optional theme filter (e.g. "crypto", "AI agents", "consumer"). If empty, scans all ideas. A `pick:<id|name>` value (from the "build next?" force-reply — e.g. `pick:2` or `pick:Onchain reputation`) instead marks that idea as chosen-to-build in the backlog and ends, skipping the audit — see step 0.
 

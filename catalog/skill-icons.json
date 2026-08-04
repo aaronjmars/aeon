@@ -68,8 +68,6 @@
 
     "idea-pipeline": "<path d='M22 3H2l8 9.5V19l4 2v-8.5z'/>",
     "mention-radar": "<circle cx='12' cy='12' r='4'/><path d='M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8'/>",
-    "okf-export": "<path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/><path d='M17 8l-5-5-5 5'/><path d='M12 3v12'/>",
-    "okf-ingest": "<path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/><path d='M7 10l5 5 5-5'/><path d='M12 15V3'/>",
     "operator-scorecard": "<path d='M12 14l4-4'/><path d='M3.3 19a10 10 0 1 1 17.3 0'/><circle cx='12' cy='14' r='1.4' fill='currentColor' stroke='none'/>",
     "reply-maker": "<path d='M9 17l-5-5 5-5'/><path d='M20 18v-2a4 4 0 0 0-4-4H4'/>",
     "schedule-ads": "<path d='M3 11l18-5v12L3 14z'/><path d='M11.6 16.8a3 3 0 1 1-5.8-1.6'/>",

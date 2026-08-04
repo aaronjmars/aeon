@@ -1,5 +1,4 @@
 ---
-type: Reference
 title: "Batched Contract Calls"
 description: "Skill reference for Base MCP's EIP-5792 batched contract calls."
 ---

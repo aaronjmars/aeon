@@ -1,5 +1,4 @@
 ---
-type: Reference
 title: Skill Spotlight — Rotation State
 description: Queue, coverage history, and blocklist config for the skill-spotlight rotation.
 tags: [meta, config]

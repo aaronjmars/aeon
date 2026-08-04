@@ -1,5 +1,4 @@
 ---
-type: Reference
 layout: default
 title: ADK - Aeon Developer Kit
 description: Build products on top of Aeon - authorize access to your users' instances with a GitHub App, drive skills over the GitHub API, and ship your own skills as a pack.
@@ -347,7 +346,6 @@ Total infrastructure on your side: one GitHub App and a session store. No agent 
 - **MCP server** ([`apps/mcp-server`](../apps/mcp-server/README.md)) - every skill as an `aeon-<slug>` tool in Claude Desktop/Code; the local, push-button complement to your hosted integration.
 - **`ai-build` label** - label any GitHub issue `ai-build` and the agent implements it and opens a PR; your app can create labeled issues to request work.
 - **Telegram instant mode** ([`apps/webhook`](../apps/webhook/README.md)) - ~1s command replies via a Cloudflare Worker, if your product fronts a chat surface.
-- **OKF** ([`OKF.md`](OKF.md)) - `memory/topics/` is a self-describing knowledge bundle; other agents (including yours) can read or ingest it as structured knowledge.
 
 ---
 
@@ -366,6 +364,6 @@ Total infrastructure on your side: one GitHub App and a session store. No agent 
 
 ## 7. Reference
 
-- **This repo:** [README](../.github/README.md) (quick start, packs) · [`CONFIGURATION.md`](CONFIGURATION.md) (chains, reactive, gateways, cross-repo tokens) · [`community-skill-packs.md`](community-skill-packs.md) (pack protocol & trust model) · [`CAPABILITIES.md`](CAPABILITIES.md) (capability taxonomy) · [`OKF.md`](OKF.md) (knowledge format).
+- **This repo:** [README](../.github/README.md) (quick start, packs) · [`CONFIGURATION.md`](CONFIGURATION.md) (chains, reactive, gateways, cross-repo tokens) · [`community-skill-packs.md`](community-skill-packs.md) (pack protocol & trust model) · [`CAPABILITIES.md`](CAPABILITIES.md) (capability taxonomy).
 - **Reference integration:** the full GitHub App pattern in production shape splits cleanly into modules - App auth (`assertAccess`, dispatch + poll), a per-request token + tenant-check layer, `AsyncLocalStorage` tenancy, sealed-secret writes, and server-side sessions.
 - **GitHub docs:** [GitHub Apps](https://docs.github.com/en/apps) · [workflow_dispatch](https://docs.github.com/en/rest/actions/workflows#create-a-workflow-dispatch-event) · [Actions secrets API](https://docs.github.com/en/rest/actions/secrets) · [`workflow_run` webhook](https://docs.github.com/en/webhooks/webhook-events-and-payloads#workflow_run).

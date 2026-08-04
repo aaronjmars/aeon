@@ -1049,9 +1049,13 @@ jobs:
               | sed -nE 's/.*attest:[[:space:]]*(true|false).*/\1/p' || true)
 
             # Tier 2 — SKILL.md frontmatter (author intent, travels with the skill).
+            # Accepts legacy top-level `attest:` or the Agent Skills spec form
+            # nested under `metadata:` (indented).
             FM_ATTEST=$(awk '/^---$/{n++; next}
-              n==1 && /^attest:/{
-                v=$0; sub(/^attest:[ \t]*/,"",v); sub(/[ \t]*#.*$/,"",v);
+              n!=1{next}
+              /^[^ \t]/{im=0} /^metadata:/{im=1}
+              /^attest:/ || (im && /^[ \t]+attest:/){
+                v=$0; sub(/^[ \t]*attest:[ \t]*/,"",v); sub(/[ \t]*#.*$/,"",v);
                 gsub(/^[ \t"]+|[ \t"]+$/,"",v); print v; exit
               }' "skills/${SKILL}/SKILL.md" 2>/dev/null || true)
 
@@ -1503,12 +1507,6 @@ jobs:
           git config user.name "aeonframework"
           git config user.email "aeonframework@proton.me"
           rm -f ./notify ./notify-jsonrender  # Remove generated notify scripts before committing
-
-          # OKF: stamp `type:` frontmatter onto any in-scope markdown the run
-          # created bare (e.g. a fresh memory/logs/ day-file appended via bash by
-          # a read-only skill) — ci-okf gates conformance and the backfill is
-          # idempotent. Best-effort: never fails the commit.
-          [ -f scripts/okf-backfill.mjs ] && node scripts/okf-backfill.mjs || true
 
           # Issues-as-state (hardening §3): cron-state.json was materialized from the
           # pinned Issue for this run's readers — it's a projection, not source of truth.

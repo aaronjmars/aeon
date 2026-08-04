@@ -1,13 +1,23 @@
 ---
-type: Skill
-mode: read-only
-name: Investigation Report
-category: crypto
+name: investigation-report
 description: One-shot Base-token investigation - runs any subset of six onchain-security checks (rug-scan, contract-audit, deployer-trace, holder-concentration, honeypot, lp-lock) into one verdict. Keyless core.
-var: ""
-tags: [crypto, security, base]
-requires: [ETHERSCAN_API_KEY?, BASESCAN_API_KEY?, BASE_RPC_URL?]
-capabilities: [external_api, read_only, sends_notifications]
+metadata:
+  title: Investigation Report
+  mode: read-only
+  category: crypto
+  var: ""
+  tags:
+    - crypto
+    - security
+    - base
+  requires:
+    - ETHERSCAN_API_KEY?
+    - BASESCAN_API_KEY?
+    - BASE_RPC_URL?
+  capabilities:
+    - external_api
+    - read_only
+    - sends_notifications
 ---
 > **${var}** — Base subject to investigate, plus optional flags: `<token-address> [--checks=rug,contract,deployer,holders,honeypot,lp] [--depth=quick|deep]`. The first token is the subject contract address (`0x…`, required). `--checks=` is a comma-list selecting which analyzers to run (**default = all six**). `--depth=` is `quick` (the old rug-scan fast path — minimal reads) or `deep` (full standalone logic of each selected check; **default**). If the subject address is empty, log `REPORT_NO_TARGET` and exit cleanly (no notify).
 >

@@ -1,7 +1,3 @@
----
-type: Reference
----
-
 # Products
 
 Config for the product-aware skills: `bd-radar` and `product-pulse`.

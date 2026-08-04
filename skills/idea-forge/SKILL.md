@@ -1,10 +1,15 @@
 ---
-type: Skill
-name: Idea Forge
-category: basics
+name: idea-forge
 description: Three-mode idea engine - generate collides the week's zeitgeist with what you can ship into scored wedges; validate viability-screens the idea backlog; memo writes evidence-backed startup memos.
-var: ""
-tags: [research, ideas, creative, meta]
+metadata:
+  title: Idea Forge
+  category: basics
+  var: ""
+  tags:
+    - research
+    - ideas
+    - creative
+    - meta
 ---
 
 > **${var}** — Selector `mode [theme/constraint]`. First token picks the mode: `generate` (default) collides the zeitgeist with the capability surface into ranked wedges; `validate` screens the existing backlog for viability; `memo` writes 2 rigorous evidence-backed startup memos. Anything after the mode is a theme/constraint bias. A bare theme with no mode keyword (e.g. `payments`, `crypto`) = `generate` biased to that theme. `dry-run` anywhere skips the notify. Examples: `` (empty → generate, open-ended) · `simulation` (generate, themed) · `validate crypto` (screen crypto ideas) · `memo solo founder` (memos under a constraint) · `generate payments dry-run` (generate, no notify). A `pick:<id|name>` value (from the "build next?" force-reply — e.g. `pick:Onchain reputation`) is intercepted **before** mode dispatch: it marks that idea as chosen-to-build in the shared backlog and ends — see "Force-reply interception" below.

@@ -1,5 +1,4 @@
 ---
-type: Reference
 title: "Uniswap Plugin"
 description: "Skill plugin reference for swapping and LPing on Uniswap through Base MCP."
 ---

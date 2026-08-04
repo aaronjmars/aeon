@@ -1,5 +1,4 @@
 ---
-type: Reference
 title: "Installing Base MCP"
 description: "Skill reference for installing the Base MCP server in Claude, ChatGPT, Cursor, Codex, and other surfaces."
 ---

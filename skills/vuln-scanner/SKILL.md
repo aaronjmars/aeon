@@ -1,12 +1,21 @@
 ---
-type: Skill
-name: Vuln Scanner
-category: dev
+name: vuln-scanner
 description: Audit trending repos for real security vulnerabilities and disclose responsibly - scan and route findings (PVR / dependency PR), re-submit queued advisories, and send armed email disclosures
-var: ""
-tags: [dev, security, meta]
-depends_on: [github-trending]
-requires: [GH_GLOBAL?, RESEND_API_KEY?, RESEND_FROM?, RESEND_REPLY_TO?]
+metadata:
+  title: Vuln Scanner
+  category: dev
+  var: ""
+  tags:
+    - dev
+    - security
+    - meta
+  depends_on:
+    - github-trending
+  requires:
+    - GH_GLOBAL?
+    - RESEND_API_KEY?
+    - RESEND_FROM?
+    - RESEND_REPLY_TO?
 ---
 <!-- autoresearch: variation B — responsible-disclosure-first: private reports for code vulns, public PRs only for already-disclosed dep CVEs -->
 

@@ -1,5 +1,4 @@
 ---
-type: Reference
 title: "Aerodrome Plugin"
 description: "Skill plugin reference for building unsigned Aerodrome calldata with the Sugar SDK CLI and submitting it through Base MCP send_calls."
 ---

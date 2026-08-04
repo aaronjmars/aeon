@@ -1,10 +1,13 @@
 ---
-type: Skill
-name: PR Review
-category: basics
+name: pr-review
 description: Review open PRs two ways - default is a per-PR deep review with severity-tagged findings, inline comments, and a verdict; --survey runs a risk-tiered triage digest of what's safe to merge first
-var: ""
-tags: [dev, community]
+metadata:
+  title: PR Review
+  category: basics
+  var: ""
+  tags:
+    - dev
+    - community
 ---
 <!-- autoresearch: variation B — sharper output: severity-tagged & capped findings, inline comments on exact lines, one-line verdict; folds in skip rules (A) and SHA dedup + large-diff fallback (C). Absorbs pr-merge as the `--survey` risk-tiered triage-digest branch (no capability lost). -->
 

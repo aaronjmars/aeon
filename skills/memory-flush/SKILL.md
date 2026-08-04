@@ -1,10 +1,12 @@
 ---
-type: Skill
-name: Memory Flush
-category: core
+name: memory-flush
 description: Promote important recent log entries into MEMORY.md and prune stale ones
-var: ""
-tags: [meta]
+metadata:
+  title: Memory Flush
+  category: core
+  var: ""
+  tags:
+    - meta
 ---
 > **${var}** — Topic to focus on. If empty, flushes all recent activity.
 

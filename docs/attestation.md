@@ -1,7 +1,3 @@
----
-type: Reference
----
-
 # Skill-execution attestation
 
 Aeon can produce **verifiable provenance for skill runs** using

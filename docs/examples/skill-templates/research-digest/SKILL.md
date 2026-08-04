@@ -1,9 +1,11 @@
 ---
 name: [REPLACE: SKILL_NAME]
-category: research
 description: Digest of the most interesting new posts on [REPLACE: TOPIC] from RSS feeds and the open web
-var: ""
-tags: [research]
+metadata:
+  category: research
+  var: ""
+  tags:
+    - research
 ---
 
 > **${var}** — Optional. Pass a different topic to override the default. If empty, digests [REPLACE: TOPIC].

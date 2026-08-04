@@ -248,12 +248,20 @@ if lines and lines[0].strip() == "---":
     end = next((i for i in range(1, len(lines)) if lines[i].strip() == "---"), None)
     if end is not None:
         block = lines[1:end]
-        ci = next((j for j, l in enumerate(block) if re.match(r"^category:", l)), None)
+        # category may be top-level (legacy) or nested under `metadata:` (spec
+        # form). Replace in place preserving indentation; else insert into the
+        # metadata block if present, else top-level after name.
+        ci = next((j for j, l in enumerate(block) if re.match(r"^\s*category:", l)), None)
         if ci is not None:
-            block[ci] = f"category: {cat}"
+            indent = re.match(r"^\s*", block[ci]).group(0)
+            block[ci] = f"{indent}category: {cat}"
         else:
-            ni = next((j for j, l in enumerate(block) if re.match(r"^name:", l)), None)
-            block.insert((ni + 1) if ni is not None else 0, f"category: {cat}")
+            mi = next((j for j, l in enumerate(block) if re.match(r"^metadata:", l)), None)
+            if mi is not None:
+                block.insert(mi + 1, f"  category: {cat}")
+            else:
+                ni = next((j for j, l in enumerate(block) if re.match(r"^name:", l)), None)
+                block.insert((ni + 1) if ni is not None else 0, f"category: {cat}")
         open(path, "w").write("\n".join(["---"] + block + ["---"] + lines[end + 1:]))
 PY
 fi

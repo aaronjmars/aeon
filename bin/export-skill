@@ -93,7 +93,10 @@ if [[ -z "$OUTPUT_DIR" ]]; then
   OUTPUT_DIR="$EXPORTS_DIR/$SKILL_NAME"
 fi
 
-SKILL_DISPLAY=$(sed -n '/^---$/,/^---$/{ /^name:/s/^name: *//p }' "$SKILL_SRC/SKILL.md")
+# Display name: prefer the spec-form `metadata: title:`; fall back to the legacy
+# top-level `name:` (which in spec form is the lowercase slug).
+SKILL_DISPLAY=$(sed -n '/^---$/,/^---$/{ s/^[[:space:]]*title:[[:space:]]*//p }' "$SKILL_SRC/SKILL.md" | head -1)
+[[ -z "$SKILL_DISPLAY" ]] && SKILL_DISPLAY=$(sed -n '/^---$/,/^---$/{ /^name:/s/^name: *//p }' "$SKILL_SRC/SKILL.md")
 SKILL_DESC=$(sed -n '/^---$/,/^---$/{ /^description:/s/^description: *//p }' "$SKILL_SRC/SKILL.md")
 
 mkdir -p "$OUTPUT_DIR"

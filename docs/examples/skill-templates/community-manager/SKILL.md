@@ -1,9 +1,11 @@
 ---
 name: [REPLACE: SKILL_NAME]
-category: social
 description: Summary of the [REPLACE: CHANNEL_PLATFORM] channel [REPLACE: CHANNEL_NAME] — top [REPLACE: TOP_N_THREADS] threads + open questions
-var: ""
-tags: [social]
+metadata:
+  category: social
+  var: ""
+  tags:
+    - social
 ---
 
 > **${var}** — Optional. Override the channel name. If empty, summarises `[REPLACE: CHANNEL_NAME]`.

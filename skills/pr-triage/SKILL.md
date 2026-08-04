@@ -1,10 +1,12 @@
 ---
-type: Skill
-name: PR Triage
-category: dev
+name: pr-triage
 description: First-touch triage for external pull requests - verdict, label, and a welcoming comment within minutes of open
-var: ""
-tags: [dev]
+metadata:
+  title: PR Triage
+  category: dev
+  var: ""
+  tags:
+    - dev
 ---
 > **${var}** — PR scope. Accepts `owner/repo`, `owner/repo#N`, or empty (all watched repos). If empty, scans every repo in `memory/watched-repos.md`.
 

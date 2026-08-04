@@ -40,8 +40,6 @@ export const SKILL_ICONS: Record<string, string> = {
   "monitor-polymarket": "<path d='M16 16l3-8 3 8c-.9.7-1.9 1-3 1s-2.1-.3-3-1z'/><path d='M2 16l3-8 3 8c-.9.7-1.9 1-3 1s-2.1-.3-3-1z'/><path d='M7 21h10'/><path d='M12 3v18'/><path d='M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2'/>",
   "narrative-convergence": "<path d='M4 4l7 7'/><path d='M20 4l-7 7'/><path d='M12 11v9'/><circle cx='12' cy='11' r='1.6' fill='currentColor' stroke='none'/>",
   "narrative-tracker": "<path d='M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1'/><path d='M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1'/><path d='M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1'/>",
-  "okf-export": "<path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/><path d='M17 8l-5-5-5 5'/><path d='M12 3v12'/>",
-  "okf-ingest": "<path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/><path d='M7 10l5 5 5-5'/><path d='M12 15V3'/>",
   "onchain-monitor": "<path d='M9 17H7A5 5 0 0 1 7 7h2'/><path d='M15 7h2a5 5 0 1 1 0 10h-2'/><path d='M8 12h8'/>",
   "operator-scorecard": "<path d='M12 14l4-4'/><path d='M3.3 19a10 10 0 1 1 17.3 0'/><circle cx='12' cy='14' r='1.4' fill='currentColor' stroke='none'/>",
   "picks-tracker": "<path d='M11.5 2.3a.5.5 0 0 1 1 0l2.3 4.7a2 2 0 0 0 1.6 1.1l5.1.8a.5.5 0 0 1 .3.9l-3.7 3.6a2 2 0 0 0-.6 1.9l.9 5.1a.5.5 0 0 1-.8.6l-4.6-2.4a2 2 0 0 0-2 0l-4.6 2.4a.5.5 0 0 1-.8-.6l.9-5.1a2 2 0 0 0-.6-1.9L2.2 9.8a.5.5 0 0 1 .3-.9l5.2-.8a2 2 0 0 0 1.5-1.1z'/>",

@@ -1,13 +1,15 @@
 ---
-type: Skill
-name: Unlock Monitor
-category: crypto
+name: unlock-monitor
 description: Token unlock and vesting tracker - quantify supply pressure via absorption ratio, classify cliff vs linear, and deliver one-line market reads
-schedule: "0 10 * * 1"
-commits: true
-tags: [crypto]
-permissions:
-  - contents:write
+metadata:
+  title: Unlock Monitor
+  category: crypto
+  schedule: "0 10 * * 1"
+  commits: true
+  tags:
+    - crypto
+  permissions:
+    - contents:write
 ---
 
 <!-- autoresearch: variation B — sharper output via Absorption Ratio (unlock $ / avg daily volume), Cliff vs Linear classification, and a one-line market-read verdict per unlock. Replaces qualitative HIGH/MED/LOW tiers with quantitative liquidity-strain thresholds backed by Keyrock's 16k-unlock study. Folds in source-status observability (from C) and CoinGecko volume enrichment (from A) as cheap wins. -->

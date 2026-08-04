@@ -1,10 +1,13 @@
 ---
-type: Skill
-name: Autoresearch
-category: evolution
+name: autoresearch
 description: Evolve a skill by generating variations, evaluating them, and updating the best version
-var: ""
-tags: [meta, dev]
+metadata:
+  title: Autoresearch
+  category: evolution
+  var: ""
+  tags:
+    - meta
+    - dev
 ---
 > **${var}** — Name of the skill to evolve (e.g. `token-movers`). Required.
 

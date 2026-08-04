@@ -1,5 +1,4 @@
 ---
-type: Reference
 layout: default
 title: "Status"
 permalink: /status/

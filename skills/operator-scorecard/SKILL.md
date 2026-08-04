@@ -1,10 +1,13 @@
 ---
-type: Skill
 name: operator-scorecard
-category: productivity
 description: Three recap modes - default synthesizes agent health, community growth, and economic activity into a was-it-worth-it verdict; ops recaps what shipped and failed; push ranks push impact.
-var: ""
-tags: [meta, productivity, dev]
+metadata:
+  category: productivity
+  var: ""
+  tags:
+    - meta
+    - productivity
+    - dev
 ---
 
 > **${var}** — Mode selector. The first token picks the branch; the remainder is branch-specific.

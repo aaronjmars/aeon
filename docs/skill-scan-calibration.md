@@ -1,7 +1,3 @@
----
-type: Reference
----
-
 # skill-scan.sh calibration
 
 `scripts/skill-scan.sh` is the security gate `bin/install-skill-pack` runs before

@@ -1,13 +1,21 @@
 ---
-type: Skill
-mode: read-only
-name: PostHog Error Digest
-category: dev
+name: posthog-errors
 description: Weekly cross-project error overview from PostHog - enumerates every project the OAuth grant covers, pulls the last 7 days of error-tracking issues per project, ranks them by impact, flags what's new vs ongoing, and sends one digest with per-project totals, the top issues, and a clickable link to a full committed report of every issue.
-var: ""
-tags: [monitoring, errors, mcp]
-mcp: [posthog]
-capabilities: [external_api, read_only, sends_notifications]
+metadata:
+  title: PostHog Error Digest
+  mode: read-only
+  category: dev
+  var: ""
+  tags:
+    - monitoring
+    - errors
+    - mcp
+  mcp:
+    - posthog
+  capabilities:
+    - external_api
+    - read_only
+    - sends_notifications
 ---
 
 Today is ${today}.
@@ -154,8 +162,7 @@ ships — note the write failure in the log and move on.
 The notification is capped (top ~5 issues + a table); the **full report** is the
 complete picture it links to — **every** issue across **every** project, with full
 fields. Write it read-only-safe with a `cat` heredoc to a stable path under `output/`
-(preserved by the read-only guard, and **not** an OKF root, so no `type:` frontmatter
-needed). Overwrite it in full each run — it's current-state, not an archive. Copy
+(preserved by the read-only guard). Overwrite it in full each run — it's current-state, not an archive. Copy
 numbers verbatim from the tool results:
 
 ```bash
@@ -209,8 +216,7 @@ leaves behind in read-only mode).
 
 **The notify body file MUST live under `/tmp/` — never `memory/` or `output/`.** Those
 two are committed to the repo by the post-run step, so a scratch `.md` written there
-ships as junk, and an untyped `.md` under `memory/` (an OKF root) fails the `ci-okf`
-check. Only the Step 4 snapshot (`memory/posthog-errors/*.json`) and the Step 4b report
+ships as junk. Only the Step 4 snapshot (`memory/posthog-errors/*.json`) and the Step 4b report
 (`output/posthog-errors/report.md`) are meant to persist; everything else is `/tmp`.
 
 Shape the body, highest-signal first:

@@ -1,15 +1,19 @@
 ---
-type: Skill
-mode: read-only
-name: Narrative Tracker
-category: crypto
+name: narrative-tracker
 description: Track rising, peaking, and fading crypto/tech narratives with quantitative mindshare + velocity signals and explicit positioning calls
-schedule: "0 14 * * *"
-commits: true
-tags: [crypto, research]
-requires: [XAI_API_KEY]
-permissions:
-  - contents:write
+metadata:
+  schedule: "0 14 * * *"
+  commits: true
+  permissions:
+    - contents:write
+  title: Narrative Tracker
+  mode: read-only
+  category: crypto
+  tags:
+    - crypto
+    - research
+  requires:
+    - XAI_API_KEY
 ---
 <!-- autoresearch: variation B — sharper output (quantitative mindshare + velocity + explicit positioning calls, with multi-angle inputs from A, dedup/empty-state handling from C, and transition detection from D) -->
 

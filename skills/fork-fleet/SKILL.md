@@ -1,11 +1,13 @@
 ---
-type: Skill
 name: fork-fleet
-category: core
 description: Fork divergence monitor - tracks where the fleet's active forks diverge in CODE (unique commits, new/modified skills) and CONFIG (enable/var/model/schedule vs upstream), gated on real change.
-var: ""
-tags: [dev, meta]
-cron: "0 10 * * 1"
+metadata:
+  category: core
+  var: ""
+  tags:
+    - dev
+    - meta
+  cron: "0 10 * * 1"
 ---
 > **${var}** — Divergence scope selector; space-separated tokens, order-independent, all optional:
 > - **scope** (`code` | `config` | `both`, default `both`) — which divergence dimension to run.

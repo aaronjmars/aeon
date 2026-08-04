@@ -1,10 +1,13 @@
 ---
-type: Skill
-name: Auto Merge
-category: core
+name: auto-merge
 description: Automatically merge open PRs that have passing CI, no blocking reviews, and no conflicts
-var: ""
-tags: [dev, meta]
+metadata:
+  title: Auto Merge
+  category: core
+  tags:
+    - dev
+    - meta
+  var: ""
 ---
 <!-- autoresearch: variation C — safety-hardened (author allowlist, size cap, UNKNOWN retry, fork block, dry-run mode) so an autonomous agent with merge credentials cannot accidentally ship a hostile or oversized PR -->
 

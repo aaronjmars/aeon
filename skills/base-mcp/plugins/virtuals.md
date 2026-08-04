@@ -1,5 +1,4 @@
 ---
-type: Reference
 title: "Virtuals Plugin"
 description: "Skill plugin reference for creating and operating Virtuals (ACP) AI agents through the Virtuals MCP, signed in via Base MCP."
 ---

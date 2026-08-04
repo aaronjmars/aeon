@@ -1,5 +1,4 @@
 ---
-type: Reference
 title: "Avantis Plugin"
 description: "Skill plugin reference for reading Avantis market data and positions on any surface, and building perpetual-futures transactions from CLI harnesses (with an Avantis UI fallback on chat-only surfaces). Aligned with the canonical Avantis-Labs/avantis-trading-skill spec."
 ---

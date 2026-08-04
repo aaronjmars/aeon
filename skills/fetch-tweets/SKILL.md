@@ -1,11 +1,14 @@
 ---
-type: Skill
-name: Fetch Tweets
-category: basics
+name: fetch-tweets
 description: Search and curate X/Twitter behind one selector - keyword, topic roundup, a single or tracked-account digest, an X list, or the AI-agent buzz preset - clustered into signal-scored sub-narratives.
-var: ""
-tags: [social]
-requires: [XAI_API_KEY?]
+metadata:
+  title: Fetch Tweets
+  category: basics
+  var: ""
+  tags:
+    - social
+  requires:
+    - XAI_API_KEY?
 ---
 <!-- autoresearch: variation B — sharper output via clustering + signal scoring + insight extraction. Merged HUB: absorbs tweet-digest, tweet-roundup, list-digest, refresh-x, agent-buzz behind a `source:` selector. -->
 > **${var}** — `<source>:<arg>` where `<source>` ∈ `keyword | topic | account | list | agent-buzz`. The `<arg>` is source-specific (a query, a topic, a handle, comma-separated list IDs, or an optional focus). If no `source:` prefix is given, the source is inferred from the shape of `<arg>` (see **Source selector**). **Required** for `keyword` and `list`; optional for `topic`, `account`, and `agent-buzz`.

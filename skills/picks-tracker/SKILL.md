@@ -1,11 +1,16 @@
 ---
-type: Skill
-name: Picks Tracker
-category: crypto
+name: picks-tracker
 description: Retrospective on past token and prediction market picks - what hit, what flopped, what the score is
-schedule: "0 9 * * 0"
-tags: [crypto, review, meta]
-requires: [COINGECKO_API_KEY?]
+metadata:
+  title: Picks Tracker
+  category: crypto
+  schedule: "0 9 * * 0"
+  tags:
+    - crypto
+    - review
+    - meta
+  requires:
+    - COINGECKO_API_KEY?
 ---
 
 Today is ${today}. Your task is to audit the last 30 days of token picks and score them against current prices.

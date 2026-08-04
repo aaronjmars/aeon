@@ -1,11 +1,18 @@
 ---
-type: Skill
-name: Send Email
-category: productivity
+name: send-email
 description: Compose and send a one-off email to a named recipient via Resend - written in the operator's voice, then sent in-run through the shared send caps with an operator audit copy
-var: ""
-requires: [RESEND_API_KEY?, RESEND_FROM?, RESEND_REPLY_TO?]
-tags: [productivity, email, outreach]
+metadata:
+  title: Send Email
+  category: productivity
+  var: ""
+  requires:
+    - RESEND_API_KEY?
+    - RESEND_FROM?
+    - RESEND_REPLY_TO?
+  tags:
+    - productivity
+    - email
+    - outreach
 ---
 > **${var}** — who to email and why, e.g. `to=jane@acme.com | subject=Intro | about=propose a 20-min call on X`. Freeform also works ("email jane@acme.com to follow up on yesterday's demo"). `cc=` is optional. The reply-shape `revise:<instruction>` (Telegram force-reply, e.g. `revise:make it warmer`) refines the **last composed draft for review only — it never sends**.
 

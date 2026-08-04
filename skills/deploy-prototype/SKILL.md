@@ -1,11 +1,16 @@
 ---
-type: Skill
-name: Deploy Prototype
-category: dev
+name: deploy-prototype
 description: Generate a small app or tool and deploy it live to Vercel via API
-var: ""
-tags: [dev, build]
-requires: [VERCEL_TOKEN?, GH_GLOBAL?]
+metadata:
+  title: Deploy Prototype
+  category: dev
+  var: ""
+  tags:
+    - dev
+    - build
+  requires:
+    - VERCEL_TOKEN?
+    - GH_GLOBAL?
 ---
 <!-- autoresearch: variation B — sharper output via prototype quality bar + self-check + signal-anchored record -->
 

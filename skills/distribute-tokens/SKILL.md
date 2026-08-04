@@ -1,12 +1,20 @@
 ---
-type: Skill
-name: Distribute Tokens
-category: crypto
+name: distribute-tokens
 description: Two-phase contributor rewards - plan builds a tier-priced payout from the repo's merged-PR ranking; send executes it on-chain via Bankr Wallet API with per-recipient idempotency and dry-run.
-var: ""
-tags: [community, crypto]
-requires: [BANKR_API_KEY?]
-capabilities: [external_api, writes_external_host, onchain_writes, sends_notifications]
+metadata:
+  title: Distribute Tokens
+  category: crypto
+  var: ""
+  tags:
+    - community
+    - crypto
+  requires:
+    - BANKR_API_KEY?
+  capabilities:
+    - external_api
+    - writes_external_host
+    - onchain_writes
+    - sends_notifications
 ---
 <!-- autoresearch: variation C — robustness via per-recipient idempotency state, two-phase resolve→execute, dry-run, retries, 403/429 handling, recovery. Merged: contributor-reward's tier-priced reward-computation folded in as the plan/input phase; the on-chain distribution stays the execute phase. -->
 

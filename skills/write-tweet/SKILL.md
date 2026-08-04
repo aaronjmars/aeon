@@ -1,11 +1,15 @@
 ---
-type: Skill
-name: Write Tweet
-category: basics
+name: write-tweet
 description: Multi-format tweet studio - standalone drafts (10 across 5 size tiers), a 5-10 tweet thread, or 10 remixes of past tweets, selected via ${var}
-var: ""
-tags: [social, content]
-requires: [XAI_API_KEY?]
+metadata:
+  title: Write Tweet
+  category: basics
+  var: ""
+  tags:
+    - social
+    - content
+  requires:
+    - XAI_API_KEY?
 ---
 > **${var}** — `[format] [argument]`. Pick one of three formats, then pass its argument. Empty ⇒ **drafts** (standalone tweet drafts). `thread …` ⇒ a multi-tweet **thread**. `remix …` ⇒ **remix** of your past tweets. `revise:<instruction>` ⇒ **revise** the last saved draft (the Telegram force-reply shape, e.g. `revise:make it punchier`). See Selector below.
 

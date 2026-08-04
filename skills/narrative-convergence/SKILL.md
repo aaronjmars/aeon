@@ -1,10 +1,13 @@
 ---
-type: Skill
 name: narrative-convergence
-category: core
 description: Cross-skill signal detector - finds entities or themes surfaced independently by 3+ different skill categories within 48h and surfaces them as high-confidence write opportunities
-var: ""
-tags: [content, meta, intelligence]
+metadata:
+  category: core
+  var: ""
+  tags:
+    - content
+    - meta
+    - intelligence
 ---
 > **${var}** — Optional entity or theme filter (e.g. "Anthropic", "coordination markets"). If empty, scans all skill output categories.
 

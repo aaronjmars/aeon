@@ -1,9 +1,11 @@
 ---
 name: [REPLACE: SKILL_NAME]
-category: dev
 description: First-touch review of newly opened PRs on [REPLACE: WATCHED_REPO] — verdict + welcoming comment + label
-var: ""
-tags: [dev]
+metadata:
+  category: dev
+  var: ""
+  tags:
+    - dev
 ---
 
 > **${var}** — Optional. PR number to review. If empty, scans all newly-opened PRs on `[REPLACE: WATCHED_REPO]`.

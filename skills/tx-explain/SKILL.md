@@ -1,13 +1,19 @@
 ---
-type: Skill
-mode: read-only
-name: Tx Explain
-category: basics
+name: tx-explain
 description: Decode any Base transaction into a plain-English story - method, token movements, swaps/approvals, counterparties, and suspicious-approval flags. Keyless via Base RPC + Etherscan v2.
-var: ""
-tags: [crypto, base]
-requires: [ETHERSCAN_API_KEY?]
-capabilities: [external_api, sends_notifications]
+metadata:
+  title: Tx Explain
+  mode: read-only
+  category: basics
+  var: ""
+  tags:
+    - crypto
+    - base
+  requires:
+    - ETHERSCAN_API_KEY?
+  capabilities:
+    - external_api
+    - sends_notifications
 ---
 > **${var}** — Transaction hash (`0x...`, 66 chars) on Base. Required. If empty, log `TX_EXPLAIN_NO_TARGET` and exit cleanly (no notify).
 
