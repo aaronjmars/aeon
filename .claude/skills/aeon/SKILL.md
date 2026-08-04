@@ -1,6 +1,6 @@
 ---
 name: aeon
-description: Set up and run an Aeon agent instance — get started from scratch, pick which skills to turn on or install more from packs, reschedule or change what runs, edit what an existing skill does, fix a skill that isn't firing, set the STRATEGY.md north star and soul/ voice, and turn a Claude Code chat into a scheduled Aeon skill. Use when the user mentions Aeon, aeon.yml, an Aeon skill / instance / routine / pack, or asks to schedule, enable, edit, or debug an agent that runs on a cron.
+description: Set up and run an Aeon agent instance — get started from scratch, pick which skills to turn on or install more from packs, reschedule or change what runs, edit what an existing skill does, fix a skill that isn't firing, set the STRATEGY.md north star and soul/ voice, turn a Claude Code chat into a scheduled Aeon skill, and mine past Claude Code conversations for recurring work worth automating as a skill. Use when the user mentions Aeon, aeon.yml, an Aeon skill / instance / routine / pack, asks to schedule, enable, edit, or debug an agent that runs on a cron, or asks what of their repeated/manual work Aeon could take over.
 ---
 
 # Aeon
@@ -18,6 +18,7 @@ Pick the mode they're asking for:
 | **5 · Edit a skill** | Change what an existing skill does |
 | **6 · What to turn on** | Pick skills, browse packs, install more |
 | **7 · Strategy & voice** | `STRATEGY.md` and `soul/` — the north star and the tone |
+| **8 · Mine history → skill** | "What of my repeated work could Aeon do for me?" — surface it from past Claude Code chats |
 
 ## Preflight (every mode)
 
@@ -367,6 +368,37 @@ By default Aeon has no personality. `soul/SOUL.md` (identity, worldview, opinion
 **The quality bar: specific enough to be wrong.** *"I think most AI safety discourse is galaxy-brained cope"* is useful. *"I have nuanced views on AI safety"* is not. Push for the first kind — a soul that can't offend anyone won't sound like anyone.
 
 Neither file takes `type:` frontmatter — both are outside the OKF scope.
+
+---
+
+## Mode 8 — Mine history for skills to automate
+
+"What am I doing by hand over and over that Aeon could just do?" Mode 4 turns *this* chat into a skill; Mode 8 mines *past* chats to find which chat is worth turning into one. It reads the operator's local Claude Code transcripts (`~/.claude/projects/*/*.jsonl`), so it only works on their own machine — never inside an Aeon run.
+
+1. **Scan.** Run the miner from the instance repo root:
+
+   ```bash
+   node .claude/skills/aeon/scripts/mine-history.mjs --days 45 --top 15
+   ```
+
+   It parses every top-level session in the window (skips subagent sidechains), normalises shell commands to `binary subcommand`, groups session titles, and prints a digest ranked by **distinct sessions × distinct days** — recurrence and cadence, not raw volume. Flags: `--days N` (window, default 120), `--project SUBSTR` (only sessions whose cwd matches — scope to one repo/topic), `--top N`, `--min-sessions N`, `--json`. It has no dependencies and reverts to a clean error if there's no history. Deeper reading of the tables and the candidate rubric: `references/history-mining.md`.
+
+2. **Read it as a human would.** The digest is raw signal, not a verdict — the judgment is yours:
+   - **Recurring command workflows** — a `binary subcommand` across many sessions *and* many days is a habit. Universal plumbing (`git status`, `gh auth`, bare `node`/`python3`) is already filtered out, but `gh pr`/`gh api`/`npm run` are substrate too — high everywhere, weak as a skill idea. Look for the *distinctive* recurring call: a named script, a specific CLI (`x-cli`, `langfuse`, `raindrop`), a tight `gh api` pattern.
+   - **Recurring task themes** — grouped session titles are the strongest signal. A title you've hit across many days at a rough cadence ("check X", "review Y", "digest Z") is almost always the real automation candidate.
+   - **Tooling / projects** — which MCP servers and repos the work lives in; tells you what a skill would need wired and where to scope `--project`.
+
+3. **Filter to genuine candidates.** A row is worth proposing only if it's all of:
+   - **Recurring** — spans several sessions across several days, not one busy afternoon.
+   - **Fetch/compute/report-shaped** — pulls or checks something and reports. Interactive, decision-heavy, or one-off migration work does *not* automate.
+   - **Unattended-safe** — no dependence on local files, logged-in desktop apps, or a human answering mid-task (Mode 4 step 2/3 covers hardening).
+   - **Not already a skill.** Dedup against the instance: `./aeon skills ls`. Much recurring `gh pr` work is already `pr-review`/`pr-check`; a research cadence is already `digest`/`mention-radar`. If an existing skill covers it, the move is Mode 2 (reschedule) or Mode 5 (edit its `var`), **not** a new skill.
+
+4. **Propose three, with evidence.** Don't dump the digest. Name **three** candidates, each with its recurrence count as proof ("you did X across N sessions over D days"), a one-line skill sketch (what it fetches, what it sends), a suggested `mode:` (`read-only` if it only fetches and reports) and a suggested `schedule:` inferred from the observed cadence (seen ~daily → daily; ~weekly → weekly). Ask which to build.
+
+5. **Hand off to Mode 4** to author the chosen one — the same skill-file shape, unattended-hardening, quoted-`schedule:` entry, and dual-catalog CI. Mode 8 finds the work; Mode 4 ships it.
+
+**Privacy:** the transcripts are read locally and only the aggregate digest is surfaced. Don't paste raw prompt bodies or anything sensitive from a session into a channel or a committed file; the counts and titles are enough to decide.
 
 ---
 
