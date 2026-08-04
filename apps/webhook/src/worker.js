@@ -31,7 +31,9 @@
  *   GITHUB_TOKEN              GitHub PAT — fine-grained with Contents: read/write
  *                             and Actions: read/write on your fork (or classic `repo`)
  */
-export default {
+import { instrument } from "@microlabs/otel-cf-workers";
+
+const handler = {
   async fetch(request, env) {
     // Telegram only ever POSTs updates. Treat anything else as a health probe.
     if (request.method !== "POST") {
@@ -113,6 +115,41 @@ export default {
       message: message.text,
       update_id: update.update_id,
     });
+  },
+};
+
+// --- OpenTelemetry (opt-in + no-op) ----------------------------------------
+// Mirrors scripts/langfuse-otel.sh: traces are exported only when the operator
+// sets OTEL_EXPORTER_OTLP_ENDPOINT (a Worker var/secret). The Node OTEL SDK does
+// not run on the Workers runtime, so this uses @microlabs/otel-cf-workers, which
+// wraps the fetch handler and also traces the outbound GitHub/Telegram calls as
+// child spans. Requires `nodejs_compat` (AsyncLocalStorage) — set in wrangler.toml.
+//
+// Worker env is per-request (not module scope), so the wrapped handler is built
+// lazily on the first request that has telemetry configured and cached in the
+// warm isolate; with no endpoint set, the raw handler runs untouched.
+function otelConfig(env) {
+  const base = env.OTEL_EXPORTER_OTLP_ENDPOINT.replace(/\/+$/, "");
+  const url = base.endsWith("/v1/traces") ? base : `${base}/v1/traces`;
+  const headers = {};
+  for (const pair of (env.OTEL_EXPORTER_OTLP_HEADERS || "").split(",")) {
+    const eq = pair.indexOf("=");
+    if (eq > 0) headers[pair.slice(0, eq).trim()] = pair.slice(eq + 1).trim();
+  }
+  return {
+    exporter: { url, headers },
+    service: { name: env.OTEL_SERVICE_NAME || "aeon-webhook" },
+  };
+}
+
+let instrumented;
+export default {
+  fetch(request, env, ctx) {
+    if (env.OTEL_EXPORTER_OTLP_ENDPOINT) {
+      instrumented ||= instrument(handler, otelConfig);
+      return instrumented.fetch(request, env, ctx);
+    }
+    return handler.fetch(request, env, ctx);
   },
 };
 

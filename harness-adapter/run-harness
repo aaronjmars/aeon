@@ -61,6 +61,7 @@ fi
 
 . "$HERE/lib/tools-grammar.sh"
 . "$HERE/lib/envelope.sh"
+. "$HERE/lib/otel-span.sh"   # sourced; no-op unless OTLP + otel-cli are configured
 
 # derive capability mode from the toolset when not given explicitly
 if [ -z "$MODE" ]; then
@@ -153,8 +154,10 @@ if [ "$MODE" = "read-only" ] && [ "$SANDBOX" = "auto" ]; then
 fi
 
 OUT="$RH_TMPDIR/envelope.json"
+RH_SPAN_START=$(_rh_now_ns)
 "${CMD[@]}" > "$OUT"
 rc=$?
+RH_SPAN_END=$(_rh_now_ns)
 if [ $rc -eq 124 ]; then
   echo "error: harness run exceeded --timeout ${TIMEOUT}s" >&2
   exit 124
@@ -166,6 +169,8 @@ if validate_envelope < "$OUT"; then
   # ensure exactly one trailing newline (if, not &&: a guard-style && here would
   # become the script's exit status — the same pitfall aeon.yml warns about)
   if [ -n "$(tail -c 1 "$OUT")" ]; then echo; fi
+  # Emit a harness span (non-claude only; no-op unless OTLP telemetry is on).
+  rh_emit_harness_span "$OUT" "$RH_SPAN_START" "$RH_SPAN_END"
 else
   echo "warning: adapter output failed contract validation — wrapping raw" >&2
   wrap_raw_output < "$OUT"

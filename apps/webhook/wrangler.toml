@@ -1,6 +1,9 @@
 name = "aeon-telegram-webhook"
 main = "src/worker.js"
 compatibility_date = "2025-01-01"
+# nodejs_compat: required by @microlabs/otel-cf-workers (AsyncLocalStorage-based
+# trace context). Harmless when OpenTelemetry is left disabled.
+compatibility_flags = ["nodejs_compat"]
 
 # This Worker reads its config from environment variables / secrets, not from
 # this file. The "Deploy to Cloudflare" wizard prompts for them (declared in
@@ -12,3 +15,8 @@ compatibility_date = "2025-01-01"
 #   wrangler secret put TELEGRAM_WEBHOOK_SECRET
 #   wrangler secret put GITHUB_REPO
 #   wrangler secret put GITHUB_TOKEN
+#
+# Optional OpenTelemetry (opt-in + no-op — leave unset to disable):
+#   wrangler secret put OTEL_EXPORTER_OTLP_ENDPOINT   # base OTLP URL; /v1/traces auto-appended
+#   wrangler secret put OTEL_EXPORTER_OTLP_HEADERS    # "Authorization=Basic ...,x-key=val"
+#   wrangler secret put OTEL_SERVICE_NAME             # optional; default "aeon-webhook"

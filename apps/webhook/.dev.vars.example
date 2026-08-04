@@ -8,3 +8,8 @@ TELEGRAM_ALLOWED_USER_ID=  # optional; your numeric user id. Required for group 
 TELEGRAM_WEBHOOK_SECRET=   # random string; pass same value to setWebhook secret_token
 GITHUB_REPO=owner/your-aeon-fork
 GITHUB_TOKEN=
+# Optional OpenTelemetry (opt-in; leave blank to disable). Point at a Langfuse
+# OTLP endpoint (https://<host>/api/public/otel) or any OTLP collector.
+OTEL_EXPORTER_OTLP_ENDPOINT=   # base URL; /v1/traces is appended automatically
+OTEL_EXPORTER_OTLP_HEADERS=    # comma-separated k=v, e.g. Authorization=Basic <b64>
+OTEL_SERVICE_NAME=             # optional; defaults to aeon-webhook

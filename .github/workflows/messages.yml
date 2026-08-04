@@ -467,9 +467,15 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           MOONSHOT_API_KEY: ${{ secrets.MOONSHOT_API_KEY }}
           MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          # Tier-2 harness tracing gates the otel-cli install below on these.
+          LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+          LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+          OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.OTEL_EXPORTER_OTLP_ENDPOINT }}
         run: |
           set -euo pipefail
           bash scripts/install-harness.sh "$H"
+          # Stage otel-cli for Tier-2 harness spans (no-op unless telemetry is on).
+          bash scripts/install-otel-cli.sh
 
       - name: Run
         id: run
@@ -505,6 +511,12 @@ jobs:
           LANGFUSE_HOST: ${{ vars.LANGFUSE_HOST }}
           LANGFUSE_TRACING: ${{ vars.LANGFUSE_TRACING }}
           LANGFUSE_LOG_CONTENT: ${{ vars.LANGFUSE_LOG_CONTENT }}
+          # Optional raw OTLP target for the non-claude harnesses (Tier-2 gen_ai
+          # spans). When Langfuse keys are set, langfuse-otel.sh derives the
+          # endpoint instead — leave these unset.
+          OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.OTEL_EXPORTER_OTLP_ENDPOINT }}
+          OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
+          OTEL_SERVICE_NAME: ${{ vars.OTEL_SERVICE_NAME }}
           GITHUB_TOKEN: ${{ secrets.GH_GLOBAL || secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.GH_GLOBAL || secrets.GITHUB_TOKEN }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -699,6 +711,13 @@ jobs:
             grok)   case "$MODEL" in grok-*) RH_MODEL_ARGS=(--model "$MODEL") ;; esac ;;
             *)      if [ -n "${MODEL_ARG:-}" ]; then RH_MODEL_ARGS=(--model "$MODEL_ARG"); fi ;;
           esac
+          # Tier-2 harness tracing: claude sourced langfuse-otel.sh above and
+          # self-traces; for the other harnesses export the OTLP env here so
+          # harness-adapter/lib/otel-span.sh emits a gen_ai span. No-op unless
+          # telemetry is configured; `|| true` so it never fails the reply.
+          if [ "$HARNESS" != "claude" ]; then
+            AEON_OTEL_COMPONENT=harness source "${GITHUB_WORKSPACE}/scripts/langfuse-otel.sh" >&2 || true
+          fi
           HARNESS_ERR=$(mktemp)
           if ! CLAUDE_OUTPUT=$(echo "$PROMPT" | bash "$RH" "$HARNESS" \
             "${RH_MODEL_ARGS[@]}" "${RH_ARGS[@]}" 2>"$HARNESS_ERR"); then

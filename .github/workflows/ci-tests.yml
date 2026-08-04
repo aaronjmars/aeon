@@ -67,6 +67,8 @@ jobs:
         run: bash scripts/tests/test_mcp_oauth_refresh.sh
       - name: langfuse-otel tests
         run: bash scripts/tests/test_langfuse_otel.sh
+      - name: otel harness-span tests
+        run: bash scripts/tests/test_otel_span.sh
       - name: state reducer tests
         run: python3 scripts/tests/test_state_reduce.py
       - name: health triage tests

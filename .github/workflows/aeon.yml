@@ -283,6 +283,10 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           MOONSHOT_API_KEY: ${{ secrets.MOONSHOT_API_KEY }}
           MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          # Tier-2 harness tracing gates the otel-cli install below on these.
+          LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+          LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+          OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.OTEL_EXPORTER_OTLP_ENDPOINT }}
         run: |
           set -euo pipefail
           # The install recipes live in scripts/install-harness.sh so messages.yml
@@ -290,6 +294,8 @@ jobs:
           # because `secrets.*` only resolves inside a workflow — but the logic,
           # which is the part that drifted last time, is shared.
           bash scripts/install-harness.sh "$H"
+          # Stage otel-cli for Tier-2 harness spans (no-op unless telemetry is on).
+          bash scripts/install-otel-cli.sh
 
       - name: Validate skill secrets
         if: steps.work.outputs.mode != ''
@@ -481,6 +487,12 @@ jobs:
           LANGFUSE_HOST: ${{ vars.LANGFUSE_HOST }}
           LANGFUSE_TRACING: ${{ vars.LANGFUSE_TRACING }}
           LANGFUSE_LOG_CONTENT: ${{ vars.LANGFUSE_LOG_CONTENT }}
+          # Optional raw OTLP target for the non-claude harnesses (Tier-2 gen_ai
+          # spans, harness-adapter/lib/otel-span.sh). When Langfuse keys are set
+          # instead, langfuse-otel.sh derives the endpoint — leave these unset.
+          OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.OTEL_EXPORTER_OTLP_ENDPOINT }}
+          OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
+          OTEL_SERVICE_NAME: ${{ vars.OTEL_SERVICE_NAME }}
           GITHUB_TOKEN: ${{ secrets.GH_GLOBAL || secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.GH_GLOBAL || secrets.GITHUB_TOKEN }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -811,6 +823,12 @@ jobs:
               echo "::notice::effective model for $HARNESS: $EFFECTIVE_MODEL"
             fi
 
+            # Tier-2 harness tracing: export the OTLP env (Langfuse keys or a raw
+            # endpoint) so harness-adapter/lib/otel-span.sh emits a gen_ai span
+            # for this non-claude harness. claude self-traces and sources $LF in
+            # its own cascade above; here it is component=harness. No-op unless
+            # telemetry is configured, and `|| true` so it never fails the run.
+            AEON_OTEL_COMPONENT=harness source "$LF" >&2 || true
             if CLAUDE_OUTPUT=$(echo "$PROMPT" | bash "$RH" "$HARNESS" "${RH_MODEL_ARGS[@]}" "${RH_ARGS[@]}" 2>/tmp/harness-stderr.txt); then
               CLAUDE_OK=1
             fi

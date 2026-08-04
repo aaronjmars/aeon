@@ -21,10 +21,15 @@ import {
   ListResourcesRequestSchema,
   ReadResourceRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { SpanStatusCode } from "@opentelemetry/api";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { type Skill, loadSkills, runSkill } from "./skill-executor.js";
 import { listOkfResources, readOkfResource } from "./okf.js";
+import { initTracing } from "./tracing.js";
+
+// Opt-in + no-op unless OTEL_EXPORTER_OTLP_ENDPOINT is set (see tracing.ts).
+const tracer = initTracing();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -114,28 +119,43 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools }));
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const toolName = request.params.name;
-  const slug = toolNameToSlug(toolName);
-  const skill = skills.find((s) => s.slug === slug);
+  return tracer.startActiveSpan(`mcp.call_tool ${toolName}`, (span) => {
+    const slug = toolNameToSlug(toolName);
+    const skill = skills.find((s) => s.slug === slug);
+    span.setAttribute("aeon.mcp.tool", toolName);
+    span.setAttribute("aeon.skill", slug);
 
-  if (!skill) {
-    return {
-      content: [
-        {
-          type: "text" as const,
-          text: `Unknown Aeon tool: ${toolName}\nAvailable tools: ${tools.map((t) => t.name).join(", ")}`,
-        },
-      ],
-      isError: true,
-    };
-  }
+    if (!skill) {
+      span.setAttribute("aeon.mcp.unknown_tool", true);
+      span.setStatus({ code: SpanStatusCode.ERROR, message: "unknown tool" });
+      span.end();
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: `Unknown Aeon tool: ${toolName}\nAvailable tools: ${tools.map((t) => t.name).join(", ")}`,
+          },
+        ],
+        isError: true,
+      };
+    }
 
-  const varArg = request.params.arguments?.var;
-  const varValue = typeof varArg === "string" ? varArg : "";
-  const output = runSkill(REPO_ROOT, slug, varValue, LOG_PREFIX);
-
-  return {
-    content: [{ type: "text" as const, text: output }],
-  };
+    try {
+      const varArg = request.params.arguments?.var;
+      const varValue = typeof varArg === "string" ? varArg : "";
+      const output = runSkill(REPO_ROOT, slug, varValue, LOG_PREFIX);
+      span.setAttribute("aeon.output_bytes", output.length);
+      return {
+        content: [{ type: "text" as const, text: output }],
+      };
+    } catch (err) {
+      span.recordException(err as Error);
+      span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });
+      throw err;
+    } finally {
+      span.end();
+    }
+  });
 });
 
 // ---- OKF knowledge bundle (read-only resources) ----

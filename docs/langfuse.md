@@ -36,8 +36,27 @@ Code's span exporter at Langfuse's OTLP endpoint (`<host>/api/public/otel`).
 Coverage: the main skill run (all gateway fallback attempts), the post-run quality
 scorer, the json-render feed convert, and the conversational-reply poller
 (`messages.yml`). Each is tagged with an `aeon.component` resource attribute
-(`skill-run` / `scorer` / `feed` / `message`). The **Grok Build harness**
-(`harness: grok`) is not traced — the grok CLI has no equivalent OTEL export.
+(`skill-run` / `scorer` / `feed` / `message`).
+
+### The non-claude harnesses (grok / codex / pi / vibe / kimi)
+
+Those CLIs have no native OTEL export, so their *internal* spans (per-tool, per
+LLM-request) can't be captured. Instead run-harness emits **one coarse `gen_ai`
+span per run** from the harness envelope — `gen_ai.system`, `gen_ai.request.model`,
+token counts, and cost (`aeon.component=harness`). Only numeric usage is recorded;
+the prompt and result text are never put on the span. This is opt-in on the same
+Langfuse keys, plus a small `otel-cli` binary staged in CI
+(`scripts/install-otel-cli.sh`); with no telemetry configured it is a clean no-op.
+See `harness-adapter/lib/otel-span.sh`.
+
+### The Node entry points (dashboard / mcp-server / webhook)
+
+These surfaces (the operator control plane, the MCP server, and the Telegram
+webhook Worker) can export their own OTLP traces — the request/routing layer, not
+the inference, which already flows through the harness traces above. They are
+opt-in on the standard `OTEL_EXPORTER_OTLP_ENDPOINT` env (point it at Langfuse's
+`/api/public/otel` or any OTLP collector) and no-op when it is unset. The webhook
+additionally requires the `nodejs_compat` flag, already set in its `wrangler.toml`.
 
 ## Setup
 
