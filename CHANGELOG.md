@@ -11,6 +11,32 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Added
 
+- **New notification channel: Buzz.** `./notify` can now post to a
+  [Buzz](https://buzz.xyz) channel (Block's self-hostable Nostr-relay workspace)
+  alongside Telegram / Discord / Slack / email. Unlike the bearer-URL webhooks,
+  delivery goes through the `buzz` CLI, which signs each message (NIP-98) with the
+  agent's own keypair and publishes it as a room member rather than a webhook
+  poster. Gated on `BUZZ_PRIVATE_KEY` + `BUZZ_CHANNEL_ID` and the presence of the
+  CLI; outbound only for now (Phase 1). (#822)
+- **OpenTelemetry on the Node entry points and non-claude harnesses.** The opt-in
+  Langfuse tracing that previously covered only the `claude -p` path now extends to
+  the dashboard, MCP server, and webhook (request/routing spans) and emits one
+  coarse `gen_ai` span per run for the grok/codex/pi/vibe/kimi harnesses (numeric
+  usage only, never prompt or result text). No-op unless
+  `OTEL_EXPORTER_OTLP_ENDPOINT` (or the Langfuse keys) is set, and it never fails
+  the caller. (#821, #823)
+- **`aeon` skill Mode 8 - mine Claude Code history for skills to automate.** A new
+  mode that reads the operator's own past Claude Code transcripts, ranks recurring
+  work by distinct sessions x distinct days, and surfaces the strongest candidates
+  to turn into scheduled skills (then hands the chosen one to Mode 4). Local-only;
+  it never runs inside an Aeon run. (#820)
+- **Per-skill icons across the dashboard, docs, and catalog.** Every skill now has
+  its own monochrome glyph from one canonical source (`catalog/skill-icons.json`),
+  driving the dashboard roster/detail/packs surfaces and the README + docs tables
+  through a new `bin/generate-skill-icons` generator (`--check` fails on drift).
+  (#808)
+- **Community skill pack registered: AI2Human Create Task** (`ai2human-handoff`),
+  now listed in `bin/install-skill-pack --list`. (#812)
 - **New skill: `deploy-uni-hook`** - turns a one-line brief into a live Uniswap
   v4 hook + test pool on any v4 chain. Generates from a pre-audited template
   (`dynamic`/`noop`/`skim`) or a from-scratch freeform hook, auto-derives the
@@ -72,6 +98,18 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Changed
 
+- **Adopted the Agent Skills open standard; removed OKF globally.** All 65 skills
+  now use spec-form frontmatter (only `name` + `description` top-level, everything
+  else nested under `metadata:`, block-style lists) and pass the official
+  `skills-ref` validator. OKF is gone entirely - the validator/index/backfill
+  scripts, the `ci-okf` workflow, the MCP `okf://` resources, `docs/OKF.md`, and the
+  `okf-export` / `okf-ingest` skills - and the `type:` frontmatter it mandated is
+  stripped from every bundle file. The readers that parse skill metadata
+  (`skill_requires`, `generate-skills-json`, the dashboard frontmatter parser, the
+  scheduler `depends_on` parser) were rewritten for block-style lists, and the
+  eyebrow lockfile was re-baselined. (#824)
+- **Ecosystem logos refreshed; NoelClaw and SyntheticsAI removed** from
+  `docs/ECOSYSTEM.md`. (#814)
 - **Dashboard catalogs the `PAGESPEED_API_KEY` secret** - seo-audit's optional
   Core Web Vitals key now appears in the Skill Keys group with its brand icon and
   where-to-get-it copy, instead of a bare initials-badge catch-all row. (#803)
@@ -91,6 +129,20 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Fixed
 
+- **Read-only persistence contract corrected.** Docs told read-only skills they
+  could persist to `memory/` during a run, but the OS sandbox write-locks the whole
+  workspace on all six harnesses, so those writes silently fail. `CLAUDE.md` and
+  `docs/CONFIGURATION.md` now state the real contract: persistence routes through
+  the final captured output and `./notify`, and the post-run guard commits it to
+  `output/.chains/` plus a `memory/logs/` entry outside the sandbox. (#817)
+- **Read-only MCP skills route persistence through their output**, not direct
+  `memory/` writes. `finance-district-mcp`, `glim-mcp`, and `robinhood-mcp` no
+  longer instruct the agent to append to `memory/logs/` under read-only (those
+  writes are refused by the sandbox), and the bare `./notify -f` is corrected to
+  `./notify -f <file>` in each. (#818)
+- **`finance-district-mcp` declares `onchain_writes`** (it signs and broadcasts
+  transfers, swaps, and x402 payments) and its `./notify -f` usage is corrected to
+  require a file path. (#816)
 - **`finance-district-mcp` registered in `aeon.yml`.** The skill shipped in #791
   but had no schedule entry, so it never ran; it is now present (disabled by
   default). (#800)
@@ -322,6 +374,16 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Security
 
+- **Skill-scan recalibrated to fire on operations, not syntax.** The HIGH tier now
+  matches dangerous sinks (code execution, secret exfiltration, destruction) and
+  prompt injection rather than ordinary shell syntax, adds a `curl | sh` RCE
+  pattern, and locks the boundary with a fixture test in CI - fixing a state where
+  the gate failed 65 of 67 first-party skills and pushed operators toward `--force`
+  (which skips the deep scan). (#811)
+- **Skill-scan hardening follow-up:** closed an injection-suppression evasion
+  (attacker-appended rejection keywords could silence a HIGH finding), extended the
+  RCE process-substitution detection to `source <(curl ...)`, and caught quoted
+  destructive-`rm` targets. (#813)
 - **Telegram inbound gated on the owner's user ID.** In a group or public chat
   any member could command the bot by tapping a button; inbound is now restricted
   to `TELEGRAM_ALLOWED_USER_ID` (defaults to the chat ID for a 1:1 DM), failing
@@ -332,6 +394,8 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Maintenance
 
+- 2 dependency bumps (wrangler in the webhook; the dashboard group) plus a new CI
+  eyebrow capability-integrity gate for skills. (#809, #810, #815)
 - CI green-up after the Telegram owner-gate, plus a dashboard PacksPanel
   unique-key fix. (#798, #799)
 - Repo-wide cleanup pass across 8 dimensions (dead code, weak types,
