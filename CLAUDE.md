@@ -93,7 +93,7 @@ Two exemptions: **reserved `index.md`/`log.md`** stay untyped (OKF §6/§7), and
 
 Your available tools depend on your skill's frontmatter `mode:` (default `write`):
 - **`write`** — full toolset, including `Write`/`Edit`/`Bash(git:*)`/`Bash(gh:*)`/`python`.
-- **`read-only`** — repo-mutation tools (`Write`, `Edit`, `Bash(git:*)`, `Bash(gh:*)`, python) are **stripped from `--allowedTools`** — you physically cannot mutate the repo or call `gh` (even `gh api` GETs). Produce output via `./notify` and `memory/` only, and fetch GitHub data with WebFetch/curl against `api.github.com`. Any stray writes are reverted after the run, so don't rely on them.
+- **`read-only`** — repo-mutation tools (`Write`, `Edit`, `Bash(git:*)`, `Bash(gh:*)`, python) are **stripped from `--allowedTools`**, and the OS sandbox write-locks the whole workspace — so you physically cannot mutate the repo, call `gh` (even `gh api` GETs), or write anywhere under the checkout (**`memory/` and `output/` included**). Produce output via your **final message** (the run's captured output) and `./notify`; the workflow persists that captured output to `output/.chains/` and appends a `memory/logs/` entry on your behalf after the run. Fetch GitHub data with WebFetch/curl against `api.github.com`. Any stray writes are reverted after the run, so don't rely on them.
 
 ## Skill Chaining
 

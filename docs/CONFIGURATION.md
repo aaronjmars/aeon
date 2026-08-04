@@ -70,7 +70,7 @@ mode: read-only   # may read the repo, fetch the web, and ./notify — but canno
 mode: write       # full access (the default): adds Write / Edit / git / gh / python3
 ```
 
-`read-only` strips the repo-mutation tools from Claude Code's `--allowedTools` (`Write`, `Edit`, `Bash(git:*)`, `Bash(gh:*)`), so a research-and-notify skill **physically can't** commit, push, or open a PR — a post-run guard still saves its `memory/` + `output/` and reverts any stray write. Use it for pure read-and-notify skills; `write` (the default, a strict superset) for anything that writes code. It's the runtime half of the install-time [`capabilities:`](../docs/CAPABILITIES.md) hint.
+`read-only` strips the repo-mutation tools from Claude Code's `--allowedTools` (`Write`, `Edit`, `Bash(git:*)`, `Bash(gh:*)`) **and** the OS sandbox write-locks the whole workspace for the run (see [Capabilities → enforcement layers](CAPABILITIES.md)), so a research-and-notify skill **physically can't** commit, push, open a PR, or write anywhere in the checkout — `memory/` and `output/` included. Don't write those directly; route persistence through your **final message** (the run's captured output) and `./notify`. After the run, outside the sandbox, the workflow persists your captured output to `output/.chains/`, appends a `memory/logs/` run entry on your behalf, and reverts any stray write that slipped through. Use it for pure read-and-notify skills; `write` (the default, a strict superset) for anything that writes code. It's the runtime half of the install-time [`capabilities:`](../docs/CAPABILITIES.md) hint.
 
 ## MCP servers in skill runs
 
