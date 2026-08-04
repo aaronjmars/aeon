@@ -57,6 +57,7 @@ The first two are the direct-to-Anthropic options; the rest are gateways. Settin
 | `SLACK_WEBHOOK_URL` | api.slack.com/apps → Create App → Incoming Webhooks → Install → Copy URL |
 | `SLACK_BOT_TOKEN` + `SLACK_CHANNEL_ID` | Same app → add `channels:history` + `reactions:write` scopes. Only for inbound |
 | `RESEND_API_KEY` + `NOTIFY_EMAIL_TO` | resend.com/api-keys. Powers **all** outbound email — the notification channel, emailed digests, and security disclosures |
+| `BUZZ_PRIVATE_KEY` + `BUZZ_CHANNEL_ID` (+ `BUZZ_RELAY_URL`) | [Buzz](https://buzz.xyz) (Block's Nostr-relay workspace). `BUZZ_PRIVATE_KEY` is the agent's `nsec` keypair, `BUZZ_CHANNEL_ID` the target channel UUID (`buzz channels list`), `BUZZ_RELAY_URL` your relay (defaults to localhost). Outbound only; needs the `buzz` CLI staged in the run |
 
 Telegram is the fastest to set up and the only one with inline buttons and slash-commands. Start there.
 

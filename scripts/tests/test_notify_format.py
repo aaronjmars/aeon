@@ -155,6 +155,21 @@ class TestChannels(unittest.TestCase):
             if b["type"] == "section":
                 self.assertLessEqual(len(b["text"]["text"]), 3000)
 
+    def test_buzz_returns_raw_markdown_with_title(self):
+        chunks = nf.buzz("- a bullet\n- another", title="Daily", severity="warn")
+        self.assertEqual(len(chunks), 1)
+        # Markdown is passed through untouched (Buzz renders it natively); title is bolded.
+        self.assertIn("**Daily**", chunks[0])
+        self.assertIn("- a bullet", chunks[0])
+
+    def test_buzz_chunks_within_limit_and_indexes(self):
+        chunks = nf.buzz("z" * 40000, title="", severity="info", limit=15000)
+        self.assertGreater(len(chunks), 1)
+        n = len(chunks)
+        for i, c in enumerate(chunks):
+            self.assertLessEqual(len(c), 15000)
+            self.assertTrue(c.rstrip().endswith(f"[{i + 1}/{n}]"))
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

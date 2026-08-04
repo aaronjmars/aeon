@@ -287,6 +287,29 @@ else
   rm -f "${UNWRITABLE}.err"
 fi
 
+# 18. Buzz channel — dry-run records the decoded Markdown (no `buzz` binary, no network).
+#     Gated on BUZZ_PRIVATE_KEY + BUZZ_CHANNEL_ID; NOTIFY_DRY_RUN bypasses `command -v buzz`.
+reset
+BUZZ_PRIVATE_KEY=nsec1x BUZZ_CHANNEL_ID=chan-uuid NOTIFY_DRY_RUN=1 \
+  bash "$NOTIFY" --title "Scan Report" --severity warn "Found 3 movers worth a look today" >/dev/null 2>&1
+BZ="$WORK/buzz-payload.txt"
+if [ -f "$BZ" ] && grep -q "Scan Report" "$BZ" && grep -q "Found 3 movers" "$BZ"; then
+  pass "buzz dry-run records decoded markdown payload"
+else
+  bad "buzz dry-run records decoded markdown payload"
+fi
+
+# 18b. Buzz gate — with the binary absent and NOT in dry-run, the channel is skipped
+#      (falls back to the pending queue like any unconfigured channel).
+reset
+BUZZ_PRIVATE_KEY=nsec1x BUZZ_CHANNEL_ID=chan-uuid \
+  bash "$NOTIFY" --severity critical "A real critical notification long enough to clear the floors" >/dev/null 2>&1
+if [ ! -f "$WORK/buzz-payload.txt" ] && [ -n "$(ls "$WORK"/*.md 2>/dev/null)" ]; then
+  pass "buzz skipped when binary absent -> pending-queue fallback"
+else
+  bad "buzz skipped when binary absent -> pending-queue fallback"
+fi
+
 reset
 echo "---"
 [ "$fail" = "0" ] && echo "ALL PASS" || echo "SOME FAILED"

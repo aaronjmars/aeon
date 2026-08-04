@@ -291,6 +291,19 @@ jobs:
           # which is the part that drifted last time, is shared.
           bash scripts/install-harness.sh "$H"
 
+      # Stage the Buzz CLI so ./notify can deliver to the Buzz channel. The script
+      # self-gates: it is an instant no-op unless BUZZ_PRIVATE_KEY is set, so every
+      # non-Buzz operator pays nothing. Set BUZZ_CLI_URL (repo var) to a prebuilt
+      # binary to skip the from-source cargo build.
+      - name: Stage Buzz CLI
+        env:
+          BUZZ_PRIVATE_KEY: ${{ secrets.BUZZ_PRIVATE_KEY }}
+          BUZZ_CLI_URL: ${{ vars.BUZZ_CLI_URL }}
+          BUZZ_CLI_REF: ${{ vars.BUZZ_CLI_REF }}
+        run: |
+          set -euo pipefail
+          bash scripts/install-buzz-cli.sh
+
       - name: Validate skill secrets
         if: steps.work.outputs.mode != ''
         env:
@@ -491,6 +504,12 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          # Buzz channel (Block's Nostr-relay workspace). ./notify signs + publishes
+          # via the buzz CLI staged by "Stage Buzz CLI"; the channel no-ops without
+          # BUZZ_PRIVATE_KEY. BUZZ_RELAY_URL is a var (defaults to localhost in the CLI).
+          BUZZ_PRIVATE_KEY: ${{ secrets.BUZZ_PRIVATE_KEY }}
+          BUZZ_CHANNEL_ID: ${{ secrets.BUZZ_CHANNEL_ID }}
+          BUZZ_RELAY_URL: ${{ vars.BUZZ_RELAY_URL }}
           NOTIFY_EMAIL_TO: ${{ secrets.NOTIFY_EMAIL_TO }}
           NOTIFY_EMAIL_FROM: ${{ vars.NOTIFY_EMAIL_FROM || 'aeon@notifications.aeon.bot' }}
           NOTIFY_EMAIL_SUBJECT_PREFIX: ${{ vars.NOTIFY_EMAIL_SUBJECT_PREFIX || '[Aeon]' }}

@@ -471,6 +471,19 @@ jobs:
           set -euo pipefail
           bash scripts/install-harness.sh "$H"
 
+      # Stage the Buzz CLI for the Buzz notify channel — instant no-op unless
+      # BUZZ_PRIVATE_KEY is set. Set BUZZ_CLI_URL (var) to a prebuilt binary to skip
+      # the from-source build.
+      - name: Stage Buzz CLI
+        if: steps.msg.outputs.source != ''
+        env:
+          BUZZ_PRIVATE_KEY: ${{ secrets.BUZZ_PRIVATE_KEY }}
+          BUZZ_CLI_URL: ${{ vars.BUZZ_CLI_URL }}
+          BUZZ_CLI_REF: ${{ vars.BUZZ_CLI_REF }}
+        run: |
+          set -euo pipefail
+          bash scripts/install-buzz-cli.sh
+
       - name: Run
         id: run
         if: steps.msg.outputs.source != ''
@@ -515,6 +528,11 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          # Buzz channel — ./notify signs + publishes via the buzz CLI (staged by
+          # "Stage Buzz CLI"); no-ops without BUZZ_PRIVATE_KEY.
+          BUZZ_PRIVATE_KEY: ${{ secrets.BUZZ_PRIVATE_KEY }}
+          BUZZ_CHANNEL_ID: ${{ secrets.BUZZ_CHANNEL_ID }}
+          BUZZ_RELAY_URL: ${{ vars.BUZZ_RELAY_URL }}
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
           GROK_CREDENTIALS: ${{ secrets.GROK_CREDENTIALS }}   # grok harness: X-account OAuth (restored by run-grok.sh)
           GH_SECRETS_PAT: ${{ secrets.GH_SECRETS_PAT }}   # persist rotated grok refresh token → GROK_CREDENTIALS (run-grok.sh §2b)

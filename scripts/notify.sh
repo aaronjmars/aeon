@@ -13,8 +13,9 @@
 #
 # Per-channel rendering (via scripts/notify_format.py): Telegram = Markdown
 # normalized to HTML (parse_mode=HTML, fence-safe chunks, 3900), Discord embeds
-# (color by severity), Slack Block Kit. Falls back to $AEON_PENDING_DIR/notify-queue for
-# post-run delivery when the sandbox blocks outbound curl.
+# (color by severity), Slack Block Kit, Buzz = raw Markdown via the buzz-cli. Falls
+# back to $AEON_PENDING_DIR/notify-queue for post-run delivery when the sandbox blocks
+# outbound curl.
 set -euo pipefail
 
 # Resolve the formatter whether run as ./notify (repo root) or scripts/notify.sh
@@ -326,6 +327,32 @@ if [ -n "${SLACK_WEBHOOK_URL:-}" ]; then
     curl -sf -X POST "$SLACK_WEBHOOK_URL" -H "Content-Type: application/json" \
       -d "$SLACK_PAYLOAD" > /dev/null 2>&1 && DELIVERED=true || true
   fi
+fi
+
+# Buzz — Block's Nostr-relay workspace (buzz.xyz / github.com/block/buzz). Aeon posts
+# as itself: BUZZ_PRIVATE_KEY is a Schnorr keypair (nsec) and the buzz-cli signs each
+# message + publishes it over the relay at BUZZ_RELAY_URL into channel BUZZ_CHANNEL_ID.
+# Unlike the webhook channels above there is no bearer-URL to POST to, so delivery needs
+# the `buzz` binary staged in the run (see install-harness); we gate on its presence and
+# skip cleanly when it is absent — same graceful degrade as a missing webhook. Content is
+# Markdown, which Buzz renders natively (no HTML/Block-Kit transform). One send per chunk.
+if { command -v buzz >/dev/null 2>&1 || [ "${NOTIFY_DRY_RUN:-}" = "1" ]; } \
+   && [ -n "${BUZZ_PRIVATE_KEY:-}" ] && [ -n "${BUZZ_CHANNEL_ID:-}" ]; then
+  BUZZ_CHUNKS_B64=$(printf '%s' "$MSG" | python3 "$FMT" buzz --title "$TITLE" --severity "$SEVERITY" || true)
+  while IFS= read -r BZ_B64; do
+    [ -z "$BZ_B64" ] && continue
+    BZ_MSG=$(printf '%s' "$BZ_B64" | base64 -d)
+    # Dry-run (tests): record the decoded Markdown instead of sending. No binary, no network.
+    if [ "${NOTIFY_DRY_RUN:-}" = "1" ]; then
+      mkdir -p "$PENDING_DIR/notify-queue"
+      printf '%s\n---\n' "$BZ_MSG" >> "$PENDING_DIR/notify-queue/buzz-payload.txt"
+      DELIVERED=true
+      continue
+    fi
+    printf '%s' "$BZ_MSG" | buzz messages send --channel "$BUZZ_CHANNEL_ID" --content - >/dev/null 2>&1 \
+      && DELIVERED=true || true
+    sleep 0.3
+  done <<< "$BUZZ_CHUNKS_B64"
 fi
 
 # Email via Resend (operator-notify channel — same provider/key as the in-run

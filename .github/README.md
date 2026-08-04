@@ -266,6 +266,7 @@ Set the secret → channel activates. No code changes needed.
 | Telegram | `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` | Same |
 | Discord | `DISCORD_WEBHOOK_URL` | `DISCORD_BOT_TOKEN` + `DISCORD_CHANNEL_ID` |
 | Slack | `SLACK_WEBHOOK_URL` | `SLACK_BOT_TOKEN` + `SLACK_CHANNEL_ID` |
+| Buzz | `BUZZ_PRIVATE_KEY` + `BUZZ_CHANNEL_ID` (+ `BUZZ_RELAY_URL`) | - |
 | Email | `RESEND_API_KEY` + `NOTIFY_EMAIL_TO` | - |
 
 **Set up each channel:**
@@ -274,6 +275,7 @@ Set the secret → channel activates. No code changes needed.
 - **Discord** - *outbound:* a channel webhook URL. *Inbound:* a bot token + channel ID, with the `channels:history` scope. ([discord.com/developers](https://discord.com/developers/applications))
 - **Slack** - *outbound:* an Incoming Webhook URL. *Inbound:* a bot token + channel ID, with the `channels:history` + `reactions:write` scopes. ([api.slack.com/apps](https://api.slack.com/apps))
 - **Email** - [resend.com/api-keys](https://resend.com/api-keys) → Create API Key → set it as `RESEND_API_KEY`, and `NOTIFY_EMAIL_TO` to your inbox. Optional: `NOTIFY_EMAIL_FROM` (default `aeon@notifications.aeon.bot` - **must be a sender/domain verified in Resend**) and `NOTIFY_EMAIL_SUBJECT_PREFIX` (default `[Aeon]`). Same key as security disclosures, so one Resend key powers all outbound email.
+- **Buzz** - [Buzz](https://buzz.xyz) is Block's open, self-hostable workspace where humans and agents are first-class members ([github.com/block/buzz](https://github.com/block/buzz)). *Outbound:* set `BUZZ_PRIVATE_KEY` (the agent's `nsec` keypair), `BUZZ_CHANNEL_ID` (target channel UUID from `buzz channels list`), and `BUZZ_RELAY_URL` (your relay; defaults to `http://localhost:3000`). Aeon posts Markdown as itself via the [`buzz` CLI](https://github.com/block/buzz/tree/main/crates/buzz-cli), which signs (NIP-98) and publishes each message over the relay. The CLI must be staged in the run (no prebuilt binary yet - `cargo install --path crates/buzz-cli`); the channel skips silently until it is. Inbound (agent-as-participant) is a later phase.
 
 **Restrict who can command the agent (inbound):** Telegram is scoped to a single `TELEGRAM_CHAT_ID`. That's enough for a **1:1 DM** (there the chat ID *is* your user ID). For a **group/public chat**, also set `TELEGRAM_ALLOWED_USER_ID` to your numeric user ID (from [@userinfobot](https://t.me/userinfobot)) - otherwise any group member can command the bot, including by tapping a **Run again / Schedule weekly** button on a posted notification (Telegram delivers those taps even with group-privacy mode on). Left unset in a group, taps and messages **fail closed**. For Discord and Slack, set the optional repo variables `DISCORD_ALLOWED_AUTHOR_ID` / `SLACK_ALLOWED_USER_ID` (or same-named secrets) to the authorized sender's user ID - inbound messages from anyone else in the channel are then ignored. **Leaving those unset processes commands from any non-bot member of the channel**, so set them whenever the channel isn't private to you.
 

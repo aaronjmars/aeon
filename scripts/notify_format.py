@@ -10,6 +10,7 @@ Channels & limits:
   - telegram : Markdown -> Telegram HTML (parse_mode=HTML), chunks <= 3900; base64 per line
   - discord  : embeds, description <= 4096; one JSON POST body per line
   - slack    : Block Kit, section text <= 3000; one JSON POST body (stdout)
+  - buzz     : raw Markdown (Buzz renders it natively), chunks <= 15000; base64 per line
 
 Two correctness properties this guarantees and the tests pin:
   1. No chunk exceeds its channel limit.
@@ -286,9 +287,26 @@ def slack(text, title, severity, limit=3000):
     return {"blocks": blocks}  # dict
 
 
+def buzz(text, title, severity, limit=15000):
+    # Buzz (Block's Nostr-relay workspace) renders Markdown natively, so unlike the
+    # Telegram/Slack paths there is no HTML or Block-Kit transform — just chunk the
+    # Markdown fence-safely. `limit` sits well under the relay's 65,536-byte per-message
+    # cap and small enough to stay readable in a chat channel. One `buzz messages send`
+    # per chunk; the caller base64-decodes each line and pipes it to the CLI's stdin.
+    meta = SEVERITY.get(severity, SEVERITY[DEFAULT_SEVERITY])
+    body = text
+    if title:
+        body = "%s **%s**\n\n%s" % (meta["emoji"], title, body)
+    chunks = chunk(body, limit)
+    n = len(chunks)
+    if n > 1:
+        chunks = [c + f"\n\n[{i + 1}/{n}]" for i, c in enumerate(chunks)]
+    return chunks  # list[str] of Markdown, one message per chunk
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("channel", choices=["telegram", "discord", "slack"])
+    ap.add_argument("channel", choices=["telegram", "discord", "slack", "buzz"])
     ap.add_argument("--title", default="")
     ap.add_argument("--severity", default=DEFAULT_SEVERITY)
     ap.add_argument("--limit", type=int, default=0)
@@ -306,6 +324,10 @@ def main():
     elif args.channel == "slack":
         lim = args.limit or 3000
         sys.stdout.write(json.dumps(slack(text, args.title, args.severity, lim)) + "\n")
+    elif args.channel == "buzz":
+        lim = args.limit or 15000
+        for c in buzz(text, args.title, args.severity, lim):
+            sys.stdout.write(base64.b64encode(c.encode()).decode() + "\n")
 
 
 if __name__ == "__main__":
