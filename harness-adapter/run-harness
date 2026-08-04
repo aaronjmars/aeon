@@ -154,10 +154,10 @@ if [ "$MODE" = "read-only" ] && [ "$SANDBOX" = "auto" ]; then
 fi
 
 OUT="$RH_TMPDIR/envelope.json"
-RH_SPAN_START=$(_rh_now_ns)
+RH_SPAN_START=$(_rh_now)
 "${CMD[@]}" > "$OUT"
 rc=$?
-RH_SPAN_END=$(_rh_now_ns)
+RH_SPAN_END=$(_rh_now)
 if [ $rc -eq 124 ]; then
   echo "error: harness run exceeded --timeout ${TIMEOUT}s" >&2
   exit 124

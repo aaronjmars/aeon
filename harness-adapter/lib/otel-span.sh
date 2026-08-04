@@ -18,14 +18,17 @@
 # CONTENT: only numeric usage + model + harness are recorded as gen_ai.*
 # attributes. The prompt and the result text are NEVER put on the span.
 
-# Epoch nanoseconds, portably. GNU date supports %N; BSD/macOS date prints a
-# literal "N", so fall back to second granularity there.
-_rh_now_ns() {
-  local n
-  n=$(date +%s%N 2>/dev/null)
-  case "$n" in
-    *[!0-9]* | "") echo "$(( $(date +%s) * 1000000000 ))" ;;
-    *) echo "$n" ;;
+# A timestamp otel-cli accepts for --start/--end: Unix epoch "seconds.fraction"
+# (its docs' canonical form is `date +%s.%N`). NOT bare nanoseconds — otel-cli
+# misparses a plain 19-digit integer into a far-future time. GNU date supports
+# %N; BSD/macOS date leaves a literal "N", so fall back to whole seconds there
+# (otel-cli accepts a plain epoch-seconds integer too).
+_rh_now() {
+  local t
+  t=$(date +%s.%N 2>/dev/null)
+  case "$t" in
+    *[!0-9.]* | "") date +%s ;;
+    *) echo "$t" ;;
   esac
 }
 
