@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated": "2026-08-03",
+  "updated": "2026-08-04",
   "description": "Machine-readable registry of community skill packs installable via bin/install-skill-pack. Mirrors the human-readable table in README.md.",
   "packs": [
     {
@@ -20,7 +20,7 @@
     {
       "repo": "liquidpadbot/aeon-skill-pack-liquidpad",
       "name": "LiquidPad",
-      "description": "Track LiquidPad on Base — $LPAD burn cycle alerts, new token launches with onchain provenance, daily protocol digest, and fee-accrual tracking on every launched token.",
+      "description": "Track LiquidPad on Base \u2014 $LPAD burn cycle alerts, new token launches with onchain provenance, daily protocol digest, and fee-accrual tracking on every launched token.",
       "author": "liquidpadbot",
       "license": "MIT",
       "homepage": "https://www.liquidpad.site",
@@ -36,7 +36,7 @@
     {
       "repo": "ryjin111/aeon-skill-pack-mythosforge",
       "name": "aeon-skill-pack-mythosforge",
-      "description": "Read-only MythosForge monitoring — ops/backlog/jury/payout health, proof-of-creation integrity on Base, theme/round guard against silent relabels, jury-drift detection, and live gallery/proof-page QA.",
+      "description": "Read-only MythosForge monitoring \u2014 ops/backlog/jury/payout health, proof-of-creation integrity on Base, theme/round guard against silent relabels, jury-drift detection, and live gallery/proof-page QA.",
       "author": "ryjin111",
       "license": "MIT",
       "homepage": "https://mythosforge.xyz",
@@ -54,7 +54,7 @@
       "repo": "codexvritra/signa",
       "path": "aeon-skills",
       "name": "signa",
-      "description": "The full SIGNA skill suite — wallet-signed cross-platform agent messaging, multi-agent coordination (broadcast and delegate across the network), plus integrations with Aeon ecosystem partners already on Base: Bankr resolver and recent launches, gitlawb activity for any wallet, MiroShark sim stats and wallet-signed sim fire, plus x402 receipts and bounded spend mandates (a human grants a signed budget, the agent spends within it and asks for more). Lives at aeon-skills/ inside the SIGNA monorepo so the wire format, SDKs, and skill pack all version together.",
+      "description": "The full SIGNA skill suite \u2014 wallet-signed cross-platform agent messaging, multi-agent coordination (broadcast and delegate across the network), plus integrations with Aeon ecosystem partners already on Base: Bankr resolver and recent launches, gitlawb activity for any wallet, MiroShark sim stats and wallet-signed sim fire, plus x402 receipts and bounded spend mandates (a human grants a signed budget, the agent spends within it and asks for more). Lives at aeon-skills/ inside the SIGNA monorepo so the wire format, SDKs, and skill pack all version together.",
       "author": "signa-agent",
       "license": "MIT",
       "homepage": "https://www.signaagent.xyz/partners",
@@ -86,7 +86,7 @@
     {
       "repo": "Atrium-Hermes/aeon-atrium-skills",
       "name": "Atrium Skills",
-      "description": "Publish, monetize & discover agent skills on Atrium — the onchain skill marketplace on Base. atrium-publish turns evolving skills into DID-signed, IPFS-pinned, USDC-earning assets (with royalty lineage to prior versions); atrium-scout rents skills that match open loops; atrium-earnings tracks and withdraws creator USDC.",
+      "description": "Publish, monetize & discover agent skills on Atrium \u2014 the onchain skill marketplace on Base. atrium-publish turns evolving skills into DID-signed, IPFS-pinned, USDC-earning assets (with royalty lineage to prior versions); atrium-scout rents skills that match open loops; atrium-earnings tracks and withdraws creator USDC.",
       "author": "Atrium-Hermes",
       "license": "MIT",
       "homepage": "https://atriumhermes.tech",
@@ -101,7 +101,7 @@
     {
       "repo": "mnemedb/aeon-skill-pack-mneme",
       "name": "aeon-skill-pack-mneme",
-      "description": "Mneme as Aeon's persistent memory layer — vector recall across runs, entity/relation graph, live Base chain streams, async LLM 'dream' reflections, and schema-aware /chat. One MNEME_API_KEY (scope *), zero infra. Drops into any Aeon agent and replaces the markdown+JSON memory dir with a real Postgres schema that's searchable, traversable, and stream-aware.",
+      "description": "Mneme as Aeon's persistent memory layer \u2014 vector recall across runs, entity/relation graph, live Base chain streams, async LLM 'dream' reflections, and schema-aware /chat. One MNEME_API_KEY (scope *), zero infra. Drops into any Aeon agent and replaces the markdown+JSON memory dir with a real Postgres schema that's searchable, traversable, and stream-aware.",
       "author": "mnemedb",
       "license": "MIT",
       "homepage": "https://mnemedb.dev",
@@ -121,7 +121,7 @@
     {
       "repo": "clawhunter/clawhunter-skills",
       "name": "clawhunter-skills",
-      "description": "Aggregates and AI-triages crypto bounties across venues (Pump Fun GO, Atelier, EarnFi, tiny.place) and matches each to your agent with a plan to win — plus paid research and create tools (voice tones, logo-grounded images, Kling video direction, web + X research). Paid tools settle via x402 (USDC on Solana or Base).",
+      "description": "Aggregates and AI-triages crypto bounties across venues (Pump Fun GO, Atelier, EarnFi, tiny.place) and matches each to your agent with a plan to win \u2014 plus paid research and create tools (voice tones, logo-grounded images, Kling video direction, web + X research). Paid tools settle via x402 (USDC on Solana or Base).",
       "author": "clawhunter",
       "license": "MIT",
       "homepage": "https://clawhunter.fun",
@@ -180,7 +180,7 @@
     {
       "repo": "techdigger/aeon-skill-pack-agentlink",
       "name": "AgentLink",
-      "description": "Give an aeon agent a verified, human-backed on-chain identity on Base via AgentLink — check link status, hand the owner a linker URL, then sign requests to free partner endpoints (XONA, WURK).",
+      "description": "Give an aeon agent a verified, human-backed on-chain identity on Base via AgentLink \u2014 check link status, hand the owner a linker URL, then sign requests to free partner endpoints (XONA, WURK).",
       "author": "techdigger",
       "license": "MIT",
       "homepage": "https://agentlink.id",
@@ -216,6 +216,19 @@
       "capabilities": [
         "external_api",
         "sends_notifications"
+      ]
+    },
+    {
+      "repo": "JessieJanie/aeon-skill-pack-skim",
+      "name": "Skim Clean Reads",
+      "description": "Pay-per-call clean web reads via Skim x402 \u2014 any URL to clean markdown ~4x smaller than raw HTML (fewer tokens per model step), $0.002 USDC on Base ($0.005 with JS rendering), no API key.",
+      "author": "JessieJanie",
+      "license": "MIT",
+      "homepage": "https://skim402.com",
+      "category": "research",
+      "trust_level": "community",
+      "skills": [
+        "skim-read"
       ]
     }
   ]
