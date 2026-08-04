@@ -235,14 +235,17 @@ They just did something in Claude Code and want it to happen on a schedule.
 
 ```yaml
 ---
-type: Skill
-name: My Skill
-category: basics
+name: my-skill
 description: One line — what it does and what it sends.
-var: ""
-tags: [content]
-mode: read-only
-requires: [SOME_API_KEY?]
+metadata:
+  title: My Skill
+  mode: read-only
+  category: basics
+  var: ""
+  tags:
+    - content
+  requires:
+    - SOME_API_KEY?
 ---
 
 Today is ${today}. <the prompt — plain instructions, including judgment calls>
