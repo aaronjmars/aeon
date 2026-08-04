@@ -325,6 +325,7 @@ Either way the installer reads the pack's `skills-pack.json` manifest, runs the 
 | [Charon for AEON](https://github.com/CharonAI-code/charon/tree/main/skills/aeon) (`--path skills/aeon`) | 2 | Repo-local policy enforcement for AEON runs, with natural-language policy management. |
 | [aeon-skill-pack-agentlink](https://github.com/techdigger/aeon-skill-pack-agentlink) | 1 | Verified, human-backed on-chain identity on Base via AgentLink. Read-only, on-demand. |
 | [AI2Human Create Task](https://github.com/richard7463/ai2human-aeon-skill-pack) | 1 | Route a blocked human step to AI2Human: dispatch human execution, then follow the proof, verify, settle loop before USDC payout. |
+| [aeon-skill-pack-skim](https://github.com/JessieJanie/aeon-skill-pack-skim) | 1 | Pay-per-call clean web reads via Skim x402: any URL to markdown ~4x smaller than raw HTML, $0.002 USDC on Base, no API key. |
 
 **To list a pack here**, open a PR that adds a table row **and** a matching [`catalog/skill-packs.json`](../catalog/skill-packs.json) entry. The full checklist - public repo + license, a per-skill `SKILL.md`, a `skills-pack.json` manifest, the registry schema, and the trust model - is in [`docs/community-skill-packs.md`](../docs/community-skill-packs.md#pack-maintainers-publishing-checklist).
 
