@@ -26,7 +26,7 @@ Wired by the dashboard MCP panel's one-click **Connect** (OAuth with `offline_ac
 2. **Prices / yield (when relevant)** — `getTokenPrice` for held tokens; note 24h moves over ±5%. `discoverYieldStrategies` for idle stablecoins (EVM only) — surface the top option (protocol, APY, TVL) as a suggestion. Never deposit unless the task explicitly asks.
 3. **Act only on explicit instruction** — transfers, swaps, yield deposits, and x402 payments move real value. Do exactly what `${var}` asks, nothing more; sequence any irreversible action last, fail-closed. Amounts above the auto-approve threshold are rejected by the wallet — report that, never try to work around it.
 4. **x402 paid calls** — follow the 402 flow (authorize within caps; gasless for the payer via EIP-3009).
-5. **Notify** once via `./notify -f <file>`, and **log** to `memory/logs/${today}.md`. Every value-moving action (transfer, swap, deposit, x402 payment) goes in **both** — the notification is the operator's only guaranteed record, so a payment that isn't in it effectively went unreported:
+5. **Notify** once via `./notify -f <file>`, and put the same record in your **final output**. This skill is `read-only`, so you can't write `memory/logs/` yourself (the sandbox write-locks the workspace); the workflow commits your captured output to `memory/logs/` + `output/.chains/` after the run. Every value-moving action (transfer, swap, deposit, x402 payment) goes in **both the notify and the output** — the notification is the operator's only guaranteed record, so a payment that isn't in it effectively went unreported:
 
    ```
    ### finance-district-mcp

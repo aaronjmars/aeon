@@ -39,13 +39,13 @@ Write the digest: a 2–3 sentence answer up top, then the supporting evidence g
 
 ### 4. Notify
 
-Deliver via `./notify -f` (ordinary Markdown): the answer, the evidence, a `Sources` list of clickable URLs, and a final line `calls: N/<budget>`. This skill is on-demand — a completed run always notifies (unlike monitors, silence isn't signal here).
+Deliver via `./notify -f <file>` (ordinary Markdown): the answer, the evidence, a `Sources` list of clickable URLs, and a final line `calls: N/<budget>`. This skill is on-demand — a completed run always notifies (unlike monitors, silence isn't signal here).
 
 **Exactly one `./notify` call per run.** Each call overwrites `apps/dashboard/outputs/.pending-<skill>.md` (last-writer-wins), which becomes the chain artifact `output/.chains/glim-mcp.md` that `consume:` steps and the feed read — a follow-up "headline" ping would replace the digest with a stub. Everything goes in the single `-f` file.
 
-### 5. Log
+### 5. Result record
 
-Append to `memory/logs/${today}.md`:
+This skill is `read-only`, so it can't write the repo during the run (the sandbox write-locks the workspace). Don't append to `memory/logs/` yourself — put this record in your **final output**; the workflow persists it to `memory/logs/` and `output/.chains/glim-mcp.md` on your behalf after the run:
 
 ```
 ### glim-mcp
@@ -54,7 +54,7 @@ Append to `memory/logs/${today}.md`:
 - Calls: N (budget 10|25) | sources cited: M
 ```
 
-If the answer is durable knowledge about a tracked topic (a token, a protocol, a watched repo), also fold the finding into the matching `memory/topics/` note per the OKF rules — bump its `timestamp:`.
+If the answer is durable knowledge about a tracked topic (a token, a protocol, a watched repo), it can't be folded into `memory/topics/` from a read-only run — surface it clearly in the output so the operator (or a write-mode skill) can persist it per the OKF rules.
 
 ## Constraints
 

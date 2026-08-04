@@ -37,14 +37,14 @@ Operator-initiated only — never trade on a scheduled/default run, and never in
 
 ### 3. Notify
 
-This skill is on-demand — deliver the result via `./notify -f` (ordinary Markdown), **exactly one `./notify` call per run** (each call overwrites the `.pending-<skill>.md` file the chain artifact is captured from — a second ping would clobber the report):
+This skill is on-demand — deliver the result via `./notify -f <file>` (ordinary Markdown), **exactly one `./notify` call per run** (each call overwrites the `.pending-<skill>.md` file the chain artifact is captured from — a second ping would clobber the report):
 
 - **Report branches:** portfolio value + day change, buying power, a positions table, open orders, and one line of what stands out (concentration, a position moving hard). Keep it tight — signal, not a data dump.
 - **Trade branch:** the exact order placed (side, symbol, size, order id, status) — or, on refusal, exactly what was ambiguous and how to restate it. Severity `success` for a placed order, `warn` for a refusal.
 
-### 4. Log
+### 4. Result record
 
-Append to `memory/logs/${today}.md`:
+This skill is `read-only`, so it can't write the repo during the run (the sandbox write-locks the workspace). Don't append to `memory/logs/` yourself — put this record in your **final output**; the workflow persists it to `memory/logs/` and `output/.chains/robinhood-mcp.md` on your behalf after the run:
 
 ```
 ### robinhood-mcp
