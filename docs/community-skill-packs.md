@@ -273,4 +273,19 @@ fields warn rather than fail.
 
 ## Listed packs
 
-See the [Community Skill Packs section](https://github.com/aeonfun/aeon#community-skill-packs) in the main README for the current registry.
+Community skill packs live in their own repos and install as one bundle. The authoritative registry is [`catalog/skill-packs.json`](../catalog/skill-packs.json); the human-readable list:
+
+| Pack | Skills | Description |
+|------|--------|-------------|
+| [aeon-skills](https://github.com/AntFleet/aeon-skills) | 2 | Two-model-consensus PR review (Opus 4.7 + GPT-5), x402 pay-per-call for public repos. |
+| [aeon-skill-pack-liquidpad](https://github.com/liquidpadbot/aeon-skill-pack-liquidpad) | 4 | Track LiquidPad on Base: burn alerts, launches, digest, fee accrual. |
+| [aeon-skill-pack-mythosforge](https://github.com/ryjin111/aeon-skill-pack-mythosforge) | 5 | Read-only MythosForge monitoring: ops/jury/payout health and proof-of-creation integrity on Base. |
+| [signa](https://github.com/codexvritra/signa) (`--path aeon-skills`) | 20 | Wallet-signed cross-platform agent messaging, encrypted rooms, and x402 bounded-spend mandates. |
+| [Atrium Skills](https://github.com/Atrium-Hermes/aeon-atrium-skills) | 3 | Publish, rent, and earn from agent skills on Atrium, the onchain skill marketplace on Base. |
+| [aeon-skill-pack-mneme](https://github.com/mnemedb/aeon-skill-pack-mneme) | 8 | Persistent memory layer: vector recall, entity graph, and Base chain streams. One key, zero infra. |
+| [clawhunter-skills](https://github.com/clawhunter/clawhunter-skills) | 2 | Aggregates and AI-triages crypto bounties across venues; paid research/create tools settle via x402. |
+| [Polymarket Trader by Simmer](https://github.com/SpartanLabsXyz/aeon-skill-pack-polymarket/tree/main/aeon-skill-pack) (`--path aeon-skill-pack`) | 3 | Signal, discovery, and real order-placing on Polymarket (simulate-by-default, live opt-in). |
+| [Charon for AEON](https://github.com/CharonAI-code/charon/tree/main/skills/aeon) (`--path skills/aeon`) | 2 | Repo-local policy enforcement for AEON runs, with natural-language policy management. |
+| [aeon-skill-pack-agentlink](https://github.com/techdigger/aeon-skill-pack-agentlink) | 1 | Verified, human-backed on-chain identity on Base via AgentLink. Read-only, on-demand. |
+| [AI2Human Create Task](https://github.com/richard7463/ai2human-aeon-skill-pack) | 1 | Route a blocked human step to AI2Human: dispatch human execution, then follow the proof, verify, settle loop before USDC payout. |
+| [aeon-skill-pack-skim](https://github.com/JessieJanie/aeon-skill-pack-skim) | 1 | Pay-per-call clean web reads via Skim x402: any URL to markdown ~4x smaller than raw HTML, $0.002 USDC on Base, no API key. |
