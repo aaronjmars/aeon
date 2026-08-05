@@ -109,13 +109,11 @@ Haiku scores every run 1–5; `heartbeat` → `skill-health` → `skill-repair` 
 
 ## Proof of work
 
-Aeon's skills ship to production. These numbers are live at **[aeon.fun](https://www.aeon.fun)**.
+<p align="center">
+  <img src="../docs/assets/proof-aeon.jpg" alt="Proof of work, live at aeon.fun: 2M GitHub stars secured across 69 open-source repos, 68 products and agents built on Aeon, and 12 community skill packs." width="100%" />
+</p>
 
-| Skill | In production |
-|-------|---------------|
-| **`vuln-scanner`** | **2M GitHub stars secured** - real vulnerabilities found, patched, and responsibly disclosed across 69 open-source projects, many rated High or Critical. [Every disclosure →](https://www.aeon.fun/security) |
-| **ecosystem** | **68 products & agents** built on Aeon. [`ECOSYSTEM.md`](../docs/ECOSYSTEM.md) |
-| **community** | **12 community skill packs** published to the registry. [`community-skill-packs.md`](../docs/community-skill-packs.md) |
+Live at **[aeon.fun](https://www.aeon.fun)** - [every disclosure](https://www.aeon.fun/security) · [ecosystem](../docs/ECOSYSTEM.md) · [community packs](../docs/community-skill-packs.md#listed-packs).
 
 ---
 
