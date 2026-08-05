@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-05T17:47:16.370189Z",
+  "generatedAt": "2026-08-05T21:21:37.337793Z",
   "generator": "eyebrow/0.4.1",
   "artifacts": [
     {
@@ -948,6 +948,26 @@
       ],
       "contentHash": "sha256-365c75fddefa585bbdd502b317a0586dedd31ad3181b42acb3ce5f6b9aaf453b",
       "discoveredFrom": "skills/glim-mcp/SKILL.md"
+    },
+    {
+      "id": "8137f7de078d4c0d",
+      "tool": "aeon",
+      "scope": "project:.",
+      "type": "skill",
+      "name": "video-script",
+      "source": {
+        "kind": "local",
+        "ref": "skills/video-script"
+      },
+      "capabilities": {},
+      "files": [
+        {
+          "path": "SKILL.md",
+          "hash": "6ff4e88f69fab9c04ff38e2c6ea1d264e4c84fe5aaf55a3e0c29a7603579fb09"
+        }
+      ],
+      "contentHash": "sha256-f6e23e2eeeab6e8df6a92e951c5794215400cf4a562d1ab307f55dac07a5aab2",
+      "discoveredFrom": "skills/video-script/SKILL.md"
     },
     {
       "id": "818943558ca75f62",
