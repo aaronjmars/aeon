@@ -85,6 +85,14 @@ The prompt *is* the skill. You schedule it, hand it a `var`, chain it into other
 
 <p align="center"><a href="../docs/community-skill-packs.md#listed-packs"><b>Community skill packs →</b></a></p>
 
+## Why "the most autonomous"
+
+Most agent tools keep you in the loop - approve this call, review this diff. Aeon is built for the work you want done while you're away, and it's the only framework that does all four unattended: runs on a schedule, remembers across runs, reacts to conditions, and repairs its own broken skills. The most autonomous agent is the one that never asks.
+
+Full comparison vs AutoGen, CrewAI, n8n, and LangGraph: [`SHOWCASE.md`](../docs/SHOWCASE.md).
+
+![Autonomy spectrum](../docs/assets/autonomy-aeon.jpg)
+
 ### It ships real work
 
 <p align="center">
@@ -106,14 +114,6 @@ A model scores every run 1–5; `heartbeat` → `skill-health` → `skill-repair
 </p>
 
 `spawn-instance` forks Aeon into a new specialized instance (`var: "crypto-tracker: monitor DeFi protocols"`), picks relevant skills, and registers it - no secrets propagated, billing isolated. `fleet-control` health-checks and dispatches across the fleet.
-
-## Why "the most autonomous"
-
-Most agent tools keep you in the loop - approve this call, review this diff. Aeon is built for the work you want done while you're away, and it's the only framework that does all four unattended: runs on a schedule, remembers across runs, reacts to conditions, and repairs its own broken skills. The most autonomous agent is the one that never asks.
-
-Full comparison vs AutoGen, CrewAI, n8n, and LangGraph: [`SHOWCASE.md`](../docs/SHOWCASE.md).
-
-![Autonomy spectrum](../docs/assets/autonomy-aeon.jpg)
 
 ## Proof of work
 
