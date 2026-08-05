@@ -91,6 +91,8 @@ Most agent tools keep you in the loop - approve this call, review this diff. Aeo
 
 Full comparison vs AutoGen, CrewAI, n8n, and LangGraph: [`SHOWCASE.md`](../docs/SHOWCASE.md).
 
+![Autonomy spectrum](../docs/assets/autonomy-aeon.jpg)
+
 ## Proof of work
 
 <p align="center">
@@ -100,8 +102,6 @@ Full comparison vs AutoGen, CrewAI, n8n, and LangGraph: [`SHOWCASE.md`](../docs/
 Live at **[aeon.fun](https://www.aeon.fun)**: **2M GitHub stars secured** - real vulnerabilities found, patched, and responsibly disclosed across 69 open-source repos (**Alibaba**, **Tencent**, **Vercel**, and more), many rated High or Critical. **68 products built on top of Aeon.**
 
 [Every disclosure →](https://www.aeon.fun/security) · [ecosystem](../docs/ECOSYSTEM.md) · [community packs](../docs/community-skill-packs.md#listed-packs)
-
-![Autonomy spectrum](../docs/assets/autonomy-aeon.jpg)
 
 ### It ships real work
 
