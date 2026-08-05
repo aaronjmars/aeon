@@ -33,9 +33,11 @@
 
 ## Quick start
 
-You need **Node.js 20+**, the **[GitHub CLI](https://cli.github.com/) (`gh`)** authenticated (`gh auth login`), and **your own copy of this repo** - click **Use this template** on [the repo page](https://github.com/aeonfun/aeon) (keep it public; Actions minutes are free), or `gh repo fork aeonfun/aeon --clone`.
+<p align="center">
+  <img src="../docs/assets/quickstart-aeon.jpg" alt="Quick start in four steps: 1 Fork - Use this template to get your own repo copy. 2 Connect - add a Telegram, Discord, or email channel. 3 Pick skills - toggle skills on and set their cron schedule. 4 Runs itself - Aeon runs unattended on GitHub Actions." width="100%" />
+</p>
 
-   <img src="../docs/assets/use-template.png" alt="The Use this template button at the top of the repo page" width="240" />
+You need **Node.js 20+**, the **[GitHub CLI](https://cli.github.com/) (`gh`)** authenticated (`gh auth login`), and **your own copy** - click **Use this template** on [the repo page](https://github.com/aeonfun/aeon) (keep it public; Actions minutes are free), or `gh repo fork aeonfun/aeon --clone`.
 
 ```bash
 git clone https://github.com/<you>/aeon   # skip if you used `gh repo fork --clone`
@@ -78,14 +80,9 @@ mode: write
 
 The prompt *is* the skill. You schedule it, hand it a `var`, chain it into others, and Haiku rates every run. **Six packs ship in the box** (Core, Evolution, Basics on by default; enable the rest in the **Packs** view). How packs work: [`docs/skill-packs.md`](../docs/skill-packs.md).
 
-| Pack | Key | Skills | Examples |
-| --- | --- | --- | --- |
-| **Core** - fleet coordination, self-config, liveness; shown by default | `core` | 12 | <img src="../docs/assets/skill-icons/fleet-control.svg" width="14" height="14" align="top" alt=""> `fleet-control`, <img src="../docs/assets/skill-icons/spawn-instance.svg" width="14" height="14" align="top" alt=""> `spawn-instance`, <img src="../docs/assets/skill-icons/auto-workflow.svg" width="14" height="14" align="top" alt=""> `auto-workflow` |
-| **Evolution** - authors, evolves, installs & heals its own skills; shown by default | `evolution` | 9 | <img src="../docs/assets/skill-icons/create-skill.svg" width="14" height="14" align="top" alt=""> `create-skill`, <img src="../docs/assets/skill-icons/autoresearch.svg" width="14" height="14" align="top" alt=""> `autoresearch`, <img src="../docs/assets/skill-icons/aeon-doctor.svg" width="14" height="14" align="top" alt=""> `aeon-doctor` |
-| **Basics** - simple, immediately-runnable skills; shown by default | `basics` | 16 | <img src="../docs/assets/skill-icons/digest.svg" width="14" height="14" align="top" alt=""> `digest`, <img src="../docs/assets/skill-icons/token-movers.svg" width="14" height="14" align="top" alt=""> `token-movers`, <img src="../docs/assets/skill-icons/pr-review.svg" width="14" height="14" align="top" alt=""> `pr-review` |
-| **Dev & Code** | `dev` | 10 | <img src="../docs/assets/skill-icons/github-monitor.svg" width="14" height="14" align="top" alt=""> `github-monitor`, <img src="../docs/assets/skill-icons/feature.svg" width="14" height="14" align="top" alt=""> `feature`, <img src="../docs/assets/skill-icons/seo-audit.svg" width="14" height="14" align="top" alt=""> `seo-audit` |
-| **Crypto & Markets** | `crypto` | 14 | <img src="../docs/assets/skill-icons/token-pick.svg" width="14" height="14" align="top" alt=""> `token-pick`, <img src="../docs/assets/skill-icons/defi-overview.svg" width="14" height="14" align="top" alt=""> `defi-overview`, <img src="../docs/assets/skill-icons/deploy-uni-hook.svg" width="14" height="14" align="top" alt=""> `deploy-uni-hook` |
-| **Productivity** | `productivity` | 6 | <img src="../docs/assets/skill-icons/mention-radar.svg" width="14" height="14" align="top" alt=""> `mention-radar`, <img src="../docs/assets/skill-icons/send-email.svg" width="14" height="14" align="top" alt=""> `send-email`, <img src="../docs/assets/skill-icons/operator-scorecard.svg" width="14" height="14" align="top" alt=""> `operator-scorecard` |
+<p align="center">
+  <img src="../docs/assets/packs-aeon.jpg" alt="Six skill packs, 67 skills total: Core (fleet coordination, self-config, liveness), Evolution (authors and heals its own skills), Basics (simple runnable skills), Dev & Code, Crypto & Markets, and Productivity." width="100%" />
+</p>
 
 <p align="center"><a href="../docs/skill-packs.md#full-catalog-all-67-skills-by-pack"><b>Full catalog - all 67 skills by pack →</b></a></p>
 
