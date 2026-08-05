@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="110" height="40" viewBox="0 0 110 40" role="img" aria-label="Docs">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1c1a15"/>
+      <stop offset="1" stop-color="#0d0c0a"/>
+    </linearGradient>
+    <style>@keyframes rock{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}.bk{transform-box:fill-box;transform-origin:center;animation:rock 3s ease-in-out infinite}</style>
+  </defs>
+  <rect x="0.5" y="0.5" width="109" height="39" rx="19.5" fill="url(#g)" stroke="#F4EFE1" stroke-opacity="0.5"/>
+  <rect x="2" y="1.5" width="106" height="15" rx="12" fill="#F4EFE1" opacity="0.05"/>
+  <g class="bk" stroke="#F4EFE1" stroke-width="1.5" fill="none" stroke-linejoin="round">
+    <path d="M17 13.5h6.5a2 2 0 0 1 2 2v11.5a1.6 1.6 0 0 0-1.6-1.6H17z"/>
+    <path d="M33 13.5h-6.5a2 2 0 0 0-2 2v11.5a1.6 1.6 0 0 1 1.6-1.6H33z"/>
+  </g>
+  <text x="42" y="25.5" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="15" font-weight="700" fill="#F4EFE1">Docs</text>
+</svg>

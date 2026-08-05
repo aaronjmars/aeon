@@ -1,24 +1,31 @@
 <p align="center">
-  <img src="../docs/assets/aeon.jpg" alt="Aeon" width="120" />
-</p>
-
-<h1 align="center">AEON</h1>
-
-<p align="center">
-  <a href="https://www.aeon.fun/docs"><img src="https://img.shields.io/badge/Docs-aeon.fun-blue?style=flat-square&logo=gitbook&logoColor=white&labelColor=1a1a2e" alt="Documentation"></a>
-  <a href="https://github.com/aeonfun/aeon/stargazers"><img src="https://img.shields.io/github/stars/aeonfun/aeon?style=flat-square&logo=github" alt="GitHub stars"></a>
-  <a href="https://github.com/aeonfun/aeon/network/members"><img src="https://img.shields.io/github/forks/aeonfun/aeon?style=flat-square&logo=github" alt="GitHub forks"></a>
-  <a href="https://x.com/aeonframework"><img src="https://img.shields.io/badge/%40aeonframework-black?style=flat-square&logo=x&labelColor=000000" alt="@aeonframework on X"></a>
-  <a href="https://bankr.bot/discover/0xbf8e8f0e8866a7052f948c16508644347c57aba3"><img src="https://img.shields.io/badge/%24aeon%20on-Bankr-orange?style=flat-square&labelColor=1a1a2e" alt="$aeon on Bankr"></a>
+  <img src="../docs/assets/hero-animated.svg" alt="AEON — the most autonomous agent framework. 67 skills across 6 harnesses (Claude Code, Grok, Codex, Pi, Vibe, Kimi), running unattended on GitHub Actions: it ships features to your repos, privately discloses real vulnerabilities, deploys live apps, runs deep research, and writes new skills for itself. Keywords: autonomous AI agent, agent framework, GitHub Actions automation, self-improving agent, multi-agent orchestration, LLM skills, cron agent." width="100%" />
 </p>
 
 <p align="center">
-  <strong>The most autonomous agent framework.</strong><br>
+  <strong>Star us&nbsp;❤️&nbsp;→</strong>&nbsp;&nbsp;
+  <a href="https://github.com/aeonfun/aeon/stargazers"><img src="../docs/assets/btn-star.svg" alt="Star Aeon on GitHub" height="34" align="absmiddle"></a>&nbsp;&nbsp;
+  <a href="https://www.aeon.fun"><img src="../docs/assets/btn-site.svg" alt="aeon.fun" height="34" align="absmiddle"></a>&nbsp;&nbsp;
+  <a href="https://www.aeon.fun/docs"><img src="../docs/assets/btn-docs.svg" alt="Aeon docs" height="34" align="absmiddle"></a>&nbsp;&nbsp;
+  <a href="https://x.com/aeonframework"><img src="../docs/assets/btn-x.svg" alt="@aeonframework on X" height="34" align="absmiddle"></a>&nbsp;&nbsp;
+  <a href="https://bankr.bot/discover/0xbf8e8f0e8866a7052f948c16508644347c57aba3"><img src="../docs/assets/btn-bankr.svg" alt="$aeon on Bankr" height="34" align="absmiddle"></a>
+</p>
+
+<div align="center">
+
+[![stars](https://img.shields.io/github/stars/aeonfun/aeon?style=flat-square&label=stars&color=F4EFE1&labelColor=0d0c0a&logo=github&logoColor=F4EFE1)](https://github.com/aeonfun/aeon/stargazers)
+[![forks](https://img.shields.io/github/forks/aeonfun/aeon?style=flat-square&label=forks&color=F4EFE1&labelColor=0d0c0a&logo=github&logoColor=F4EFE1)](https://github.com/aeonfun/aeon/network/members)
+[![license](https://img.shields.io/badge/license-MIT-F4EFE1?style=flat-square&labelColor=0d0c0a)](../LICENSE)
+[![node](https://img.shields.io/badge/node-20+-F4EFE1?style=flat-square&labelColor=0d0c0a)](https://nodejs.org/)
+
+</div>
+
+<p align="center">
   Give it a direction and it gets the work done: ships features to your repos, finds and privately discloses real vulnerabilities, deploys live apps, runs deep research - and writes new skills for itself. No approval loops. No babysitting. Configure once, forget forever.
 </p>
 
 <p align="center">
-  <img src="../docs/assets/aeon-demo.gif" alt="Aeon Demo" />
+  <img src="../docs/assets/aeon-demo.gif" alt="Aeon live demo — the dashboard configures skills, schedules them on cron, and Aeon runs unattended: shipping PRs, disclosing vulnerabilities, and reporting back to your channels." />
 </p>
 
 ---
