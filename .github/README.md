@@ -189,13 +189,27 @@ The deep reference lives in [`docs/`](../docs) - jump in:
 
 ## Community
 
-<p align="center">
-  <b><a href="https://x.com/aeonframework">Follow @aeonframework on X</a></b> for launches, demos, and updates &nbsp;·&nbsp; <b><a href="https://www.aeon.fun/docs">Read the docs</a></b> &nbsp;·&nbsp; <b><a href="https://bankr.bot/discover/0xbf8e8f0e8866a7052f948c16508644347c57aba3">$aeon on Bankr</a></b>
-</p>
+<table width="100%" border="0" cellspacing="0" role="presentation">
+  <tr>
+    <td align="center" valign="middle" width="33%">
+      <a href="https://x.com/aeonframework" title="Follow @aeonframework on X"><img src="../docs/assets/comm-x-aeon.jpg" alt="Follow @aeonframework on X for launches, demos, and updates." width="100%"/></a>
+    </td>
+    <td align="center" valign="middle" width="33%">
+      <a href="https://www.aeon.fun/docs" title="Read the Aeon docs"><img src="../docs/assets/comm-docs-aeon.jpg" alt="Read the Aeon documentation - guides and reference." width="100%"/></a>
+    </td>
+    <td align="center" valign="middle" width="33%">
+      <a href="https://bankr.bot/discover/0xbf8e8f0e8866a7052f948c16508644347c57aba3" title="$aeon on Bankr"><img src="../docs/assets/comm-bankr-aeon.jpg" alt="$aeon token on Bankr." width="100%"/></a>
+    </td>
+  </tr>
+</table>
 
 ---
 
 ## We love contributors
+
+<p align="center">
+  <img src="../docs/assets/we-love-contributors-aeon.jpg" alt="We love contributors — every bug fix, new skill, and doc tweak makes Aeon better. Big PRs and small ones, both welcome." width="100%" />
+</p>
 
 <p align="center">
   <b>We're excited to meet you.</b><br/>
