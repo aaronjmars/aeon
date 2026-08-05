@@ -11,6 +11,31 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Added
 
+- **New skill: `video-script`** - turns a repo, product page, or topic into a
+  recording-ready video script. Receipts-first: every number, address, and date is
+  verified against the live source in-run, and anything unverifiable is cut or
+  deferred to a dated "verify before recording" checklist. Standard conventions
+  throughout (`${var}` selector, `--minutes N` runtime, `soul/` voice, output to
+  `output/video-scripts/`). `basics` pack, disabled by default; brings the catalog
+  to **68 skills** (67 -> 68). (#835)
+- **New skill: `aeon-update`** - the downstream counterpart to `fork-fleet`. Runs
+  inside an instance and pulls the parent's shipped framework changes *down* (new
+  skills, script/harness fixes, workflow and doc updates), landing them as one
+  reviewable PR - replacing the hand-run rsync-overlay rebase every managed
+  instance did to stay current with canon. `core` pack, `write` mode, weekly and
+  disabled by default; catalog **67** (66 -> 67). (#832)
+- **New skill: `pack-submit`** - the inverse of `install-skill`. Takes one of the
+  agent's own local skills and publishes it as a community pack: packages it into a
+  standalone pack repo, creates and pushes a public GitHub repo to host it, and
+  opens the registry PR (a README **Community Packs** row plus a matching
+  `catalog/skill-packs.json` entry in one diff, gated on
+  `validate-skill-packs.mjs`). `evolution` pack, disabled by default; catalog
+  **66** (65 -> 66). (#831)
+- **Community skill pack registered: Skim Clean Reads** (`skim-read`) - reads any
+  URL as clean markdown via Skim's x402 endpoint, roughly 4x smaller than the raw
+  HTML so downstream model steps burn far fewer tokens ($0.002 USDC on Base per
+  read, no API key). Listed in the Community Packs table and
+  `bin/install-skill-pack --list`. (#829)
 - **New notification channel: Buzz.** `./notify` can now post to a
   [Buzz](https://buzz.xyz) channel (Block's self-hostable Nostr-relay workspace)
   alongside Telegram / Discord / Slack / email. Unlike the bearer-URL webhooks,
@@ -98,6 +123,16 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Changed
 
+- **README brand refresh.** The `.github/README.md` was rebuilt around an animated
+  hero and section-banner art with a pill navigation, trimmed to MiroShark prose
+  density, and the longer-form detail was relocated into `docs/` (Configuration,
+  Skill packs, Showcase). Adds a "compare vs Claude Code, Hermes, and OpenClaw"
+  pointer and a Community section. Presentation only - no capability change. (#833,
+  #834, #836-#838, #840-#842, #844-#857)
+- **`memory-flush` hardened.** The memory GC pass now stamps the consolidation date
+  on every flush (so a live, repeatedly-flushed store no longer reads as an
+  untouched template), scans an adaptive window instead of a fixed three days,
+  de-duplicates before writing, and rotates its logs. Body-only skill edit. (#828)
 - **Adopted the Agent Skills open standard; removed OKF globally.** All 65 skills
   now use spec-form frontmatter (only `name` + `description` top-level, everything
   else nested under `metadata:`, block-style lists) and pass the official
@@ -129,6 +164,9 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Fixed
 
+- **Stale "Proof of work" numbers corrected** on the README to match
+  aeon.fun/security and `ECOSYSTEM.md`: ~2M stars secured, 69 repos, 68 ecosystem
+  products (community packs stay 12). (#843)
 - **Read-only persistence contract corrected.** Docs told read-only skills they
   could persist to `memory/` during a run, but the OS sandbox write-locks the whole
   workspace on all six harnesses, so those writes silently fail. `CLAUDE.md` and
@@ -394,6 +432,9 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Maintenance
 
+- Webhook Dependabot batch (undici, `@opentelemetry/core`) plus two CI changes:
+  dropped the daily cron from Setup Telegram Commands, and stated the egress-parser
+  scope with a lockfile-coverage gate. (#826, #827, #839)
 - 2 dependency bumps (wrangler in the webhook; the dashboard group) plus a new CI
   eyebrow capability-integrity gate for skills. (#809, #810, #815)
 - CI green-up after the Telegram owner-gate, plus a dashboard PacksPanel
