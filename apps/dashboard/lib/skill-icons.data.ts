@@ -6,6 +6,7 @@
 export const SKILL_ICONS: Record<string, string> = {
   "action-converter": "<rect x='3' y='5' width='6' height='6' rx='1'/><path d='M3 17l2 2 4-4'/><path d='M13 6h8M13 12h8M13 18h8'/>",
   "aeon-doctor": "<path d='M11 2v2M5 2v2'/><path d='M5 4H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V6a2 2 0 0 0-2-2h-1'/><path d='M8 16a6 6 0 0 0 12 0v-2'/><circle cx='20' cy='11' r='2'/>",
+  "aeon-update": "<path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/><path d='M7 10l5 5 5-5'/><path d='M12 15V3'/>",
   "article": "<path d='M4 22a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2'/><path d='M6 22a2 2 0 0 0 2-2V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2z'/><path d='M18 14h-8M15 18h-5'/><path d='M10 6h8v4h-8z'/>",
   "auto-merge": "<circle cx='6' cy='6' r='3'/><circle cx='18' cy='18' r='3'/><path d='M6 21V9a9 9 0 0 0 9 9'/>",
   "auto-workflow": "<rect x='3' y='3' width='8' height='8' rx='2'/><path d='M7 11v4a2 2 0 0 0 2 2h4'/><rect x='13' y='13' width='8' height='8' rx='2'/>",
