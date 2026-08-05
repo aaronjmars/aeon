@@ -74,17 +74,22 @@ var: ""                          # per-run input - "solana", "rust", "AI agents"
 mode: write
 ---
 ```
-> Today is ${today}. Generate and send a daily **${var}** digest.
->
-> The whole point of a digest is **signal, not volume**. A reader skimming for 60 seconds should walk away with three things they didn't know that morning and one of them should change a decision they'd make this week. Anything that doesn't clear that bar gets cut.
 
-The prompt *is* the skill. You schedule it, hand it a `var`, chain it into others, and Haiku rates every run. **Six packs ship in the box** (Core, Evolution, Basics on by default; enable the rest in the **Packs** view). How packs work: [`docs/skill-packs.md`](../docs/skill-packs.md).
+The prompt *is* the skill. You schedule it, hand it a `var`, chain it into others, and Haiku rates every run. How packs work: [`docs/skill-packs.md`](../docs/skill-packs.md).
 
 <p align="center">
   <img src="../docs/assets/packs-aeon.jpg" alt="Six skill packs, 67 skills total: Core (fleet coordination, self-config, liveness), Evolution (authors and heals its own skills), Basics (simple runnable skills), Dev & Code, Crypto & Markets, and Productivity." width="100%" />
 </p>
 
 <p align="center"><a href="../docs/skill-packs.md#full-catalog-all-67-skills-by-pack"><b>Full catalog - all 67 skills by pack →</b></a></p>
+
+### It ships real work
+
+<p align="center">
+  <img src="../docs/assets/ships-work-aeon.jpg" alt="It ships real work — four things Aeon does end to end: ships code (PRs to your repos), deploys apps (live to Vercel), finds bugs (real vulnerabilities, privately disclosed), and writes skills (new capabilities from a sentence)." width="100%" />
+</p>
+
+`feature` ships code to your repos, `deploy-prototype` ships live apps to Vercel, `vuln-scanner` finds and privately discloses real vulnerabilities, `create-skill` writes new skills from a sentence. How each works: [`CORE.md`](../docs/CORE.md).
 
 ### It heals itself
 
@@ -99,14 +104,6 @@ Haiku scores every run 1–5; `heartbeat` → `skill-health` → `skill-repair` 
 </p>
 
 `spawn-instance` forks Aeon into a new specialized instance (`var: "crypto-tracker: monitor DeFi protocols"`), picks relevant skills, and registers it - no secrets propagated, billing isolated. `fleet-control` health-checks and dispatches across the fleet.
-
-### It ships real work
-
-<p align="center">
-  <img src="../docs/assets/ships-work-aeon.jpg" alt="It ships real work — four things Aeon does end to end: ships code (PRs to your repos), deploys apps (live to Vercel), finds bugs (real vulnerabilities, privately disclosed), and writes skills (new capabilities from a sentence)." width="100%" />
-</p>
-
-`feature` ships code to your repos, `deploy-prototype` ships live apps to Vercel, `vuln-scanner` finds and privately discloses real vulnerabilities, `create-skill` writes new skills from a sentence. How each works: [`CORE.md`](../docs/CORE.md).
 
 ### Add more skills
 
@@ -228,6 +225,4 @@ Everything above gets you running. The deep reference lives in [`docs/`](../docs
 
 ---
 
-## Support the project
-
-`0xbf8e8f0e8866a7052f948c16508644347c57aba3`
+<p align="center"><sub>MIT · Support the project: <code>0xbf8e8f0e8866a7052f948c16508644347c57aba3</code> ⭐</sub></p>
