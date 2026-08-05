@@ -67,6 +67,7 @@ export const SKILL_ICONS: Record<string, string> = {
   "token-pick": "<path d='M3.9 8.6a4 4 0 0 1 4.7-4.8 4 4 0 0 1 6.8 0 4 4 0 0 1 4.7 4.8 4 4 0 0 1 0 6.8 4 4 0 0 1-4.7 4.7 4 4 0 0 1-6.8 0 4 4 0 0 1-4.7-4.8 4 4 0 0 1 0-6.7z'/><path d='M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8'/><path d='M12 18V6'/>",
   "tx-explain": "<path d='M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1z'/><path d='M14 8H8M16 12H8M13 16H8'/>",
   "unlock-monitor": "<rect x='3' y='11' width='18' height='11' rx='2'/><path d='M7 11V7a5 5 0 0 1 9.9-1'/><circle cx='12' cy='16' r='1.4' fill='currentColor' stroke='none'/>",
+  "video-script": "<path d='M22 8l-6 4 6 4V8z'/><rect x='2' y='6' width='14' height='12' rx='2'/><path d='M5 10h6M5 13h4'/>",
   "vuln-scanner": "<path d='M8 2l1.9 1.9M14.1 3.9 16 2'/><path d='M9 7.1v-1a3 3 0 1 1 6 0v1'/><path d='M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6'/><path d='M12 20v-9'/><path d='M6.5 9C4.6 8.8 3 7.1 3 5'/><path d='M6 13H2'/><path d='M3 21c0-2.1 1.7-3.9 3.8-4'/><path d='M21 5c0 2.1-1.6 3.8-3.5 4'/><path d='M22 13h-4'/><path d='M17.2 17c2.1.1 3.8 1.9 3.8 4'/>",
   "vuln-tracker": "<path d='M20 13c0 5-3.5 7.5-7.7 9a1 1 0 0 1-.7 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.5 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z'/><path d='M9 12l2 2 4-4'/>",
   "write-tweet": "<path fill='currentColor' stroke='none' d='M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z'/>",
