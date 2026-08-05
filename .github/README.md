@@ -107,19 +107,6 @@ Haiku scores every run 1–5; `heartbeat` → `skill-health` → `skill-repair` 
 
 `spawn-instance` forks Aeon into a new specialized instance (`var: "crypto-tracker: monitor DeFi protocols"`), picks relevant skills, and registers it - no secrets propagated, billing isolated. `fleet-control` health-checks and dispatches across the fleet.
 
-### Add more skills
-
-```bash
-bin/add-skill aeonfun/aeon --list        # browse the built-in catalog
-bin/add-skill BankrBot/skills bankr hydrex  # install from any GitHub repo
-bin/add-skill BankrBot/skills --all         # install everything from a repo
-bin/export-skill token-movers               # package one for standalone use
-```
-
-Installed skills land in `skills/` disabled - flip `enabled: true`. Or build your own from a [template](../docs/examples/skill-templates/TEMPLATE.md), drop a [portable workflow](../docs/examples/workflow-templates) into any repo, or label an issue `ai-build` and Claude opens the PR. More: [`skill-packs.md`](../docs/skill-packs.md).
-
----
-
 ## Proof of work
 
 Aeon's skills ship to production. These numbers are live at **[aeon.fun](https://www.aeon.fun)**.
