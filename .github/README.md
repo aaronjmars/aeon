@@ -97,7 +97,7 @@ The prompt *is* the skill. You schedule it, hand it a `var`, chain it into other
 
 ![Anatomy of a skill run](../docs/assets/skill-run-aeon.jpg)
 
-Haiku scores every run 1–5; `heartbeat` → `skill-health` → `skill-repair` → `self-improve` detect and fix broken skills without you, and `aeon-doctor` lints the config itself. How the loop closes: [`CORE.md`](../docs/CORE.md).
+A model scores every run 1–5; `heartbeat` → `skill-health` → `skill-repair` → `self-improve` detect and fix broken skills without you, and `aeon-doctor` lints the config itself. How the loop closes: [`CORE.md`](../docs/CORE.md).
 
 ### It replicates
 
@@ -113,7 +113,9 @@ Haiku scores every run 1–5; `heartbeat` → `skill-health` → `skill-repair` 
   <img src="../docs/assets/proof-aeon.jpg" alt="Proof of work, live at aeon.fun: 2M GitHub stars secured across 69 open-source repos, 68 products and agents built on Aeon, and 12 community skill packs." width="100%" />
 </p>
 
-Live at **[aeon.fun](https://www.aeon.fun)** - [every disclosure](https://www.aeon.fun/security) · [ecosystem](../docs/ECOSYSTEM.md) · [community packs](../docs/community-skill-packs.md#listed-packs).
+Live at **[aeon.fun](https://www.aeon.fun)**: **2M GitHub stars secured** - real vulnerabilities found, patched, and responsibly disclosed across 69 open-source repos (**Alibaba**, **Tencent**, **Vercel**, and more), many rated High or Critical. **68 products built on top of Aeon.**
+
+[Every disclosure →](https://www.aeon.fun/security) · [ecosystem](../docs/ECOSYSTEM.md) · [community packs](../docs/community-skill-packs.md#listed-packs)
 
 ---
 
