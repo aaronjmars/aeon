@@ -91,6 +91,16 @@ Most agent tools keep you in the loop - approve this call, review this diff. Aeo
 
 Full comparison vs AutoGen, CrewAI, n8n, and LangGraph: [`SHOWCASE.md`](../docs/SHOWCASE.md).
 
+## Proof of work
+
+<p align="center">
+  <img src="../docs/assets/proof-aeon.jpg" alt="Proof of work, live at aeon.fun: 2M GitHub stars secured across 69 open-source repos, 68 products and agents built on Aeon, and 12 community skill packs." width="100%" />
+</p>
+
+Live at **[aeon.fun](https://www.aeon.fun)**: **2M GitHub stars secured** - real vulnerabilities found, patched, and responsibly disclosed across 69 open-source repos (**Alibaba**, **Tencent**, **Vercel**, and more), many rated High or Critical. **68 products built on top of Aeon.**
+
+[Every disclosure →](https://www.aeon.fun/security) · [ecosystem](../docs/ECOSYSTEM.md) · [community packs](../docs/community-skill-packs.md#listed-packs)
+
 ![Autonomy spectrum](../docs/assets/autonomy-aeon.jpg)
 
 ### It ships real work
@@ -114,16 +124,6 @@ A model scores every run 1–5; `heartbeat` → `skill-health` → `skill-repair
 </p>
 
 `spawn-instance` forks Aeon into a new specialized instance (`var: "crypto-tracker: monitor DeFi protocols"`), picks relevant skills, and registers it - no secrets propagated, billing isolated. `fleet-control` health-checks and dispatches across the fleet.
-
-## Proof of work
-
-<p align="center">
-  <img src="../docs/assets/proof-aeon.jpg" alt="Proof of work, live at aeon.fun: 2M GitHub stars secured across 69 open-source repos, 68 products and agents built on Aeon, and 12 community skill packs." width="100%" />
-</p>
-
-Live at **[aeon.fun](https://www.aeon.fun)**: **2M GitHub stars secured** - real vulnerabilities found, patched, and responsibly disclosed across 69 open-source repos (**Alibaba**, **Tencent**, **Vercel**, and more), many rated High or Critical. **68 products built on top of Aeon.**
-
-[Every disclosure →](https://www.aeon.fun/security) · [ecosystem](../docs/ECOSYSTEM.md) · [community packs](../docs/community-skill-packs.md#listed-packs)
 
 ---
 
