@@ -42,6 +42,7 @@ export const SKILL_ICONS: Record<string, string> = {
   "narrative-tracker": "<path d='M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1'/><path d='M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1'/><path d='M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1'/>",
   "onchain-monitor": "<path d='M9 17H7A5 5 0 0 1 7 7h2'/><path d='M15 7h2a5 5 0 1 1 0 10h-2'/><path d='M8 12h8'/>",
   "operator-scorecard": "<path d='M12 14l4-4'/><path d='M3.3 19a10 10 0 1 1 17.3 0'/><circle cx='12' cy='14' r='1.4' fill='currentColor' stroke='none'/>",
+  "pack-submit": "<path d='M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5'/><path d='M12 15V3'/><path d='M7 8l5-5 5 5'/>",
   "picks-tracker": "<path d='M11.5 2.3a.5.5 0 0 1 1 0l2.3 4.7a2 2 0 0 0 1.6 1.1l5.1.8a.5.5 0 0 1 .3.9l-3.7 3.6a2 2 0 0 0-.6 1.9l.9 5.1a.5.5 0 0 1-.8.6l-4.6-2.4a2 2 0 0 0-2 0l-4.6 2.4a.5.5 0 0 1-.8-.6l.9-5.1a2 2 0 0 0-.6-1.9L2.2 9.8a.5.5 0 0 1 .3-.9l5.2-.8a2 2 0 0 0 1.5-1.1z'/>",
   "pm-manipulation": "<path d='M21.7 18l-8-14a2 2 0 0 0-3.5 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3z'/><path d='M12 9v4'/><path d='M12 17h.01'/>",
   "posthog-errors": "<path d='M3 3v16a2 2 0 0 0 2 2h16'/><rect x='6' y='12' width='3' height='6' rx='.5'/><rect x='11' y='9' width='3' height='9' rx='.5'/><path d='M18 4l3 5h-6z'/><path d='M18 6v1.5'/>",
