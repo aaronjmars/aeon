@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="40" viewBox="0 0 128 40" role="img" aria-label="Webhooks">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c1a15"/><stop offset="1" stop-color="#0d0c0a"/></linearGradient></defs>
+  <rect x="0.5" y="0.5" width="127" height="39" rx="19.5" fill="url(#g)" stroke="#F4EFE1" stroke-opacity="0.5"/>
+  <rect x="2" y="1.5" width="124" height="15" rx="12" fill="#F4EFE1" opacity="0.05"/>
+  <path d="M23.5 12l-7 9.5h4.2l-1.2 6.5 7-9.5h-4.3z" fill="#F4EFE1"/>
+  <text x="37" y="25.5" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="15" font-weight="700" fill="#F4EFE1">Webhooks</text>
+</svg>

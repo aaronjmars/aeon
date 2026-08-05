@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="86" height="40" viewBox="0 0 86 40" role="img" aria-label="CLI">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c1a15"/><stop offset="1" stop-color="#0d0c0a"/></linearGradient></defs>
+  <rect x="0.5" y="0.5" width="85" height="39" rx="19.5" fill="url(#g)" stroke="#F4EFE1" stroke-opacity="0.5"/>
+  <rect x="2" y="1.5" width="82" height="15" rx="12" fill="#F4EFE1" opacity="0.05"/>
+  <g stroke="#F4EFE1" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="14" y="13.5" width="16" height="13" rx="2"/><path d="M17 18l3 2-3 2"/><line x1="22.5" y1="23" x2="26.5" y2="23"/></g>
+  <text x="37" y="25.5" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="15" font-weight="700" fill="#F4EFE1">CLI</text>
+</svg>

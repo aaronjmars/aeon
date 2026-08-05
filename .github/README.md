@@ -371,19 +371,23 @@ The full walkthrough - App permissions, the tenant-isolation check, dispatch got
 
 ---
 
-## Reference & advanced
+## Docs
 
-Everything above gets you running. The deeper reference lives in [`docs/`](../docs) so this page stays short.
+Everything above gets you running. The deep reference lives in [`docs/`](../docs) - jump in:
 
-- **[Configuration & advanced](../docs/CONFIGURATION.md)** - skill chaining, reactive triggers, scheduler frequency, capability modes, MCP in runs, cross-repo tokens, `STRATEGY.md` / soul, Fleet Watcher, remote dashboard, two-repo setup, Actions cost.
-- **[ADK (Aeon Developer Kit)](../docs/ADK.md)** - build products on top of Aeon: authorize access to your users' instances with a GitHub App, drive skills over the GitHub API, and ship your own skills as a pack.
-- **[LLM gateways](../docs/CONFIGURATION.md#llm-gateways)** - eight ways to power Claude Code, resolved by an automatic fail-over cascade.
-- **[Harnesses](../docs/harnesses.md)** - run skills on any of six agent CLIs (Claude Code, Grok, Codex, Pi, Vibe, Kimi) behind one contract via [`harness-adapter`](../harness-adapter/); auth, token accounting, per-skill knobs, and the live verification matrix.
-- **[Use Aeon's skills from Claude](../apps/mcp-server/README.md)** - every skill as an `aeon-<name>` MCP tool in Claude Desktop and Code.
-- **[Command line](../apps/cli/README.md)** - the whole dashboard as scriptable `./aeon` commands.
-- **[Telegram instant mode](../apps/webhook/README.md)** - ~1s replies via a self-hosted Cloudflare Worker.
-- **[Observability](../docs/langfuse.md)** and **[provenance](../docs/attestation.md)** - optional Langfuse tracing and Sigstore attestation.
-- **[Project layout](CONTRIBUTING.md#project-layout)** - an annotated tour of the repo.
+<p align="center">
+  <a href="../docs/CONFIGURATION.md"><img src="../docs/assets/doc-config.svg" alt="Configuration - chaining, triggers, scheduler, capability modes, gateways, Fleet Watcher" height="30" align="absmiddle"></a>&nbsp;
+  <a href="../docs/harnesses.md"><img src="../docs/assets/doc-harnesses.svg" alt="Harnesses - run skills on any of six agent CLIs behind one contract" height="30" align="absmiddle"></a>&nbsp;
+  <a href="../docs/skill-packs.md"><img src="../docs/assets/doc-packs.svg" alt="Skill Packs - how packs work and how to build your own" height="30" align="absmiddle"></a>&nbsp;
+  <a href="../docs/CORE.md"><img src="../docs/assets/doc-core.svg" alt="Core - the self-healing health and repair loop" height="30" align="absmiddle"></a>
+</p>
+<p align="center">
+  <a href="../apps/cli/README.md"><img src="../docs/assets/doc-cli.svg" alt="CLI - the whole dashboard as scriptable ./aeon commands" height="30" align="absmiddle"></a>&nbsp;
+  <a href="../apps/mcp-server/README.md"><img src="../docs/assets/doc-mcp.svg" alt="MCP server - every skill as an aeon MCP tool in Claude" height="30" align="absmiddle"></a>&nbsp;
+  <a href="../apps/webhook/README.md"><img src="../docs/assets/doc-webhooks.svg" alt="Webhooks - ~1s Telegram instant mode via a self-hosted worker" height="30" align="absmiddle"></a>&nbsp;
+  <a href="../docs/ADK.md"><img src="../docs/assets/doc-adk.svg" alt="ADK - build products on top of Aeon over the GitHub API" height="30" align="absmiddle"></a>&nbsp;
+  <a href="../docs/ECOSYSTEM.md"><img src="../docs/assets/doc-ecosystem.svg" alt="Ecosystem - products and agents built on Aeon" height="30" align="absmiddle"></a>
+</p>
 
 ---
 

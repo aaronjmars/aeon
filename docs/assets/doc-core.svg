@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="92" height="40" viewBox="0 0 92 40" role="img" aria-label="Core">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c1a15"/><stop offset="1" stop-color="#0d0c0a"/></linearGradient></defs>
+  <rect x="0.5" y="0.5" width="91" height="39" rx="19.5" fill="url(#g)" stroke="#F4EFE1" stroke-opacity="0.5"/>
+  <rect x="2" y="1.5" width="88" height="15" rx="12" fill="#F4EFE1" opacity="0.05"/>
+  <g stroke="#F4EFE1" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="22" cy="20" r="7.6"/><path d="M16.4 20h2.1l1.4-3 2 6 1.5-3h2.2"/></g>
+  <text x="37" y="25.5" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="15" font-weight="700" fill="#F4EFE1">Core</text>
+</svg>
