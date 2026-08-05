@@ -218,7 +218,6 @@ The deep reference lives in [`docs/`](../docs) - jump in:
 
 <p align="center">
   📝 <a href="CONTRIBUTING.md"><b>Contributing guide</b></a> &nbsp;·&nbsp;
-  🐛 <a href="https://github.com/aeonfun/aeon/labels/good%20first%20issue"><b>good first issues</b></a> &nbsp;·&nbsp;
   💬 <a href="https://x.com/aeonframework"><b>Say hi on X</b></a>
 </p>
 
