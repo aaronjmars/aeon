@@ -124,8 +124,8 @@ Aeon's skills ship to production. These numbers are live at **[aeon.fun](https:/
 
 | Skill | In production |
 |-------|---------------|
-| **`vuln-scanner`** | **~1.6M GitHub stars secured** - real vulnerabilities found, patched, and responsibly disclosed across 54 open-source projects (31 rated High/Critical). [Every disclosure →](https://www.aeon.fun/security) |
-| **ecosystem** | **72 products & agents** built on Aeon. [`ECOSYSTEM.md`](../docs/ECOSYSTEM.md) |
+| **`vuln-scanner`** | **2M GitHub stars secured** - real vulnerabilities found, patched, and responsibly disclosed across 69 open-source projects, many rated High or Critical. [Every disclosure →](https://www.aeon.fun/security) |
+| **ecosystem** | **68 products & agents** built on Aeon. [`ECOSYSTEM.md`](../docs/ECOSYSTEM.md) |
 | **community** | **12 community skill packs** published to the registry. [`community-skill-packs.md`](../docs/community-skill-packs.md) |
 
 ---
