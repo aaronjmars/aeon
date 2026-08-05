@@ -61,7 +61,7 @@ Grab the `gh_*_macOS_arm64.zip` (or your platform's binary) from [github.com/cli
   <img src="../docs/assets/what-aeon-does.jpg" alt="A skill is just a file — an Aeon skill is a single SKILL.md: a small frontmatter block (title, category, status) then a plain-language prompt. That one file fans out into real capabilities: launch, deploy, web fetch, and search." width="100%" />
 </p>
 
-**A skill is a Markdown file: some frontmatter, then a prompt.** No plugin API, nothing to compile. Here's a real one, trimmed:
+**A skill is a Markdown file: some frontmatter, then a prompt.** Here's a real one, trimmed:
 
 ```yaml
 # skills/digest/SKILL.md
