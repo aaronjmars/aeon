@@ -107,6 +107,14 @@ A model scores every run 1–5; `heartbeat` → `skill-health` → `skill-repair
 
 `spawn-instance` forks Aeon into a new specialized instance (`var: "crypto-tracker: monitor DeFi protocols"`), picks relevant skills, and registers it - no secrets propagated, billing isolated. `fleet-control` health-checks and dispatches across the fleet.
 
+## Why "the most autonomous"
+
+Most agent tools keep you in the loop - approve this call, review this diff. Aeon is built for the work you want done while you're away, and it's the only framework that does all four unattended: runs on a schedule, remembers across runs, reacts to conditions, and repairs its own broken skills. The most autonomous agent is the one that never asks.
+
+Full comparison vs AutoGen, CrewAI, n8n, and LangGraph: [`SHOWCASE.md`](../docs/SHOWCASE.md).
+
+![Autonomy spectrum](../docs/assets/autonomy-aeon.jpg)
+
 ## Proof of work
 
 <p align="center">
@@ -126,16 +134,6 @@ Live at **[aeon.fun](https://www.aeon.fun)**: **2M GitHub stars secured** - real
 </p>
 
 Read-only skills can't touch the repo, irreversible actions fail closed, an optional [Fleet Watcher](../docs/CONFIGURATION.md#fleet-watcher-authorization-layer) gates every run, and secrets stay off the command line. Details: [Configuration](../docs/CONFIGURATION.md#capability-tiers-read-only-skills).
-
----
-
-## Why "the most autonomous"
-
-Most agent tools keep you in the loop - approve this call, review this diff. Aeon is built for the work you want done while you're away, and it's the only framework that does all four unattended: runs on a schedule, remembers across runs, reacts to conditions, and repairs its own broken skills. The most autonomous agent is the one that never asks.
-
-Full comparison vs AutoGen, CrewAI, n8n, and LangGraph: [`SHOWCASE.md`](../docs/SHOWCASE.md).
-
-![Autonomy spectrum](../docs/assets/autonomy-aeon.jpg)
 
 ---
 
@@ -185,6 +183,29 @@ The deep reference lives in [`docs/`](../docs) - jump in:
   <a href="../apps/webhook/README.md"><img src="../docs/assets/doc-webhooks.svg" alt="Webhooks - ~1s Telegram instant mode via a self-hosted worker" height="30" align="absmiddle"></a>&nbsp;
   <a href="../docs/ADK.md"><img src="../docs/assets/doc-adk.svg" alt="ADK - build products on top of Aeon over the GitHub API" height="30" align="absmiddle"></a>&nbsp;
   <a href="../docs/ECOSYSTEM.md"><img src="../docs/assets/doc-ecosystem.svg" alt="Ecosystem - products and agents built on Aeon" height="30" align="absmiddle"></a>
+</p>
+
+---
+
+## Community
+
+<p align="center">
+  <b><a href="https://x.com/aeonframework">Follow @aeonframework on X</a></b> for launches, demos, and updates &nbsp;·&nbsp; <b><a href="https://www.aeon.fun/docs">Read the docs</a></b> &nbsp;·&nbsp; <b><a href="https://bankr.bot/discover/0xbf8e8f0e8866a7052f948c16508644347c57aba3">$aeon on Bankr</a></b>
+</p>
+
+---
+
+## We love contributors
+
+<p align="center">
+  <b>We're excited to meet you.</b><br/>
+  Every bug fix, new skill, or doc tweak makes Aeon better. Big PRs and small ones, both welcome.
+</p>
+
+<p align="center">
+  📝 <a href="CONTRIBUTING.md"><b>Contributing guide</b></a> &nbsp;·&nbsp;
+  🐛 <a href="https://github.com/aeonfun/aeon/labels/good%20first%20issue"><b>good first issues</b></a> &nbsp;·&nbsp;
+  💬 <a href="https://x.com/aeonframework"><b>Say hi on X</b></a>
 </p>
 
 ---
