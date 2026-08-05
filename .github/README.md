@@ -11,6 +11,11 @@
   <a href="https://bankr.bot/discover/0xbf8e8f0e8866a7052f948c16508644347c57aba3"><img src="../docs/assets/btn-bankr.svg" alt="$aeon on Bankr" height="34" align="absmiddle"></a>
 </p>
 
+<p align="center">
+  Give it a direction and it ships the work: features, vulnerability disclosures, live apps, deep research - and new skills for itself.<br/><br/>
+  <strong>No approval loops. No babysitting. Configure once, forget forever.</strong>
+</p>
+
 <div align="center">
 
 [![stars](https://img.shields.io/github/stars/aeonfun/aeon?style=flat-square&label=stars&color=F4EFE1&labelColor=0d0c0a&logo=github&logoColor=F4EFE1)](https://github.com/aeonfun/aeon/stargazers)
@@ -19,10 +24,6 @@
 [![node](https://img.shields.io/badge/node-20+-F4EFE1?style=flat-square&labelColor=0d0c0a)](https://nodejs.org/)
 
 </div>
-
-<p align="center">
-  Give it a direction and it gets the work done: ships features to your repos, finds and privately discloses real vulnerabilities, deploys live apps, runs deep research - and writes new skills for itself. No approval loops. No babysitting. Configure once, forget forever.
-</p>
 
 <p align="center">
   <img src="../docs/assets/aeon-demo.gif" alt="Aeon live demo — the dashboard configures skills, schedules them on cron, and Aeon runs unattended: shipping PRs, disclosing vulnerabilities, and reporting back to your channels." />
@@ -70,6 +71,10 @@ Grab the `gh_*_macOS_arm64.zip` (or your platform's binary) from [github.com/cli
 ---
 
 ## What Aeon can do
+
+<p align="center">
+  <img src="../docs/assets/what-aeon-does.jpg" alt="A skill is just a file — an Aeon skill is a single SKILL.md: a small frontmatter block (title, category, status) then a plain-language prompt. That one file fans out into real capabilities: launch, deploy, web fetch, and search." width="100%" />
+</p>
 
 **A skill is a Markdown file: some frontmatter, then a prompt.** No plugin API, nothing to compile. Here's a real one, trimmed:
 
@@ -136,9 +141,17 @@ Health skills file issues, repair skills close them. `heartbeat` is the only ski
 
 ### It replicates
 
+<p align="center">
+  <img src="../docs/assets/replicates-aeon.jpg" alt="It spawns itself — one Aeon forks into a fleet of specialized instances (crypto, security, research), each its own node with isolated billing and no propagated secrets." width="100%" />
+</p>
+
 Aeon can spawn and manage copies of itself. `spawn-instance` forks the repo into a new specialized instance (`var: "crypto-tracker: monitor DeFi protocols"`), selects relevant skills, and registers it in `memory/instances.json` - no secrets propagated, billing stays isolated. `fleet-control` health-checks and dispatches across instances; its `scorecard` mode tracks fleet economics.
 
 ### It ships real work
+
+<p align="center">
+  <img src="../docs/assets/ships-work-aeon.jpg" alt="It ships real work — four things Aeon does end to end: ships code (PRs to your repos), deploys apps (live to Vercel), finds bugs (real vulnerabilities, privately disclosed), and writes skills (new capabilities from a sentence)." width="100%" />
+</p>
 
 - **`feature`** - ships code unprompted, to your watched repos or any repo with `var: external:<owner/repo>`.
 - **`deploy-prototype`** - generates and deploys live web apps to Vercel.
@@ -179,6 +192,10 @@ Aeon's skills ship to production. These numbers are live at **[aeon.fun](https:/
 ---
 
 ## Guardrails
+
+<p align="center">
+  <img src="../docs/assets/guardrails-aeon.jpg" alt="Autonomy needs brakes — four safety brakes on by default or one flag away: read-only skills can't touch the repo, irreversible actions fail closed, an optional auth gate approves every run, and secrets stay off the command line." width="100%" />
+</p>
 
 Autonomy needs brakes. Aeon ships several, on by default or one flag away.
 
