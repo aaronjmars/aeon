@@ -31,8 +31,7 @@ touches a skill, the [`ci-skill-integrity`](../.github/workflows/ci-skill-integr
 workflow re-derives that fingerprint and, per [`eyebrow.policy.json`](../eyebrow.policy.json),
 fails the build **only** when a skill:
 
-- **gains a new egress host** vs the lockfile (`failOnCapabilityExpansion`) — the
-  real rug-pull signal, or
+- **gains a new egress host** vs the lockfile (`failOnCapabilityExpansion`), or
 - introduces a **new critical finding** (`failOnSeverity: critical`).
 
 It **does not** fail on a skill's wording changing (`allowContentDrift: true`).
@@ -41,6 +40,12 @@ Prose edits, refactors, and secret-plumbing changes that keep the same hosts are
 constantly, and a gate that fired on every byte would be forced off within a week
 — the exact failure mode of an over-broad scanner. eyebrow gates on *reach*, not
 wording, so the signal stays meaningful.
+
+**Scope, honestly:** the egress parser is line-based and host-granular. It
+catches the common rug-pull shape — a new endpoint appearing on a call line. It
+does **not** catch a URL split across lines, one assembled from shell variables,
+or a new *path* on an already-listed host; those remain `skill-scan.sh` and
+reviewer territory. Treat this gate as defense-in-depth, not a bash parser.
 
 This **complements** `skill-scan.sh` — it does not replace it. Scan catches
 dangerous *content*; eyebrow catches a skill *expanding what it can reach*.
