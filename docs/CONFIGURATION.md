@@ -189,3 +189,79 @@ Your `memory/`, `output/`, and personal config won't conflict - they're in files
 | **Public repo** | **Unlimited free minutes** |
 
 Private repos: Free plan = 2,000 min/mo, Pro/Team = 3,000 + $0.008/min overage. To reduce usage: switch to `*/15` or hourly cron, disable unused skills, keep the repo public. Every run logs token usage to `memory/token-usage.csv` for a per-skill, per-model cost breakdown.
+
+---
+
+## Authentication
+
+Aeon needs **at least one** way to reach a model. Add it in the dashboard's **Authenticate** modal, or from the terminal with `aeon auth`:
+
+- **A Claude subscription** - one-click OAuth, or `claude setup-token` on the CLI (prints an `sk-ant-oat01-…` token, valid 1 year).
+- **An API key** - Anthropic, Anthropic-compatible, or an [LLM gateway](#llm-gateways) key (Bankr, OpenRouter, Surplus, Venice, UsePod). Paste it and the provider is auto-detected from its prefix.
+- **A harness's own login** - each harness signs in its own way (Grok with your X account, Codex with ChatGPT, Kimi with Moonshot, and so on), in the modal or with `aeon auth --harness <name>`.
+
+Set several and each run resolves the highest-priority one whose key is present, so you don't have to pick just one.
+
+## Models
+
+The default model for all skills is set in `aeon.yml` (or from the dashboard header dropdown):
+
+```yaml
+model: claude-sonnet-5
+```
+
+Options: `claude-sonnet-5` (default), `claude-opus-5`, `claude-haiku-4-5-20251001`. Per-run overrides are available via workflow dispatch, and individual skills can override to optimize cost:
+
+```yaml
+skills:
+  token-movers: { enabled: true, schedule: "30 12 * * *", model: "claude-haiku-4-5-20251001" }
+```
+
+> Model ids are for the **claude** harness; each other [harness](harnesses.md) carries its own list, which the dashboard picker swaps in when you select it.
+
+## The `var` field
+
+Every skill accepts a single `var` - a universal input each skill interprets its own way:
+
+| Skill type | What `var` does | Example |
+|-----------|----------------|---------|
+| Research & content | Sets the topic | `var: "rust"` → digest about Rust |
+| Dev & code | Narrows to a repo | `var: "owner/repo"` → only review that repo's PRs |
+| Crypto | Focuses on a token/wallet | `var: "solana"` → only check SOL price |
+| Productivity | Sets the focus area | `var: "shipping v2"` → priority brief emphasizes v2 |
+
+Empty `var` = the skill's default behavior (scan everything, auto-pick topics). Set it from the dashboard or pass it when triggering manually.
+
+## Notifications
+
+Set the secret → channel activates. No code changes needed.
+
+| Channel | Outbound | Inbound |
+|---------|---------|---------|
+| Telegram | `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` | Same |
+| Discord | `DISCORD_WEBHOOK_URL` | `DISCORD_BOT_TOKEN` + `DISCORD_CHANNEL_ID` |
+| Slack | `SLACK_WEBHOOK_URL` | `SLACK_BOT_TOKEN` + `SLACK_CHANNEL_ID` |
+| Buzz | `BUZZ_PRIVATE_KEY` + `BUZZ_CHANNEL_ID` (+ `BUZZ_RELAY_URL`) | - |
+| Email | `RESEND_API_KEY` + `NOTIFY_EMAIL_TO` | - |
+
+**Set up each channel:**
+
+- **Telegram** - create a bot with **[@BotFather](https://t.me/BotFather)**, then copy its token + your chat ID. Saving the token in the dashboard **auto-registers** the slash-command menu (`/skillname` dispatches instantly, no LLM); a **Re-register commands** button re-syncs it after you toggle skills. Every notification carries **Run again / Schedule weekly** buttons, deep links, and stateless follow-up questions. [Full guide →](telegram-commands.md)
+- **Discord** - *outbound:* a channel webhook URL. *Inbound:* a bot token + channel ID, with the `channels:history` scope. ([discord.com/developers](https://discord.com/developers/applications))
+- **Slack** - *outbound:* an Incoming Webhook URL. *Inbound:* a bot token + channel ID, with the `channels:history` + `reactions:write` scopes. ([api.slack.com/apps](https://api.slack.com/apps))
+- **Email** - [resend.com/api-keys](https://resend.com/api-keys) → Create API Key → set it as `RESEND_API_KEY`, and `NOTIFY_EMAIL_TO` to your inbox. Optional: `NOTIFY_EMAIL_FROM` (default `aeon@notifications.aeon.bot` - **must be a sender/domain verified in Resend**) and `NOTIFY_EMAIL_SUBJECT_PREFIX` (default `[Aeon]`). Same key as security disclosures, so one Resend key powers all outbound email.
+- **Buzz** - [Buzz](https://buzz.xyz) is Block's open, self-hostable workspace where humans and agents are first-class members ([github.com/block/buzz](https://github.com/block/buzz)). *Outbound:* set `BUZZ_PRIVATE_KEY` (the agent's `nsec` keypair), `BUZZ_CHANNEL_ID` (target channel UUID from `buzz channels list`), and `BUZZ_RELAY_URL` (your relay; defaults to `http://localhost:3000`). Aeon posts Markdown as itself via the [`buzz` CLI](https://github.com/block/buzz/tree/main/crates/buzz-cli), which signs (NIP-98) and publishes each message over the relay. The CLI must be staged in the run (no prebuilt binary yet - `cargo install --path crates/buzz-cli`); the channel skips silently until it is. Inbound (agent-as-participant) is a later phase.
+
+**Restrict who can command the agent (inbound):** Telegram is scoped to a single `TELEGRAM_CHAT_ID`. That's enough for a **1:1 DM** (there the chat ID *is* your user ID). For a **group/public chat**, also set `TELEGRAM_ALLOWED_USER_ID` to your numeric user ID (from [@userinfobot](https://t.me/userinfobot)) - otherwise any group member can command the bot, including by tapping a **Run again / Schedule weekly** button on a posted notification (Telegram delivers those taps even with group-privacy mode on). Left unset in a group, taps and messages **fail closed**. For Discord and Slack, set the optional repo variables `DISCORD_ALLOWED_AUTHOR_ID` / `SLACK_ALLOWED_USER_ID` (or same-named secrets) to the authorized sender's user ID - inbound messages from anyone else in the channel are then ignored. **Leaving those unset processes commands from any non-bot member of the channel**, so set them whenever the channel isn't private to you.
+
+Want ~1s Telegram replies instead of up-to-5-min polling? See [Telegram instant mode](../apps/webhook/README.md).
+
+## API keys per skill
+
+Skills that call third-party APIs declare their credentials in a `requires:` frontmatter list, so the dashboard shows **which skill needs which key**:
+
+```yaml
+requires: [XAI_API_KEY, COINGECKO_API_KEY?]   # bare = required · `?` = works better with
+```
+
+The dashboard surfaces this as an **API keys** panel on each skill (set/unset status, inline "Set" button), a ⚠ flag when an enabled skill is missing a required key, and a **"used by"** index under each key in Settings → Access Keys. Skills can likewise declare MCP servers with an `mcp:` list (`mcp: [base]`) - same two tiers, shown as a per-skill **MCP servers** panel with install state. Convention details: [`examples/skill-templates/TEMPLATE.md`](examples/skill-templates/TEMPLATE.md#declaring-api-keys-requires).
