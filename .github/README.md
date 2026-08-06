@@ -81,7 +81,7 @@ The prompt *is* the skill. You schedule it, hand it a `var`, chain it into other
   <img src="../docs/assets/packs-aeon.jpg" alt="Six skill packs, 60+ skills total: Core (fleet coordination, self-config, liveness), Evolution (authors and heals its own skills), Basics (simple runnable skills), Dev & Code, Crypto & Markets, and Productivity." width="100%" />
 </p>
 
-<p align="center"><a href="../docs/skill-packs.md#full-catalog-all-68-skills-by-pack"><b>Full catalog - all 68 skills by pack →</b></a></p>
+<p align="center"><a href="../docs/skill-packs.md#full-catalog-all-73-skills-by-pack"><b>Full catalog - all 73 skills by pack →</b></a></p>
 
 <p align="center"><a href="../docs/community-skill-packs.md#listed-packs"><b>Community skill packs →</b></a></p>
 
