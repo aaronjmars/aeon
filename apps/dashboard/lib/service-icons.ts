@@ -51,6 +51,8 @@ const DOMAINS: Record<string, string> = {
   BASESCAN_API_KEY: 'basescan.org',
   BANKR_API_KEY: 'bankr.bot',
   VERCEL_TOKEN: 'vercel.com',
+  NEON_API_KEY: 'neon.tech',
+  RAILWAY_TOKEN: 'railway.com',
   REPLICATE_API_TOKEN: 'replicate.com',
   RESEND_API_KEY: 'resend.com',
   ADMANAGE_API_KEY: 'admanage.ai',
