@@ -53,5 +53,9 @@ __pycache__/
 # Node
 node_modules/
 
+# remotion skill: render outputs + the working storyboard are runtime-only
+skills/remotion/project/out/
+skills/remotion/project/props.json
+
 # eyebrow local snapshot cache (content-addressed; not committed)
 .eyebrow/

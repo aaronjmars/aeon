@@ -128,6 +128,25 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     oauth: true,
     oauthScopes: ['openid', 'user:read', 'organization:read', 'project:read', 'error_tracking:read'],
   },
+  {
+    slug: 'higgsfield',
+    name: 'Higgsfield',
+    url: 'https://mcp.higgsfield.ai/mcp',
+    logo: 'https://higgsfield.ai/apple-touch-icon.png',
+    description: 'Higgsfield - generative media from the agent: text-to-image, image-to-video and text-to-video with motion control, consistent characters, product placement, and cinematic looks across 100+ models. Hosted streamable-HTTP MCP with one-click OAuth Connect. Generation draws from your Higgsfield account credits.',
+    // Standard OAuth, probed live 2026-08-04: a 401 on /mcp carries WWW-Authenticate
+    // resource_metadata → PRM at /.well-known/oauth-protected-resource/mcp, which names
+    // AS https://mcp.higgsfield.ai (upstream Clerk) with authorization_code + refresh_token
+    // grants, PKCE S256, DCR (registration_endpoint /oauth2/register), public client via
+    // auth method "none". Advertises offline_access, so the token endpoint returns a refresh
+    // token (durable headless auth) — request it plus openid + email for identity. The PRM
+    // also lists a device_code AS (fnf-device-auth.higgsfield.ai) for redirect-less clients;
+    // the dashboard does the auth-code+PKCE flow, so we don't use it.
+    // Durable refresh (rotated-token persistence via GH_SECRETS_PAT) is handled generically
+    // by scripts/mcp-oauth-refresh.sh — see docs/mcp-oauth.md.
+    oauth: true,
+    oauthScopes: ['openid', 'email', 'offline_access'],
+  },
 ]
 
 export const MCP_BY_SLUG: Record<string, McpCatalogEntry> =

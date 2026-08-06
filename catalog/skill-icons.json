@@ -69,6 +69,11 @@
     "operator-scorecard": "<path d='M12 14l4-4'/><path d='M3.3 19a10 10 0 1 1 17.3 0'/><circle cx='12' cy='14' r='1.4' fill='currentColor' stroke='none'/>",
     "reply-maker": "<path d='M9 17l-5-5 5-5'/><path d='M20 18v-2a4 4 0 0 0-4-4H4'/>",
     "schedule-ads": "<path d='M3 11l18-5v12L3 14z'/><path d='M11.6 16.8a3 3 0 1 1-5.8-1.6'/>",
-    "send-email": "<rect x='2' y='4' width='20' height='16' rx='2'/><path d='M22 7l-9 5.7a1.9 1.9 0 0 1-2 0L2 7'/>"
+    "send-email": "<rect x='2' y='4' width='20' height='16' rx='2'/><path d='M22 7l-9 5.7a1.9 1.9 0 0 1-2 0L2 7'/>",
+    "spend-watch": "<path d='M4 4v16h16'/><path d='M20 8l-6 7-4-3-5 5'/><path d='M20 12V8h-4'/>",
+    "competitor-monitor": "<path d='M5 3v3M9 3v3'/><rect x='3' y='6' width='6' height='13' rx='3'/><rect x='15' y='6' width='6' height='13' rx='3'/><path d='M9 12h6'/>",
+    "higgsfield": "<rect x='3' y='4' width='18' height='16' rx='2'/><circle cx='8.5' cy='9.5' r='1.5'/><path d='M3 16l5-4 4 3 3-2 6 4'/><path d='M18 3v3M16.5 4.5h3'/>",
+    "remotion": "<rect x='2' y='3' width='20' height='18' rx='2'/><path d='M7 3v18M17 3v18'/><path d='M2 9h5M2 15h5M17 9h5M17 15h5'/><path d='M11 9.5l3 2.5-3 2.5z' fill='currentColor' stroke='none'/>",
+    "weekly-aeoncard": "<rect x='3' y='4' width='18' height='16' rx='2'/><path d='M3 9h18'/><path d='M8 16v-3M12 16v-5M16 16v-2'/>"
   }
 }

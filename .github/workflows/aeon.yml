@@ -435,6 +435,41 @@ jobs:
         if: steps.work.outputs.mode != '' && steps.skill.outputs.name == 'deploy-uni-hook'
         run: bash scripts/stage-deploy-uni-hook.sh "${{ steps.skill.outputs.name }}"
 
+      - name: Cache remotion toolchain
+        # The remotion skill renders MP4s with a bundled Remotion project. Its
+        # node_modules (incl. node_modules/.remotion, the ~90 MB chrome-headless-shell)
+        # is the slow part of staging. Cache it keyed on the lockfile so a warm run
+        # skips both `npm ci` and the browser download. The browser version is tied
+        # to the pinned remotion version in package-lock.json, so the lock hash is a
+        # sufficient key; bump the -vN salt to force-bust. Only restores/saves for
+        # the remotion skill (path is empty for every other skill = cheap no-op).
+        if: steps.work.outputs.mode != '' && steps.skill.outputs.name == 'remotion'
+        uses: actions/cache@v6
+        with:
+          path: skills/remotion/project/node_modules
+          key: remotion-${{ runner.os }}-v1-${{ hashFiles('skills/remotion/project/package-lock.json') }}
+          restore-keys: |
+            remotion-${{ runner.os }}-v1-
+
+      - name: Stage remotion toolchain
+        # Installs the headless-chrome system libs (apt), the project's node deps
+        # (from the ~/.npm + node_modules caches), and ensures chrome-headless-shell
+        # is present — all BEFORE claude -p, because apt needs root and the sandbox
+        # can't install system libraries in-run. The agent then only writes a
+        # storyboard props.json and runs `npx remotion render`. Best-effort:
+        # self-guards to the skill, never fails the run.
+        if: steps.work.outputs.mode != '' && steps.skill.outputs.name == 'remotion'
+        run: bash scripts/stage-remotion.sh "${{ steps.skill.outputs.name }}"
+
+      - name: Stage weekly-aeoncard rasterizer
+        # weekly-aeoncard renders an SVG card and needs a rasterizer to also emit a PNG
+        # for inline Telegram delivery (sendPhoto). apt needs root and the agent
+        # allowlist blocks in-run pip/apt, so install librsvg2-bin (rsvg-convert) here —
+        # render_card.py's fallback picks it up. Best-effort: never fails the run; without
+        # it the skill degrades to the SVG + a text notify.
+        if: steps.work.outputs.mode != '' && steps.skill.outputs.name == 'weekly-aeoncard'
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq librsvg2-bin || true
+
       # Single-source standing instructions. AGENTS.md is the full, self-contained
       # mirror of CLAUDE.md (operating manual + @STRATEGY.md inlined) that the
       # non-claude harnesses read — they load instruction files verbatim and don't

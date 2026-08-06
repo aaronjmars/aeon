@@ -1,0 +1,24 @@
+{
+  "name": "aeon-remotion-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Parametric Remotion project the `remotion` skill renders any topic into an MP4 from a storyboard JSON.",
+  "scripts": {
+    "render": "remotion render",
+    "studio": "remotion studio",
+    "ensure-browser": "remotion browser ensure"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.506",
+    "@remotion/transitions": "4.0.506",
+    "@remotion/zod-types": "4.0.506",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "remotion": "4.0.506",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.0",
+    "typescript": "5.9.2"
+  }
+}
