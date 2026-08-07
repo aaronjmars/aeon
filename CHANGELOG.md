@@ -11,6 +11,21 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Added
 
+- **Five new skills, ported from the `aeon-dev` instance and generalized for any
+  operator** (frontmatter converted to Agent Skills spec-form, OKF references
+  removed, private product/instance references genericized): **`spend-watch`** (dev
+  pack) - autonomous cloud-cost analyst across Neon / Vercel / Railway / GitHub
+  Actions, attributing spend to the biggest drivers and ranking dollar-figured
+  recommendations by real signal (`arm:` applies safe cost levers, disabled by
+  default); **`competitor-monitor`** (productivity, `read-only`) - snapshots
+  competitor pages (pricing, headings, CTAs, new/removed pages, title/meta) and
+  reports only what changed; **`higgsfield`** (productivity) - generative
+  image/video via the Higgsfield MCP, credit- and prompt-gated to <=2 outputs/run;
+  **`remotion`** (productivity) - renders a short (<=10s) MP4 from an agent-authored
+  storyboard via a bundled Remotion project, delivered by URL; **`weekly-aeoncard`**
+  (productivity) - weekly token-consumption recap rendered as a shareable SVG card
+  from `memory/token-usage.csv`. Brings the catalog to **73 skills** (68 -> 73; Dev
+  pack 10 -> 11, Productivity 6 -> 10). (#860)
 - **New skill: `video-script`** - turns a repo, product page, or topic into a
   recording-ready video script. Receipts-first: every number, address, and date is
   verified against the live source in-run, and anything unverifiable is cut or
@@ -123,6 +138,13 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Changed
 
+- **Dashboard catalog wiring for the five new skills** (#860): the Higgsfield hosted
+  OAuth MCP is registered in `mcp-catalog.ts` (one-click Connect, secrets + OAuth
+  refresh derived generically from the slug); `secrets-catalog.ts` adds
+  `NEON_API_KEY` and `RAILWAY_TOKEN` and notes `spend-watch` on the shared
+  `VERCEL_TOKEN`; `aeon.yml` stages the Remotion toolchain (node deps + headless
+  Chrome behind an `actions/cache`, via new `scripts/stage-remotion.sh`) and the
+  `weekly-aeoncard` rasterizer (`librsvg2-bin`), both gated to the running skill.
 - **README brand refresh.** The `.github/README.md` was rebuilt around an animated
   hero and section-banner art with a pill navigation, trimmed to MiroShark prose
   density, and the longer-form detail was relocated into `docs/` (Configuration,

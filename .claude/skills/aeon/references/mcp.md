@@ -7,7 +7,7 @@ Two unrelated things share the name. Get this wrong and nothing works.
 | | |
 |---|---|
 | **`.mcp.json`** — *external MCP servers, called BY Aeon skills* | Wired via the dashboard MCP panel or `./aeon mcp add`. This is what you want when a skill needs a tool. |
-| **`bin/add-mcp`** — *Aeon itself AS an MCP server* | Builds `apps/mcp-server` and registers it with Claude Code / Desktop, so all 65 skills appear as `aeon-*` tools **in your local Claude**. Nothing to do with a skill calling out. |
+| **`bin/add-mcp`** — *Aeon itself AS an MCP server* | Builds `apps/mcp-server` and registers it with Claude Code / Desktop, so all 73 skills appear as `aeon-*` tools **in your local Claude**. Nothing to do with a skill calling out. |
 
 The rest of this doc is the first one. For the second: `bin/add-mcp`, `--desktop` for a Claude Desktop snippet, `--uninstall` to remove, `claude mcp list` to verify.
 
