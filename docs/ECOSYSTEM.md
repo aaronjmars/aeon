@@ -47,6 +47,7 @@ These are the projects we know of that run Aeon, extend it, or integrate with th
 | <img src="https://pbs.twimg.com/profile_images/2050846114472202240/fOvJsybI_400x400.jpg" width="36" height="36" alt="Hivra logo"> | Hivra | [@HivraOS](https://x.com/HivraOS) |
 | <img src="https://pbs.twimg.com/profile_images/2060061798691221509/dGZFzJ5e_400x400.jpg" width="36" height="36" alt="Hound Flow logo"> | Hound Flow | [@HoundFlow_](https://x.com/HoundFlow_) · [houndflow.com](https://houndflow.com) |
 | <img src="https://pbs.twimg.com/profile_images/2057685123068534784/gu-mFTdW_400x400.jpg" width="36" height="36" alt="Hunch logo"> | Hunch | [@playhunchxyz](https://x.com/playhunchxyz) |
+|  | Kairune | [@usekairune](https://x.com/usekairune) · [kairune.online](https://kairune.online) |
 | <img src="https://pbs.twimg.com/profile_images/2065880577148882944/eljgIBzJ_400x400.jpg" width="36" height="36" alt="Lens logo"> | Lens | [@lnsx_io](https://x.com/lnsx_io) |
 | <img src="https://pbs.twimg.com/profile_images/2044050121852366850/v70sEXCF_400x400.jpg" width="36" height="36" alt="LiquidPad logo"> | LiquidPad | [@LiquidPadBot](https://x.com/LiquidPadBot) · [liquidpad.site](https://www.liquidpad.site) |
 | <img src="https://pbs.twimg.com/profile_images/2046582343587037184/TxgtMxAh_400x400.jpg" width="36" height="36" alt="Liq logo"> | Liq | [@liquid_launcher](https://x.com/liquid_launcher) |
