@@ -4,7 +4,7 @@ description: Delegate work to the TaskMarket agent-worker market - browse open t
 metadata:
   title: TaskMarket Delegate
   mode: write
-  category: external
+  category: crypto
   var: ""
   tags:
     - dev

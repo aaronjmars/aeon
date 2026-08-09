@@ -2233,6 +2233,103 @@
       ],
       "contentHash": "sha256-915ef57cf4dc5214a125f55df7bfe821503fd3252a8b80095f29d8343f47b5ae",
       "discoveredFrom": "skills/aeon-update/SKILL.md"
+    },
+    {
+      "id": "c9caca0148f44800",
+      "tool": "aeon",
+      "scope": "project:.",
+      "type": "skill",
+      "name": "taskmarket-delegate",
+      "source": {
+        "kind": "local",
+        "ref": "skills/taskmarket-delegate"
+      },
+      "capabilities": {
+        "network": [
+          "api.taskmarket.dev"
+        ]
+      },
+      "files": [
+        {
+          "path": "SKILL.md",
+          "hash": "b1b7f7545b1a9471684a8959da005312be41ea11ca64f55d22dfa4679f3d5d49"
+        },
+        {
+          "path": "scripts/taskmarket.js",
+          "hash": "377a1e526cc754d3e18f124bbad6e642dbc5a7a5725bda0658d13c344fcf54f6"
+        },
+        {
+          "path": "tests/test-taskmarket.js",
+          "hash": "05e90c4f547bbcb17592e57e70144f166f65983266605d3254d3549b0f42f79b"
+        }
+      ],
+      "findings": [
+        {
+          "ruleId": "SENSITIVE-PATH-READ",
+          "severity": "high",
+          "owasp": "ASK-06",
+          "file": "scripts/taskmarket.js",
+          "line": 42,
+          "snippet": "if (!process.env.TASKMARKET_API_KEY) exit(3, 'TASKMARKET_API_KEY not set; write actions require it');",
+          "explanation": "references sensitive credential or secret paths"
+        },
+        {
+          "ruleId": "SENSITIVE-PATH-READ",
+          "severity": "high",
+          "owasp": "ASK-06",
+          "file": "scripts/taskmarket.js",
+          "line": 50,
+          "snippet": "headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + process.env.TASKMARKET_API_KEY },",
+          "explanation": "references sensitive credential or secret paths"
+        },
+        {
+          "ruleId": "SENSITIVE-PATH-READ",
+          "severity": "high",
+          "owasp": "ASK-06",
+          "file": "scripts/taskmarket.js",
+          "line": 70,
+          "snippet": "headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + process.env.TASKMARKET_API_KEY },",
+          "explanation": "references sensitive credential or secret paths"
+        },
+        {
+          "ruleId": "SENSITIVE-PATH-READ",
+          "severity": "high",
+          "owasp": "ASK-06",
+          "file": "scripts/taskmarket.js",
+          "line": 71,
+          "snippet": "body: JSON.stringify({ worker_address: process.env.TASKMARKET_WORKER_ADDRESS || '', message, github_url: githubUrl || ''…",
+          "explanation": "references sensitive credential or secret paths"
+        },
+        {
+          "ruleId": "EXEC-PRIMITIVE",
+          "severity": "medium",
+          "owasp": "ASK-03",
+          "file": "tests/test-taskmarket.js",
+          "line": 5,
+          "snippet": "const { execFileSync } = require('child_process');",
+          "explanation": "uses a process-execution primitive"
+        },
+        {
+          "ruleId": "SENSITIVE-PATH-READ",
+          "severity": "high",
+          "owasp": "ASK-06",
+          "file": "tests/test-taskmarket.js",
+          "line": 26,
+          "snippet": "execFileSync('node', [SCRIPT, 'create', 't', 'd'], { stdio: 'pipe', env: { ...process.env, TASKMARKET_API_KEY: '' } });",
+          "explanation": "references sensitive credential or secret paths"
+        },
+        {
+          "ruleId": "SENSITIVE-PATH-READ",
+          "severity": "high",
+          "owasp": "ASK-06",
+          "file": "tests/test-taskmarket.js",
+          "line": 33,
+          "snippet": "const out = execFileSync('node', [SCRIPT, 'browse'], { stdio: 'pipe', env: { ...process.env, TASKMARKET_API_KEY: '' } })…",
+          "explanation": "references sensitive credential or secret paths"
+        }
+      ],
+      "contentHash": "sha256-d3d50bc8a45a831d8153aa8cc4511b033f5ddbbb489d37d447cc7969ae805b2d",
+      "discoveredFrom": "skills/taskmarket-delegate/SKILL.md"
     }
   ]
 }
