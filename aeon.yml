@@ -140,7 +140,11 @@ skills:
   idea-forge: { enabled: false, schedule: "0 9 * * 1", var: "" } # weekly business-idea engine. var: empty/generate=timing-scored wedges | validate[:theme]=viability screen | memo[:theme]=2 evidence-backed memos
   seo-audit: { enabled: false, schedule: "0 13 * * *", var: "" } # daily on-page + technical SEO audit of every page on a site. var: comma-separated origins (empty = no target, no-op). PAGESPEED_API_KEY folds in Core Web Vitals
   posthog-errors: { enabled: false, schedule: "0 15 * * 1", var: "" } # weekly cross-project PostHog error digest. Needs PostHog MCP connected in the dashboard. var: empty=all projects/7d | Nd window | project-name substrings
-  # --- Fallback (must be last) ---
+  # --- Utilities / integrations ---
+
+  # TaskMarket integration — delegate work to/from the onchain agent marketplace.
+  # var: browse | create:<reward_usdc> <title> <desc> | get:<task_id> | submit:<task_id> <file> | my-submissions | balance
+  taskmarket-delegate: { enabled: false, schedule: "workflow_dispatch", var: "" } # on-demand
   heartbeat: { enabled: true, schedule: "0 8 * * *", var: "" } # ambient fleet-health check (default) — surfaces anything worth attention. var: empty=ambient check | <area>=ambient focused on that area | brief[:<area>]=priority brief (3 things to focus on, why now, what moved; folds in priority-brief)
 
 # Reactive triggers — event-driven skill dispatch based on cron-state.json conditions.

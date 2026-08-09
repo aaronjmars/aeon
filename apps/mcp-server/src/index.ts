@@ -24,6 +24,7 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { type Skill, loadSkills, runSkill } from "./skill-executor.js";
 import { initTracing } from "./tracing.js";
+import { TASKMARKET_TOOLS, handleTaskmarketTool } from "./taskmarket-tools.js";
 
 // Opt-in + no-op unless OTEL_EXPORTER_OTLP_ENDPOINT is set (see tracing.ts).
 const tracer = initTracing();
@@ -106,20 +107,48 @@ const server = new Server(
 );
 
 const skills = loadSkills(REPO_ROOT, LOG_PREFIX);
-const tools = buildTools(skills);
+const skillTools = buildTools(skills);
+
+// Merge Aeon skill tools with TaskMarket integration tools. TaskMarket tools
+// are always available; skill tools depend on the local skill catalog.
+const allTools = [...skillTools, ...TASKMARKET_TOOLS];
 
 process.stderr.write(
-  `${LOG_PREFIX} Loaded ${skills.length} skills from ${REPO_ROOT}\n`
+  `${LOG_PREFIX} Loaded ${skills.length} skills + ${TASKMARKET_TOOLS.length} TaskMarket tools from ${REPO_ROOT}\n`
 );
 
-server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools }));
+server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: allTools }));
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const toolName = request.params.name;
-  return tracer.startActiveSpan(`mcp.call_tool ${toolName}`, (span) => {
+  return tracer.startActiveSpan(`mcp.call_tool ${toolName}`, async (span) => {
+    span.setAttribute("aeon.mcp.tool", toolName);
+
+    // Route TaskMarket integration tools first
+    if (toolName.startsWith("taskmarket_")) {
+      span.setAttribute("aeon.taskmarket.tool", toolName);
+      try {
+        const args = (request.params.arguments || {}) as Record<string, unknown>;
+        const result = await handleTaskmarketTool(toolName, args);
+        const firstContent = result.content[0];
+        span.setAttribute("aeon.output_bytes", firstContent && "text" in firstContent ? firstContent.text.length : 0);
+        return result;
+      } catch (err) {
+        span.recordException(err as Error);
+        span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });
+        span.end();
+        return {
+          content: [{ type: "text" as const, text: `TaskMarket tool error: ${err}` }],
+          isError: true,
+        };
+      } finally {
+        span.end();
+      }
+    }
+
+    // Otherwise, route to Aeon skill tools
     const slug = toolNameToSlug(toolName);
     const skill = skills.find((s) => s.slug === slug);
-    span.setAttribute("aeon.mcp.tool", toolName);
     span.setAttribute("aeon.skill", slug);
 
     if (!skill) {
@@ -130,7 +159,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         content: [
           {
             type: "text" as const,
-            text: `Unknown Aeon tool: ${toolName}\nAvailable tools: ${tools.map((t) => t.name).join(", ")}`,
+            text: `Unknown Aeon tool: ${toolName}\nAvailable tools: ${allTools.map((t) => t.name).join(", ")}`,
           },
         ],
         isError: true,
