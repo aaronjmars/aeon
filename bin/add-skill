@@ -91,7 +91,7 @@ while IFS= read -r skill_file; do
   if [[ "$skill_dir" != "$REPO_DIR" ]]; then
     AVAILABLE+=("$skill_name")
   fi
-done < <(find "$REPO_DIR" -maxdepth 2 -name "SKILL.md" -type f 2>/dev/null | sort)
+done < <(find "$REPO_DIR" -maxdepth 3 -name "SKILL.md" -type f 2>/dev/null | sort)
 
 if [[ ${#AVAILABLE[@]} -eq 0 ]]; then
   echo "No skills found in $REPO" >&2
@@ -104,7 +104,11 @@ if [[ "$LIST_ONLY" == "true" ]]; then
   echo "Available skills in $REPO:"
   echo ""
   for skill in "${AVAILABLE[@]}"; do
-    skill_dir="$REPO_DIR/$skill"
+    if [[ -d "$REPO_DIR/skills/$skill" ]]; then
+      skill_dir="$REPO_DIR/skills/$skill"
+    else
+      skill_dir="$REPO_DIR/$skill"
+    fi
     if [[ -f "$skill_dir/SKILL.md" ]]; then
       # Extract description from frontmatter
       desc=$(skill_fm "$skill_dir/SKILL.md" description)
@@ -163,7 +167,11 @@ FAILED=0
 for skill in "${SKILL_NAMES[@]}"; do
   [[ "$skill" == "--force" ]] && continue
 
-  src="$REPO_DIR/$skill"
+  if [[ -d "$REPO_DIR/skills/$skill" ]]; then
+    src="$REPO_DIR/skills/$skill"
+  else
+    src="$REPO_DIR/$skill"
+  fi
 
   if [[ ! -d "$src" ]] || [[ ! -f "$src/SKILL.md" ]]; then
     echo "  skip: '$skill' not found in repo"
