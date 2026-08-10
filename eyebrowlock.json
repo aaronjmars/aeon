@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-08T13:13:45.846218Z",
+  "generatedAt": "2026-08-10T08:39:05.159387Z",
   "generator": "eyebrow/0.4.1",
   "artifacts": [
     {
@@ -115,7 +115,7 @@
       "files": [
         {
           "path": "SKILL.md",
-          "hash": "b332ee1851dde9b5777f8db5be9d3920bb948a58cea1e6c4d1b4c1885f3074d8"
+          "hash": "0c1988170a65a2f66fda78abffb38cbdbd295feed8d1cf67f1d4cef41bf64cb0"
         }
       ],
       "findings": [
@@ -142,12 +142,12 @@
           "severity": "critical",
           "owasp": "ASK-01",
           "file": "SKILL.md",
-          "line": 704,
+          "line": 796,
           "snippet": "1. **Install** — the binaries (`semgrep`, `trufflehog`, `osv-scanner`, `slither`) are **not pre-installed**. Stage the…",
           "explanation": "downloads and executes remote code via a pipe to a shell"
         }
       ],
-      "contentHash": "sha256-750229f015bc2368ff351ec7929e50c0caecf6b1c40795535295525caec8eb27",
+      "contentHash": "sha256-73f662c990722830f89065d46c534c9a505c67052e96bd3ce11c734413b57512",
       "discoveredFrom": "skills/vuln-scanner/SKILL.md"
     },
     {
@@ -1495,7 +1495,7 @@
           "owasp": "ASK-06",
           "file": "hook-deploy.sh",
           "line": 175,
-          "snippet": "[ -f hook.env ] \u0026\u0026 . ./hook.env",
+          "snippet": "[ -f hook.env ] && . ./hook.env",
           "explanation": "references sensitive credential or secret paths"
         },
         {

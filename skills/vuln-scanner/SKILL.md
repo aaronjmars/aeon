@@ -165,6 +165,96 @@ echo "trufflehog=$([ -s /tmp/vuln-scan/trufflehog.json ] && echo ok || echo fail
 echo "osv=$([ -s /tmp/vuln-scan/osv.json ] && echo ok || echo fail)"              >> /tmp/vuln-scan/sources.txt
 ```
 
+### A3.5. Dynamic testing: fuzz it if it already ships a harness
+
+Static tools never execute the target's code, so they can't catch a bug that only
+shows up on a specific malformed input. Some repos already carry their own fuzz
+harnesses (`cargo fuzz`) for exactly this. If the clone has one, run it — this is
+a different technique from A3, not a better version of it, and it finds a
+different class of bug.
+
+**Scope, on purpose:** Rust + `cargo fuzz` only, for this pass. `stage-vuln-scanner.sh`
+installs a nightly toolchain and `cargo-fuzz` for every run (bounded, ~1-2 min:
+the runner already has stable Rust) so this step never needs an in-run install —
+it degrades to a skip exactly like a missing scanner does. Other ecosystems have
+their own fuzzers (libFuzzer/AFL for C/C++, go-fuzz, atheris for Python, Trident
+for Solana/Anchor) — worth adding the same way later, each gated on its own
+`command -v` guard, but out of scope here.
+
+**This is a real trade-off, not a free scanner:** semgrep/trufflehog/osv-scanner
+only read the target's files. This *compiles and runs* the target's own code
+(and whatever it pulls in) inside the sandboxed run. That's the same trust
+boundary any CI system already accepts when it builds a repo's test suite — the
+runner is ephemeral and only holds this skill's own scoped secrets — but it's a
+step up from A3, so it only activates when the repo hands you a harness rather
+than probing for one, and it never touches the network beyond what cloning the
+repo already did.
+
+```bash
+if [ -d fuzz/fuzz_targets ] && command -v cargo-fuzz >/dev/null 2>&1; then
+  mkdir -p /tmp/vuln-scan/fuzz
+  # Seed real inputs where they exist — an empty corpus rarely gets a mutator
+  # past a magic-byte header, so this is the difference between a shallow run
+  # and one that reaches real parsing logic.
+  for target in $(cargo fuzz list 2>/dev/null); do
+    if [ -d "tests/fixtures" ]; then
+      mkdir -p "fuzz/corpus/$target"
+      find tests/fixtures -iname "*.${target}" -exec cp {} "fuzz/corpus/$target/" \; 2>/dev/null
+    fi
+  done
+
+  # Bounded: a handful of targets, ~90s each. This is a smoke test for "does
+  # anything crash immediately," not a real fuzzing campaign — a real one runs
+  # for hours and belongs to the maintainer's own CI, not a weekly scan.
+  #
+  # This step compiles and runs the target's own code (and every dependency's
+  # build.rs) with network open. Scrub this skill's own secrets from the
+  # env first — a malicious target could otherwise exfiltrate them at compile
+  # time via a build script:
+  n=0
+  for target in $(cargo fuzz list 2>/dev/null); do
+    [ "$n" -ge 8 ] && break
+    n=$((n + 1))
+    env -u GH_TOKEN -u GH_GLOBAL -u RESEND_API_KEY -u RESEND_FROM -u RESEND_REPLY_TO \
+      cargo +nightly fuzz run "$target" -- -max_total_time=90 \
+      > "/tmp/vuln-scan/fuzz/${target}.log" 2>&1 || true
+  done
+  echo "fuzz=$([ -n "$(ls /tmp/vuln-scan/fuzz 2>/dev/null)" ] && echo ok || echo fail)" >> /tmp/vuln-scan/sources.txt
+else
+  echo "VULN_SCANNER_SKIPPED: no fuzz/fuzz_targets or cargo-fuzz unavailable"
+fi
+```
+
+A crash artifact lands at `fuzz/artifacts/<target>/crash-*`. Reproduce it clean
+before it counts as anything: `env -u GH_TOKEN -u GH_GLOBAL -u RESEND_API_KEY -u RESEND_FROM -u RESEND_REPLY_TO cargo fuzz run <target> fuzz/artifacts/<target>/crash-*`
+(same secret-scrubbing as the run above — this also compiles and executes the
+target's code) and read the actual panic message and call stack, not just the
+"deadly signal" summary line.
+
+**Root-cause it before routing it** — a crash under `fuzz/` can mean three
+different things, and they route differently:
+
+1. **The panic is in the target's own code.** Route it exactly like any other
+   code vulnerability (A5 table) — PVR if the repo has a channel, out-of-band
+   contact otherwise.
+2. **The panic is in a dependency**, reached through the target's own call path
+   (check the stack trace — if the crashing frame's crate isn't the one you
+   cloned, this is it). This happened on the one real run so far: fuzzing
+   `firecrawl/anydoc`'s `xlsx` target surfaced a crash inside `calamine`, not in
+   anydoc's own code. Report and, if the fix is small and matches the
+   dependency's own existing conventions, fix it **in the dependency's repo**,
+   not the original target — the target's only actionable next step is bumping
+   a version once one exists. A dependency panic is DoS-only (Rust panics
+   safely; this is not a memory-safety finding) and, absent a published CVE
+   already covering it, the fix usually is the disclosure: small, obvious,
+   reviewable, no exploit chain to redact. A PR is the appropriate channel for
+   that case even without PVR on the dependency's repo — same logic as A5's
+   dependency-CVE row, just for a bug you found instead of one already public.
+3. **The panic is in the harness itself**, not the parser (an assertion the
+   fuzz target's own author wrote, a fixture format mismatch, an `unwrap()` on
+   setup code outside the code path being fuzzed). Not a finding — drop it,
+   same as a scanner false positive.
+
 ### A4. Triage — read every finding before trusting it
 
 A scanner hit is a candidate, not a vulnerability. For each candidate:
@@ -193,6 +283,8 @@ This is the core of the scan arm. Pick the channel by finding type:
 | **Code vulnerability** (Semgrep ERROR/WARNING, verified exploitable) | **PVR** (GitHub private advisory) | Unpatched code flaw — public disclosure creates a zero-day |
 | **Verified leaked secret** (TruffleHog verified) | **PVR** + tell maintainer to rotate | Publishing the file/line in a public PR tells attackers where to look |
 | **Smart-contract issue** (Slither high/medium) | **PVR** | On-chain exploitation is often immediate and irreversible |
+| **Fuzz crash in the target's own code** | **PVR** | Same as any other code vulnerability — see A3.5 |
+| **Fuzz crash in a dependency** | **Public PR to the dependency's repo** (fix, not just a report, if it's small and matches their conventions) | DoS-only, no exploit chain to redact — see A3.5 case 2 |
 | **No PVR enabled AND no SECURITY.md** | **Private issue** to maintainer if possible, else skip and log | No safe channel = do no harm |
 
 #### A5a. Public PR (dependency CVEs only)
@@ -345,13 +437,13 @@ Use `./notify`. One paragraph. Lead with the verdict.
 *Vuln Scanner — <repo>*
 <N> confirmed findings (<severity-summary>).
 Disclosed via: <PVR: advisory #123 | public PR #45 | skipped (no channel)>
-Scanners: semgrep=<ok|fail>, trufflehog=<ok|fail>, osv=<ok|fail>.
+Scanners: semgrep=<ok|fail>, trufflehog=<ok|fail>, osv=<ok|fail>, fuzz=<ok|fail|skip>.
 ```
 
 If the audit was clean:
 ```
 *Vuln Scanner — <repo>*
-Clean audit. <M> candidates reviewed, 0 confirmed. Scanners: semgrep=ok, trufflehog=ok, osv=ok.
+Clean audit. <M> candidates reviewed, 0 confirmed. Scanners: semgrep=ok, trufflehog=ok, osv=ok, fuzz=skip.
 ```
 
 Then log per the **Log** section below with `Mode: scan`.
@@ -674,7 +766,7 @@ specific bullets.
 - Target: owner/repo (stars, language)
 - Candidates: N | Confirmed: M
 - Channels used: PVR (x), public PR (y), skipped (z)
-- Scanner status: semgrep=ok trufflehog=ok osv=ok
+- Scanner status: semgrep=ok trufflehog=ok osv=ok fuzz=ok|fail|skip
 - Advisory/PR links: [...]
 ```
 
@@ -705,6 +797,8 @@ specific bullets.
 2. **Execute** — non-interactive `claude -p` runs under an `--allowedTools` allowlist, so any command not on it is **denied** ("requires approval") with no human to approve. The scanner *bare names* (`semgrep`, `osv-scanner`, `trufflehog`, `slither`) must be listed in the **write tier** of `scripts/skill_mode.sh` for bare invocation to be permitted; if a name is missing it's denied and that scanner is skipped (the scan arm degrades to manual code review — a denial reads as "requires approval", **not** a network/sandbox block). This is why step A3 puts `/tmp/bin` on `PATH` and calls each tool by bare name (`semgrep …`, not `/tmp/bin/semgrep …`) — an absolute-path invocation would not match the allowlist pattern.
 
 This two-part fix resolves ISS-001 (binaries installed *and* runnable). If any scanner binary is still missing at runtime, log `VULN_SCANNER_SKIPPED: <tool> not available`, record `tool=fail` in `sources.txt`, and continue with the remaining scanners rather than aborting the whole run. An all-scanners-fail run must report **error**, not **clean**.
+
+**A3.5 (fuzz)** follows the same two-part shape, but staging happens in the workflow step, not in-run: `scripts/stage-vuln-scanner.sh` installs a nightly Rust toolchain and `cargo-fuzz` before `claude -p` starts (the sandbox denies toolchain installs in-run, same reason `deploy-uni-hook` stages Foundry the same way — see `scripts/stage-deploy-uni-hook.sh`). Staging is unconditional (same tolerance as slither above — the target isn't known yet at staging time), so it always installs; only *use* is conditional on the clone actually shipping `fuzz/fuzz_targets`. Execution needs `Bash(cargo:*)` in the write tier of `scripts/skill_mode.sh` — broader than the single-purpose scanner grants, because `cargo fuzz` dispatches through the `cargo` binary itself, which also compiles the target's own code (and its build scripts). **This means the target's build scripts run with this skill's own secrets (`GH_GLOBAL`/`GH_TOKEN`, `RESEND_API_KEY`, `RESEND_FROM`, `RESEND_REPLY_TO`) live in the environment and network open — A3.5 scrubs them with `env -u` immediately before both the fuzz run and the crash-reproduction command, and nowhere else in this skill needs that scrub**, since only this step executes the target's own code. If either staging half is missing, the `command -v cargo-fuzz` guard in A3.5 skips cleanly.
 
 **Arm B (re-submit).** `gh api` uses the `GH_TOKEN` env var internally (the workflow wires `GH_GLOBAL` in). If `gh api` fails, use the `curl` fallback in step B2. No outbound auth-required calls except `gh api`.
 
@@ -742,8 +836,9 @@ General network rules: `curl` works, with **WebFetch** as the fallback for a pla
 - **Don't scan the same repo twice in 30 days** (`memory/vuln-scanned.json`).
 - **Never post exploit chains publicly.** PoCs go in the private advisory, not in a GitHub comment.
 - **Be deferential in disclosure language** — you're offering help, not grading homework.
-- **Public PRs are only for dependency bumps** addressing already-disclosed CVEs. Everything else is private.
+- **Public PRs are only for dependency bumps** addressing already-disclosed CVEs, or a fuzz-found bug fixed directly in the dependency that owns it (A3.5 case 2) — everything else is private.
 - **All-scanners-failed ≠ clean.** Report it as an error and do not publish anything.
+- **Fuzzing only activates when the repo already ships a harness.** This skill doesn't write fuzz targets from scratch — that's real engineering work specific to the target's parsing logic, not something to improvise inside a weekly scan. If `fuzz/fuzz_targets` isn't there, `A3.5` skips, same as a missing scanner.
 
 **Disclose (Arm C):**
 - **The arming flag is sacred.** Never queue a draft without `auto_send: true`. If a
