@@ -64,11 +64,13 @@ async function main() {
 
   if (action === 'submit') {
     const [taskId, message, githubUrl] = rest;
-    if (!taskId || !message) exit(4, 'submit requires <taskId> <message> [github_url]');
+    if (!taskId || !message) exit(2, 'submit requires <taskId> <message> [github_url]');
+    const workerAddress = process.env.TASKMARKET_WORKER_ADDRESS;
+    if (!workerAddress) exit(3, 'TASKMARKET_WORKER_ADDRESS not set; submit needs the worker wallet that receives the reward');
     const res = await fetch(`${BASE}/api/tasks/${taskId}/submit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + process.env.TASKMARKET_API_KEY },
-      body: JSON.stringify({ worker_address: process.env.TASKMARKET_WORKER_ADDRESS || '', message, github_url: githubUrl || '' }),
+      body: JSON.stringify({ worker_address: workerAddress, message, github_url: githubUrl || '' }),
     });
     const body = await res.json().catch(() => ({}));
     if (!res.ok) exit(4, `submit failed: HTTP ${res.status} ${JSON.stringify(body).slice(0, 200)}`);

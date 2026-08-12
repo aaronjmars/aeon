@@ -10,8 +10,13 @@ metadata:
     - dev
     - crypto
     - delegation
-    - x402
-    - mcp
+  requires:
+    - TASKMARKET_API_KEY?
+    - TASKMARKET_WORKER_ADDRESS?
+  capabilities:
+    - external_api
+    - writes_external_host
+    - sends_notifications
 ---
 <!-- taskmarket-delegate: browse/create/submit on the TaskMarket agent-worker market (api.taskmarket.dev), authorization-gated, key-optional -->
 
@@ -33,7 +38,7 @@ Today is ${today}. Your task is to execute the requested TaskMarket action again
 ## API facts (verified 2026-08)
 
 - Base: `https://api.taskmarket.dev` (public docs: https://docs.taskmarket.dev/)
-- Open tasks (no auth): `GET /api/tasks?limit=100` → items with `id`, `description`, `reward` (in MOLT), `status`, `submissionCount`, `expiryTime`, `tags`
+- Open tasks (no auth): `GET /api/tasks?limit=100` → items with `id`, `description`, `reward` (USDC on Base), `status`, `submissionCount`, `expiryTime`, `tags`
 - Auth for create/submit: `Authorization: Bearer $TASKMARKET_API_KEY` (env var; secret name `TASKMARKET_API_KEY` — read name via `gh api repos/:owner/:repo/actions/secrets --jq '.secrets[].name'`, never the value)
 - Submit: `POST /api/tasks/{taskId}/submit` with `{worker_address, message, github_url}` — worker_address is the agent's own EVM wallet
 
@@ -63,16 +68,20 @@ Report the 5–10 most relevant open tasks: short id, reward, submission count (
 ## Creating a task (write, key + authorization required)
 
 ```bash
-TASKMARKET_API_KEY="$TASKMARKET_API_KEY" node skills/taskmarket-delegate/scripts/taskmarket.js create "$TITLE" "$DESCRIPTION" "$REWARD" "$TAGS"
+node skills/taskmarket-delegate/scripts/taskmarket.js create "$TITLE" "$DESCRIPTION" "$REWARD" "$TAGS"
 ```
+
+`taskmarket.js` reads `TASKMARKET_API_KEY` from the run environment itself - never put the key on the command line (Aeon's Bash layer refuses a credential-shaped `$SECRET` on a shell line).
 
 The script POSTs to `https://api.taskmarket.dev/api/tasks` with `{title, description, reward, tags}` and prints the created task id. Verify the response contains a task `id`; log it to `memory/logs/`.
 
 ## Submitting completed work (write, key + authorization required)
 
 ```bash
-TASKMARKET_API_KEY="$TASKMARKET_API_KEY" node skills/taskmarket-delegate/scripts/taskmarket.js submit "$TASK_ID" "$MESSAGE" "$GITHUB_URL"
+node skills/taskmarket-delegate/scripts/taskmarket.js submit "$TASK_ID" "$MESSAGE" "$GITHUB_URL"
 ```
+
+`submit` needs `TASKMARKET_WORKER_ADDRESS` (the agent's own EVM wallet) set in the run environment - that address receives the reward, so the script exits rather than posting an empty one.
 
 The script POSTs `{worker_address, message, github_url}` to `/api/tasks/{id}/submit`. A `{"success":true}` response means the submission is recorded. Log the exact payload shape (ids only, no secrets) and timestamp to `memory/logs/`.
 
@@ -83,6 +92,7 @@ End every run with a concise summary to `./notify`: action executed, task ids to
 ## Required secrets
 
 - `TASKMARKET_API_KEY` (only for create/submit; browse/track work without it)
+- `TASKMARKET_WORKER_ADDRESS` (only for submit; the EVM wallet that receives the reward)
 
 ## Graceful degradation
 
