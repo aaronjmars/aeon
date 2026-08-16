@@ -480,6 +480,15 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Security
 
+- **`ALL_SECRETS` built from an explicit allowlist, not `toJSON(secrets)`.**
+  Serializing the entire secret store into a workflow env var is the canonical
+  credential-exfiltration primitive, and on 2026-07-28 GitHub began holding
+  public-repo runs that match it for per-run, web-session-only approval - silently
+  taking the public instances `aeon-agent` and `miroshark-aeon` dark from
+  2026-07-30 (the `Aeon · Scheduler` workflow kept running green on `schedule`
+  events, so they looked alive while doing nothing). `ALL_SECRETS` now serializes
+  only the named secrets the workflow already references. Private forks were
+  unaffected - the GitHub feature is public-repo-only. (#819)
 - **Skill-scan recalibrated to fire on operations, not syntax.** The HIGH tier now
   matches dangerous sinks (code execution, secret exfiltration, destruction) and
   prompt injection rather than ordinary shell syntax, adds a `curl | sh` RCE
