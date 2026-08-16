@@ -11,6 +11,24 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Added
 
+- **New skill: `taskmarket-delegate`** - delegates work to the TaskMarket
+  agent-worker market (`tasks.taskmarket.dev` / `api.taskmarket.dev`) instead of
+  burning inference on low-confidence work. `browse` ranks open tasks
+  winnable-first with no key; `create`/`submit` sit behind an explicit operator
+  authorization gate and degrade cleanly to read-only when `TASKMARKET_API_KEY` is
+  unset. Ships a zero-dependency node client and a 6-test suite (live read-only
+  browse, no spend). `crypto` pack, disabled by default; brings the catalog to
+  **75 skills** (74 -> 75; Crypto 14 -> 15). (#865)
+- **New skill: `you-web-search`** - an optional You.com-backed web search against
+  the documented `https://api.you.com/v1/search` contract, giving operators a
+  structured, current web source without changing default behavior. Parses
+  `snippets[]` and `page_age` from the response shape You.com documents today;
+  `YDC_API_KEY` required, with optional `YOUCOM_FRESHNESS` and `YOUCOM_LIVECRAWL`
+  tuning. `basics` pack, disabled by default. (#795)
+- **Finance District listed in `docs/ECOSYSTEM.md`** - its Agent Wallet is in the
+  core catalog (`skills/finance-district-mcp`, #791) and launched as a supported
+  wallet on aeon; one alphabetized row, mirrored to aeon.fun/ecosystem
+  automatically via hourly ISR. (#869)
 - **Five new skills, ported from the `aeon-dev` instance and generalized for any
   operator** (frontmatter converted to Agent Skills spec-form, OKF references
   removed, private product/instance references genericized): **`spend-watch`** (dev
@@ -138,6 +156,18 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Changed
 
+- **`vuln-scanner` now runs a repo's own `cargo-fuzz` harnesses** during scan arm A
+  (new step A3.5). The static tools (semgrep, trufflehog, osv-scanner) only ever
+  read files; if the scanned repo ships its own `fuzz/fuzz_targets`, the scanner
+  now seeds the corpus from its `tests/fixtures`, runs each target ~90s (capped at
+  8 targets), and triages a crash with the same rigor as any scanner hit before it
+  counts as a finding. A `command -v cargo-fuzz` + `fuzz/fuzz_targets` guard keeps
+  it a clean no-op on repos without a harness. The runtime half stages a nightly
+  Rust toolchain + `cargo-fuzz` in `stage-vuln-scanner.sh` (the sandbox denies
+  toolchain installs in-run) and widens the write-tier allowlist with
+  `Bash(cargo:*)` - a deliberate step up from read-only static scanning to
+  compiling and running the target's own code inside the sandboxed run. (#863,
+  #868)
 - **Dashboard catalog wiring for the five new skills** (#860): the Higgsfield hosted
   OAuth MCP is registered in `mcp-catalog.ts` (one-click Connect, secrets + OAuth
   refresh derived generically from the slug); `secrets-catalog.ts` adds
@@ -186,6 +216,13 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Fixed
 
+- **`bin/add-skill` could not install from the standard `skills/<slug>/SKILL.md`
+  layout** - the one this repo's own catalog uses. Discovery globbed at
+  `-maxdepth 2` (never matching the depth-3 `SKILL.md`) so every repo reported "No
+  skills found", and install resolved `$REPO_DIR/$skill` without the `skills/`
+  subdir. Discovery now searches `-maxdepth 3` and install resolves `skills/<slug>`
+  first, falling back to the flatter legacy layout. Verified end-to-end installing
+  `tx-explain` from `aeonfun/aeon`. (#866)
 - **Stale "Proof of work" numbers corrected** on the README to match
   aeon.fun/security and `ECOSYSTEM.md`: ~2M stars secured, 69 repos, 68 ecosystem
   products (community packs stay 12). (#843)
@@ -454,6 +491,8 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Maintenance
 
+- Dashboard Dependabot security fix: patched `nanoid` advisories (lockfile-only
+  transitive bump, no `package.json` change). (#871)
 - Webhook Dependabot batch (undici, `@opentelemetry/core`) plus two CI changes:
   dropped the daily cron from Setup Telegram Commands, and stated the egress-parser
   scope with a lockfile-coverage gate. (#826, #827, #839)

@@ -91,6 +91,8 @@ Each is opt-in. Unset means the skills that want it skip or degrade.
 | `REPLICATE_API_TOKEN` | `article --visual` hero images | replicate.com/account/api-tokens |
 | `ADMANAGE_API_KEY` | `schedule-ads` | admanage.ai/api-docs |
 | `RESEND_API_KEY` | `send-email`, `vuln-scanner` disclosures | resend.com |
+| `YDC_API_KEY` | `you-web-search` (required for it) | api.you.com — optional `YOUCOM_FRESHNESS` / `YOUCOM_LIVECRAWL` variables tune freshness + full-page crawl |
+| `TASKMARKET_API_KEY` | `taskmarket-delegate` — only `create`/`submit`; `browse` works without | tasks.taskmarket.dev — optional `TASKMARKET_WORKER_ADDRESS` tags submissions |
 
 ## 5. Observability — optional
 
