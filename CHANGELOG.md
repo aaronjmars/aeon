@@ -19,6 +19,15 @@ from or pin to; the template keeps serving the latest `main` to new forks.
   unset. Ships a zero-dependency node client and a 6-test suite (live read-only
   browse, no spend). `crypto` pack, disabled by default; brings the catalog to
   **75 skills** (74 -> 75; Crypto 14 -> 15). (#865)
+- **New skill: `hunter-22`** - calls ClawHunter's free bounty-discovery API,
+  matches candidates against the agent's real demonstrated capabilities (code,
+  security research, research, writing, dependency analysis), and triages honestly
+  - dropping content/social-growth work wearing a bounty costume, keeping
+  deliverable work. Discovery only: no wallet, never claims or submits. When a kept
+  candidate is audit-shaped (a `code`/`onchain` bounty linking a GitHub repo), the
+  notification carries a one-tap "Audit owner/repo" button that dispatches
+  `vuln-scanner` straight at that repo, closing discovery to audit in one motion.
+  `productivity` pack, disabled by default; catalog 73 -> 74. (#864)
 - **New skill: `you-web-search`** - an optional You.com-backed web search against
   the documented `https://api.you.com/v1/search` contract, giving operators a
   structured, current web source without changing default behavior. Parses
