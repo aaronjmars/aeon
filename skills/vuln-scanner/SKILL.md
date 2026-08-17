@@ -147,10 +147,26 @@ else
 fi
 
 # --- Dependencies: osv-scanner (unified CVE DB across ecosystems) ---
+# osv-scanner v2 (what `releases/latest` now installs, 2.4.x) moved scanning under the
+# `scan source` subcommand. The v1 bare form (`osv-scanner --recursive .`) still works on
+# 2.x, so try v2 first and fall back to v1 only if v2 wrote NOTHING (keyed on emptiness,
+# NOT exit code - osv exits 1 when it FINDS vulns, which must not read as a syntax error).
+# `--no-ignore` is REQUIRED: v2 `scan source` respects .gitignore by default, so a target
+# repo that gitignores its (committed) lockfile - common for libraries/tools - yields the
+# misleading "No package sources found" (exit 128) and zero dependency coverage. A shipped-
+# but-gitignored lockfile still describes real deps, so a security scan must read it. It is
+# a no-op when lockfiles are tracked.
 if command -v osv-scanner >/dev/null 2>&1; then
-  osv-scanner --format=json --recursive . \
-    > /tmp/vuln-scan/osv.json 2>/dev/null || true
+  osv-scanner scan source --recursive --no-ignore --format=json . > /tmp/vuln-scan/osv.json 2>/dev/null; OSV_RC=$?
+  [ -s /tmp/vuln-scan/osv.json ] || { osv-scanner --format=json --recursive --no-ignore . > /tmp/vuln-scan/osv.json 2>/dev/null; OSV_RC=$?; }
+  # Classify: exit 128 = "No package sources found" = the repo has no lockfiles/manifests
+  # to scan. That is a clean N/A (nothing to do), NOT a scan failure - osv writes an EMPTY
+  # file in that case, so `[ -s ]` alone would mislabel it `fail`. Distinguish the states:
+  if [ -s /tmp/vuln-scan/osv.json ]; then OSV_STATUS=ok        # ran; results present (0 or N dep CVEs)
+  elif [ "${OSV_RC:-}" = 128 ];   then OSV_STATUS=none         # ran; no dependency lockfiles -> n/a
+  else                                 OSV_STATUS=fail; fi      # genuine tool error
 else
+  OSV_STATUS=skipped
   echo "VULN_SCANNER_SKIPPED: osv-scanner not available"
 fi
 
@@ -162,7 +178,7 @@ fi
 # Record what succeeded (empty output ≠ clean, could be tool failure)
 echo "semgrep=$([ -s /tmp/vuln-scan/semgrep.json ] && echo ok || echo fail)" >  /tmp/vuln-scan/sources.txt
 echo "trufflehog=$([ -s /tmp/vuln-scan/trufflehog.json ] && echo ok || echo fail)" >> /tmp/vuln-scan/sources.txt
-echo "osv=$([ -s /tmp/vuln-scan/osv.json ] && echo ok || echo fail)"              >> /tmp/vuln-scan/sources.txt
+echo "osv=${OSV_STATUS:-fail}"                                                    >> /tmp/vuln-scan/sources.txt
 ```
 
 ### A3.5. Dynamic testing: fuzz it if it already ships a harness
