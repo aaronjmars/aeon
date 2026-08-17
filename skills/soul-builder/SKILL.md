@@ -56,7 +56,7 @@ Gather from **every** source provided and **merge** everything useful — more s
    # with -d @file so the secretcurl command itself stays 100% literal (no shell
    # var expansion in the curl argv — the permission analyzer blocks that).
    jq -n --arg h "$HANDLE" '{
-     model: "grok-4.3",
+     model: "grok-4.6",
      input: [{role: "user", content: ("Build a voice and identity profile of X/Twitter account @" + $h + ". Step 1: return their profile — display name, bio/description, location, website, and what they pin or lead with. Step 2: return a WIDE, DIVERSE sample of 40-60 of their OWN ORIGINAL posts across a long window (not just the last day, not only the viral ones): mix short reactions, medium takes, and longer threads; span different topics, tones, and engagement levels; include some high-engagement and some quiet posts so their full range shows. Include representative replies and quote-tweets — they carry voice and opinion — but skip pure retweets of others. For EACH post return: the full text VERBATIM (never a paraphrase), the date, the type (original|reply|quote|thread-part), and the direct permalink https://x.com/" + $h + "/status/ID. Favour breadth of register over recency.")}],
      tools: [{type: "x_search"}]
    }' > /tmp/xai-soul-payload.json
@@ -256,7 +256,7 @@ Append to `memory/logs/${today}.md`:
 
 ## Fetching the X account
 
-`XAI_API_KEY` is **injected into this skill's environment** (declared in `requires:`). When it is present, **the primary way to read the X account is a direct `curl` to `https://api.x.ai/v1/responses` with `Authorization: Bearer {XAI_API_KEY}`** (Grok's `x_search`, model `grok-4.3`). There is no network sandbox blocking this — just make the call. The rules:
+`XAI_API_KEY` is **injected into this skill's environment** (declared in `requires:`). When it is present, **the primary way to read the X account is a direct `curl` to `https://api.x.ai/v1/responses` with `Authorization: Bearer {XAI_API_KEY}`** (Grok's `x_search`, model `grok-4.6`). There is no network sandbox blocking this — just make the call. The rules:
 
 1. **Check, don't assume.** Run `[ -n "$XAI_API_KEY" ] && echo KEY_PRESENT || echo KEY_UNSET`. If `KEY_PRESENT` (it will be on a normal run), you are required to try Path A before any fallback.
 2. **Allow enough time.** The `x_search` call typically takes 30–120s (it searches X live). When you invoke the Bash tool for the curl, **set the tool's `timeout` to at least 180000 (180s)**, and the curl carries **`--max-time 150`** so it fails cleanly instead of hanging. A curl that is slow is **not** a missing key — never treat a timeout as "key unavailable".

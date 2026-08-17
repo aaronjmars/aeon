@@ -112,7 +112,7 @@ curl -sL -A "$UA" \
 [ -n "$XAI_API_KEY" ] && echo KEY_PRESENT || echo KEY_UNSET   # prints KEY_PRESENT — Path A is required
 # Build the payload to a file with jq --arg (no heredoc into a var) so the ./secretcurl command stays 100% literal:
 jq -n --arg topic "$TOPIC" --arg variants "$SEARCH_VARIANTS" --arg fd "$FROM_DATE" --arg td "$TO_DATE" \
-  '{model:"grok-4.3", input:[{role:"user",content:("Search X for tweets about: "+$topic+" (also try: "+$variants+"). Date range: "+$fd+" to "+$td+". Return 15-25 substantive tweets — mix high-engagement posts with smaller accounts that add a distinct angle. For each: @handle, full text, date posted, exact engagement counts (likes, retweets, replies; 0 if unknown), follower count if available, and the direct link https://x.com/handle/status/ID. Skip retweets and reply-guy near-duplicates.")}], tools:[{type:"x_search",from_date:$fd,to_date:$td}]}' \
+  '{model:"grok-4.6", input:[{role:"user",content:("Search X for tweets about: "+$topic+" (also try: "+$variants+"). Date range: "+$fd+" to "+$td+". Return 15-25 substantive tweets — mix high-engagement posts with smaller accounts that add a distinct angle. For each: @handle, full text, date posted, exact engagement counts (likes, retweets, replies; 0 if unknown), follower count if available, and the direct link https://x.com/handle/status/ID. Skip retweets and reply-guy near-duplicates.")}], tools:[{type:"x_search",from_date:$fd,to_date:$td}]}' \
   > /tmp/xai-last30-topic-payload.json
 HTTP=$(./secretcurl -s -o /tmp/xai-last30-topic.json -w '%{http_code}' --max-time 150 -X POST "https://api.x.ai/v1/responses" \
   -H "Content-Type: application/json" \
@@ -130,7 +130,7 @@ jq -r '.output[]|select(.type=="message")|.content[]|select(.type=="output_text"
 ```bash
 # Build the handle-restricted payload to its own file with jq --arg (keeps the ./secretcurl command literal):
 jq -n --arg topic "$TOPIC" --arg handles "$RESOLVED_HANDLES" --arg fd "$FROM_DATE" --arg td "$TO_DATE" \
-  '{model:"grok-4.3", input:[{role:"user",content:("Search X for tweets from these accounts about "+$topic+": "+$handles+". Date range: "+$fd+" to "+$td+". For each: @handle, full text, date, engagement counts (likes, retweets, replies; 0 if unknown), and the direct link https://x.com/handle/status/ID.")}], tools:[{type:"x_search",from_date:$fd,to_date:$td}]}' \
+  '{model:"grok-4.6", input:[{role:"user",content:("Search X for tweets from these accounts about "+$topic+": "+$handles+". Date range: "+$fd+" to "+$td+". For each: @handle, full text, date, engagement counts (likes, retweets, replies; 0 if unknown), and the direct link https://x.com/handle/status/ID.")}], tools:[{type:"x_search",from_date:$fd,to_date:$td}]}' \
   > /tmp/xai-last30-handles-payload.json
 HTTP=$(./secretcurl -s -o /tmp/xai-last30-handles.json -w '%{http_code}' --max-time 150 -X POST "https://api.x.ai/v1/responses" \
   -H "Content-Type: application/json" \
@@ -369,7 +369,7 @@ For `LAST30_EMPTY` or `LAST30_ERROR`, skip the verdict/narrative lines and inste
 
 ## Fetching
 
-`XAI_API_KEY` is **injected into this skill's environment** (declared in `requires:`) and is present and valid. The **primary** X/Twitter source is a direct `curl` to `https://api.x.ai/v1/responses` with `Authorization: Bearer {XAI_API_KEY}`, model `grok-4.3`, `"tools":[{"type":"x_search"}]`. There is **no** network sandbox blocking this — just make the call (see step 3).
+`XAI_API_KEY` is **injected into this skill's environment** (declared in `requires:`) and is present and valid. The **primary** X/Twitter source is a direct `curl` to `https://api.x.ai/v1/responses` with `Authorization: Bearer {XAI_API_KEY}`, model `grok-4.6`, `"tools":[{"type":"x_search"}]`. There is **no** network sandbox blocking this — just make the call (see step 3).
 
 **You MUST attempt the direct curl before any fallback:**
 1. **Check, don't assume.** `[ -n "$XAI_API_KEY" ] && echo KEY_PRESENT || echo KEY_UNSET`. If `KEY_PRESENT` (it will be), Path A is required.

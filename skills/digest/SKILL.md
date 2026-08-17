@@ -65,7 +65,7 @@ Pull from the source classes selected by `${var}`. Never rely on a single one â€
    TO_DATE=$(date -u +%Y-%m-%d)
    PROMPT="Search X for substantive, recent posts about: ${topic:-the most notable technology, AI, and crypto stories today}. Date range: $FROM_DATE to $TO_DATE. Return up to 10 high-signal posts â€” prioritize verifiable claims, launches, funding, releases, exploits, or hard data over hot takes. For EACH post return: @handle, the full text, date posted, exact engagement counts (likes, retweets, replies; 0 if unknown), and the direct link https://x.com/handle/status/ID. Return a numbered list."
    jq -n --arg p "$PROMPT" --arg fd "$FROM_DATE" --arg td "$TO_DATE" \
-     '{model:"grok-4.3", input:[{role:"user",content:$p}], tools:[{type:"x_search",from_date:$fd,to_date:$td}]}' \
+     '{model:"grok-4.6", input:[{role:"user",content:$p}], tools:[{type:"x_search",from_date:$fd,to_date:$td}]}' \
      > /tmp/xai-digest-payload.json
    HTTP=$(./secretcurl -s -o /tmp/xai-digest.json -w '%{http_code}' --max-time 150 -X POST "https://api.x.ai/v1/responses" \
      -H "Content-Type: application/json" -H "Authorization: Bearer {XAI_API_KEY}" -d @/tmp/xai-digest-payload.json)

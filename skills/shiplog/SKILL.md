@@ -117,7 +117,7 @@ There are two X sources here — the **operator** handle (`$OPERATOR_HANDLE`, th
 
 *Operator posts* (`SRC=operator`):
 ```bash
-jq -n --arg h "$OPERATOR_HANDLE" --arg sd "$SINCE_DATE" --arg td "$TODAY" '{model:"grok-4.3", input:[{role:"user", content:("Search X for posts by @" + $h + " between " + $sd + " and " + $td + ". Return each post with full text, date, type (original|reply|RT — an RT text starts with \"RT @\"), exact engagement counts (likes, retweets, replies; 0 if unknown), and the direct link https://x.com/" + $h + "/status/ID. Return chronological.")}], tools:[{type:"x_search"}]}' > /tmp/xai-shiplog-operator-payload.json
+jq -n --arg h "$OPERATOR_HANDLE" --arg sd "$SINCE_DATE" --arg td "$TODAY" '{model:"grok-4.6", input:[{role:"user", content:("Search X for posts by @" + $h + " between " + $sd + " and " + $td + ". Return each post with full text, date, type (original|reply|RT — an RT text starts with \"RT @\"), exact engagement counts (likes, retweets, replies; 0 if unknown), and the direct link https://x.com/" + $h + "/status/ID. Return chronological.")}], tools:[{type:"x_search"}]}' > /tmp/xai-shiplog-operator-payload.json
 HTTP=$(./secretcurl -s -o /tmp/xai-shiplog-operator.json -w '%{http_code}' --max-time 150 -X POST "https://api.x.ai/v1/responses" \
   -H "Content-Type: application/json" -H "Authorization: Bearer {XAI_API_KEY}" -d @/tmp/xai-shiplog-operator-payload.json)
 echo "xai http=$HTTP bytes=$(wc -c </tmp/xai-shiplog-operator.json)"
@@ -125,7 +125,7 @@ echo "xai http=$HTTP bytes=$(wc -c </tmp/xai-shiplog-operator.json)"
 
 *Product/project accounts* (`SRC=projects`):
 ```bash
-jq -n --arg sd "$SINCE_DATE" --arg td "$TODAY" --arg ph "$PRODUCT_HANDLES" '{model:"grok-4.3", input:[{role:"user", content:("Search X for posts between " + $sd + " and " + $td + " from these accounts: " + $ph + ". Focus on launches, announcements, and any brag about a security fix merged into another project. For each: @handle, full text, date, exact engagement counts (likes, retweets, replies; 0 if unknown), and the direct link https://x.com/handle/status/ID. Skip retweets of others.")}], tools:[{type:"x_search"}]}' > /tmp/xai-shiplog-projects-payload.json
+jq -n --arg sd "$SINCE_DATE" --arg td "$TODAY" --arg ph "$PRODUCT_HANDLES" '{model:"grok-4.6", input:[{role:"user", content:("Search X for posts between " + $sd + " and " + $td + " from these accounts: " + $ph + ". Focus on launches, announcements, and any brag about a security fix merged into another project. For each: @handle, full text, date, exact engagement counts (likes, retweets, replies; 0 if unknown), and the direct link https://x.com/handle/status/ID. Skip retweets of others.")}], tools:[{type:"x_search"}]}' > /tmp/xai-shiplog-projects-payload.json
 HTTP=$(./secretcurl -s -o /tmp/xai-shiplog-projects.json -w '%{http_code}' --max-time 150 -X POST "https://api.x.ai/v1/responses" \
   -H "Content-Type: application/json" -H "Authorization: Bearer {XAI_API_KEY}" -d @/tmp/xai-shiplog-projects-payload.json)
 echo "xai http=$HTTP bytes=$(wc -c </tmp/xai-shiplog-projects.json)"
@@ -145,7 +145,7 @@ From the **operator** text, separate **original posts** from **RTs** (RT text st
 
 - **Ecosystem mentions** — only if `ecosystem_scouts` (`scouts:`) is configured. Fetch with the same **Path A** X.AI curl as Step 3, into its own tmp file (`SRC=ecosystem`):
   ```bash
-  jq -n --arg sd "$SINCE_DATE" --arg td "$TODAY" --arg es "$ECOSYSTEM_SCOUTS" --arg ph "$PRODUCT_HANDLES" '{model:"grok-4.3", input:[{role:"user", content:("Search X between " + $sd + " and " + $td + " for posts from these recap/scout accounts: " + $es + " that mention any of these products: " + $ph + ". Return each mention with @handle, follower_count, full text, date, and the direct link https://x.com/handle/status/ID — recaps, rankings, partner shares.")}], tools:[{type:"x_search"}]}' > /tmp/xai-shiplog-ecosystem-payload.json
+  jq -n --arg sd "$SINCE_DATE" --arg td "$TODAY" --arg es "$ECOSYSTEM_SCOUTS" --arg ph "$PRODUCT_HANDLES" '{model:"grok-4.6", input:[{role:"user", content:("Search X between " + $sd + " and " + $td + " for posts from these recap/scout accounts: " + $es + " that mention any of these products: " + $ph + ". Return each mention with @handle, follower_count, full text, date, and the direct link https://x.com/handle/status/ID — recaps, rankings, partner shares.")}], tools:[{type:"x_search"}]}' > /tmp/xai-shiplog-ecosystem-payload.json
   HTTP=$(./secretcurl -s -o /tmp/xai-shiplog-ecosystem.json -w '%{http_code}' --max-time 150 -X POST "https://api.x.ai/v1/responses" \
     -H "Content-Type: application/json" -H "Authorization: Bearer {XAI_API_KEY}" -d @/tmp/xai-shiplog-ecosystem-payload.json)
   echo "xai http=$HTTP bytes=$(wc -c </tmp/xai-shiplog-ecosystem.json)"

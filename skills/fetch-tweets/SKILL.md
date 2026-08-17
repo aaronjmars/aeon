@@ -78,7 +78,7 @@ Search X for tweets matching `ARG` and produce a curated digest grouped by sub-n
    FROM_DATE=$(date -u -d "yesterday" +%Y-%m-%d 2>/dev/null || date -u -v-1d +%Y-%m-%d)
    TO_DATE=$(date -u +%Y-%m-%d)
    PROMPT="Search X for tweets about: ${ARG}. Date range: ${FROM_DATE} to ${TO_DATE}. Return at least 15-20 candidate tweets — mix of high-engagement posts and smaller accounts that add a distinct angle. For each tweet include: @handle, the full text, date posted, exact engagement counts (likes, retweets, replies — never N/A; if unknown, say 0), and the direct link (https://x.com/handle/status/ID). Return as a numbered list."
-   jq -n --arg p "$PROMPT" '{model:"grok-4.3", input:[{role:"user",content:$p}], tools:[{type:"x_search"}]}' > /tmp/xai-ft-keyword.json
+   jq -n --arg p "$PROMPT" '{model:"grok-4.6", input:[{role:"user",content:$p}], tools:[{type:"x_search"}]}' > /tmp/xai-ft-keyword.json
    HTTP=$(./secretcurl -s -o /tmp/xai.json -w '%{http_code}' --max-time 150 -X POST "https://api.x.ai/v1/responses" \
      -H "Content-Type: application/json" \
      -H "Authorization: Bearer {XAI_API_KEY}" \
@@ -149,7 +149,7 @@ Gist of the latest X chatter on one or more configurable topics.
    FROM_DATE=$(date -u -d "yesterday" +%Y-%m-%d 2>/dev/null || date -u -v-1d +%Y-%m-%d)
    TO_DATE=$(date -u +%Y-%m-%d)
    PROMPT="Search X for recent tweets about: ${TOPIC}. Date range: ${FROM_DATE} to ${TO_DATE}. Return up to 8 substantive tweets. For each: @handle, full text, date, exact engagement counts (likes, retweets, replies; 0 if unknown), and the direct link https://x.com/handle/status/ID."
-   jq -n --arg p "$PROMPT" '{model:"grok-4.3", input:[{role:"user",content:$p}], tools:[{type:"x_search"}]}' > /tmp/xai-ft-topic.json
+   jq -n --arg p "$PROMPT" '{model:"grok-4.6", input:[{role:"user",content:$p}], tools:[{type:"x_search"}]}' > /tmp/xai-ft-topic.json
    ./secretcurl -s -o /tmp/xai-topic-out.json -X POST "https://api.x.ai/v1/responses" \
      -H "Content-Type: application/json" \
      -H "Authorization: Bearer {XAI_API_KEY}" \
@@ -201,7 +201,7 @@ Two sub-modes: **single handle** (decision-ready gist of one account) vs. **all 
    - **Path A — X.AI API** (primary): search this account's recent tweets via Grok's `x_search`.
      ```bash
      PROMPT="Search X for the latest tweets, replies, and quote tweets from @${ACCOUNT} in the last 2 days. Return each with full text, timestamp, type (original|reply|quote), what it replies to/quotes if any, exact engagement counts (likes, retweets, replies; 0 if unknown), and the permalink https://x.com/${ACCOUNT}/status/ID. Skip retweets of others. Return chronological."
-     jq -n --arg p "$PROMPT" '{model:"grok-4.3", input:[{role:"user",content:$p}], tools:[{type:"x_search"}]}' > /tmp/xai-ft-account.json
+     jq -n --arg p "$PROMPT" '{model:"grok-4.6", input:[{role:"user",content:$p}], tools:[{type:"x_search"}]}' > /tmp/xai-ft-account.json
      ./secretcurl -m 30 -s -o /tmp/xai-account-out.json -X POST "https://api.x.ai/v1/responses" \
        -H "Content-Type: application/json" \
        -H "Authorization: Bearer {XAI_API_KEY}" \
@@ -261,7 +261,7 @@ Use this to answer "what did *these specific people* post" across a watchlist.
    - **Path A — live curl** (primary, `XAI_API_KEY` is injected and set):
      ```bash
      PROMPT="Search X for the latest tweets from:${HANDLE} in the last 3 days. Return the 5 most interesting or substantive tweets. For each: full text, date, direct link (https://x.com/${HANDLE}/status/ID). Skip retweets of others."
-     jq -n --arg p "$PROMPT" '{model:"grok-4.3", input:[{role:"user",content:$p}], tools:[{type:"x_search"}]}' > /tmp/xai-ft-acct1.json
+     jq -n --arg p "$PROMPT" '{model:"grok-4.6", input:[{role:"user",content:$p}], tools:[{type:"x_search"}]}' > /tmp/xai-ft-acct1.json
      ./secretcurl -m 30 -s -o /tmp/xai-acct1-out.json -X POST "https://api.x.ai/v1/responses" \
        -H "Content-Type: application/json" \
        -H "Authorization: Bearer {XAI_API_KEY}" \
@@ -325,7 +325,7 @@ Cross-list narrative resonance + signal-scored top tweets from tracked X lists i
    TO_DATE=$(date -u +%Y-%m-%d)
    PROMPT="Look at X list https://x.com/i/lists/${LIST_ID}. Step 1: report the list name and a one-line description. Step 2: identify the most engaging tweets posted by members of this list between ${FROM_DATE} and ${TO_DATE} UTC. Return the top 12 tweets ranked by engagement (likes, retweets, replies). For EACH tweet you MUST return: (a) @handle, (b) the full tweet text (not a paraphrase), (c) explicit engagement counts as separate fields — likes:N, retweets:N, replies:N, views:N if available, (d) the direct permalink in the form https://x.com/<handle>/status/<id>, (e) media type (image|video|none), (f) one-line context if it's a reply or quote tweet (who/what). Skip retweets of accounts NOT on this list. If a tweet has an image and you can analyze it, include a one-line image description."
    jq -n --arg p "$PROMPT" --arg fd "$FROM_DATE" --arg td "$TO_DATE" \
-     '{model:"grok-4.3", input:[{role:"user",content:$p}], tools:[{type:"x_search", from_date:$fd, to_date:$td, enable_image_understanding:true}]}' \
+     '{model:"grok-4.6", input:[{role:"user",content:$p}], tools:[{type:"x_search", from_date:$fd, to_date:$td, enable_image_understanding:true}]}' \
      > /tmp/xai-ft-list.json
    ./secretcurl -s -o /tmp/xai-list-out.json --max-time 180 -X POST "https://api.x.ai/v1/responses" \
      -H "Content-Type: application/json" \
@@ -405,7 +405,7 @@ A topic-filtered preset: a curated, narrative-aware read on what the AI-agent sc
    ```bash
    PROMPT="Search X from ${FROM_DATE} to ${TO_DATE} for tweets in the AI-agents conversation: autonomous agents, agent frameworks, MCP / agent protocols, agent products, agent benchmarks, agent research papers. Return up to 40 candidates. For EACH candidate you MUST return: @handle, follower_count (integer or null), role_guess (builder|founder|researcher|investor|commentator|anon), one-line claim (what they actually said — not a paraphrase, the thesis), likes (int), retweets (int), replies (int), posted_at (ISO), direct_link (https://x.com/username/status/ID). Prefer builders/founders/researchers. Skip obvious engagement-farming threads (\"RT if you agree\", reply-guy pileons, giveaways)."
    jq -n --arg p "$PROMPT" --arg fd "$FROM_DATE" --arg td "$TO_DATE" \
-     '{model:"grok-4.3", input:[{role:"user",content:$p}], tools:[{type:"x_search", from_date:$fd, to_date:$td}]}' \
+     '{model:"grok-4.6", input:[{role:"user",content:$p}], tools:[{type:"x_search", from_date:$fd, to_date:$td}]}' \
      > /tmp/xai-ft-buzz.json
    ./secretcurl -s -o /tmp/xai-buzz-out.json -X POST "https://api.x.ai/v1/responses" \
      -H "Content-Type: application/json" \

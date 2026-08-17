@@ -85,7 +85,7 @@ For ecosystem/extension repos, note the owner (potential partner).
 FROM_DATE=$(date -u -d "3 days ago" +%Y-%m-%d 2>/dev/null || date -u -v-3d +%Y-%m-%d)
 TERMS="<OR-joined product names + @handles read from memory/products.md>"
 jq -n --arg terms "$TERMS" --arg fd "$FROM_DATE" \
-  '{model:"grok-4.3", input:[{role:"user",content:("Search X since "+$fd+" for posts mentioning any of: "+$terms+". For each post return: @handle, full text, date, whether the author reads as a project or builder (from bio/links), engagement counts, and the direct link https://x.com/handle/status/ID.")}], tools:[{type:"x_search"}]}' \
+  '{model:"grok-4.6", input:[{role:"user",content:("Search X since "+$fd+" for posts mentioning any of: "+$terms+". For each post return: @handle, full text, date, whether the author reads as a project or builder (from bio/links), engagement counts, and the direct link https://x.com/handle/status/ID.")}], tools:[{type:"x_search"}]}' \
   > /tmp/xai-bd-payload.json
 HTTP=$(./secretcurl -s -o /tmp/xai-bd.json -w '%{http_code}' --max-time 150 -X POST "https://api.x.ai/v1/responses" \
   -H "Content-Type: application/json" -H "Authorization: Bearer {XAI_API_KEY}" -d @/tmp/xai-bd-payload.json)

@@ -119,7 +119,7 @@ fi
 case "$REQ_MODEL" in claude-*|grok-*|"") REQ_MODEL="" ;; esac   # aeon-native / unset → not an OpenRouter id
 
 case "$HARNESS" in
-  codex) DEFAULT_HM="openai/gpt-5-mini" ;;
+  codex) DEFAULT_HM="openai/gpt-5.1-codex-mini" ;;
   vibe)  DEFAULT_HM="mistralai/mistral-medium-3-5" ;;   # vibe's default (VIBE_MODELS[0])
   pi)    DEFAULT_HM="deepseek/deepseek-v4-flash" ;;     # pi's default (PI_MODELS[0])
   kimi)  DEFAULT_HM="moonshotai/kimi-k2.5" ;;           # kimi's default (KIMI_MODELS[0])

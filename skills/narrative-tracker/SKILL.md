@@ -42,7 +42,7 @@ TO_DATE=$(date -u +%Y-%m-%d)
 # The `>` redirect to /tmp is fine in read-only mode (it is not a repo path; nothing reverts it).
 PROMPT="Search X for the dominant crypto and tech narratives from ${FROM_DATE} to ${TO_DATE}. Return 12-15 distinct narrative threads. For each: 1) short label, 2) 3-5 representative @handles driving it, 3) 2-3 tweet permalinks, 4) rough mention-volume descriptor (niche / growing / saturating / cooling), 5) the strongest one-line bear case against it."
 jq -n --arg p "$PROMPT" --arg fd "$FROM_DATE" --arg td "$TO_DATE" \
-  '{model:"grok-4.3", input:[{role:"user",content:$p}], tools:[{type:"x_search",from_date:$fd,to_date:$td}]}' \
+  '{model:"grok-4.6", input:[{role:"user",content:$p}], tools:[{type:"x_search",from_date:$fd,to_date:$td}]}' \
   > /tmp/xai-nt-payload.json
 HTTP=$(./secretcurl -s -o /tmp/xai-nt.json -w '%{http_code}' --max-time 150 -X POST "https://api.x.ai/v1/responses" \
   -H "Content-Type: application/json" \
@@ -142,7 +142,7 @@ Append a `### narrative-tracker` section with the full structured output (not ju
 
 ## Fetching
 
-`XAI_API_KEY` is **injected into this skill's environment** (declared in `requires:`). It is present and valid. **The primary fetch path is a direct `curl` to `https://api.x.ai/v1/responses` with `Authorization: Bearer {XAI_API_KEY}`** (model `grok-4.3`, `"tools":[{"type":"x_search"}]`). There is **no network sandbox** blocking this — earlier versions of this skill claimed there was, and that is stale and false. Just make the call.
+`XAI_API_KEY` is **injected into this skill's environment** (declared in `requires:`). It is present and valid. **The primary fetch path is a direct `curl` to `https://api.x.ai/v1/responses` with `Authorization: Bearer {XAI_API_KEY}`** (model `grok-4.6`, `"tools":[{"type":"x_search"}]`). There is **no network sandbox** blocking this — earlier versions of this skill claimed there was, and that is stale and false. Just make the call.
 
 Rules:
 1. **Check, don't assume.** Run `[ -n "${XAI_API_KEY:+x}" ] && echo KEY_PRESENT || echo KEY_UNSET` (the `${VAR:+x}` form, not bare `$XAI_API_KEY` — the bare form trips the secret-expansion analyzer and falsely reads as unset). If `KEY_PRESENT` (it will be), Path A (the curl in step 1a) is required before any fallback.

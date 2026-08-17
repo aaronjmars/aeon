@@ -27,7 +27,7 @@ command -v pi >/dev/null 2>&1 || {
 ARGS=(--mode json --no-session --approve)
 
 # model: pi is multi-provider — pass anything through (its registry matches
-# patterns like "claude-sonnet-5", "openai/gpt-4o", or bare "sonnet")
+# patterns like "claude-sonnet-5", "openai/gpt-5-mini", or bare "sonnet")
 [ -n "${RH_MODEL:-}" ] && [ "${RH_MODEL}" != "default" ] && ARGS+=(--model "$RH_MODEL")
 
 # read-only -> tool subsetting (pi's only native lever; advisory without the

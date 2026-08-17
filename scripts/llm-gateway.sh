@@ -270,8 +270,7 @@ X-Title: ${OPENROUTER_APP_TITLE:-Aeon}"
     if [ -z "$venice_model" ]; then
       m="$(printf '%s' "${MODEL:-}" | sed -E 's/-[0-9]{8}$//')"
       case "$m" in
-        claude-opus-5|claude-sonnet-5|claude-fable-5|claude-opus-4-8|claude-opus-4-7|\
-        claude-opus-4-6|claude-opus-4-5|claude-sonnet-4-6|claude-sonnet-4-5) venice_model="$m" ;;
+        claude-opus-5|claude-sonnet-5|claude-fable-5) venice_model="$m" ;;
         *) venice_model="claude-sonnet-5" ;;
       esac
     fi

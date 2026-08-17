@@ -44,17 +44,16 @@ export const KIMI_MODELS = [
   { id: 'moonshotai/kimi-k2.7-code', label: 'Kimi K2.7 Code' },
 ]
 
-// codex needs its own list: it fails DETERMINISTICALLY on gpt-5-nano (it emits a
+// codex needs its own list. It fails DETERMINISTICALLY on gpt-5-nano (it emits a
 // shell tool call with a duplicated `cmd` field, its strict parser rejects it,
-// and with no --max-turns it spins to the run guard). So its cheapest working
-// model is mini — measured on a real runner — which stays the default (first entry,
-// matched by aeon.yml's DEFAULT_HM). The rest are the codex-tuned line
-// (gpt-5.1-codex-mini, gpt-5.3-codex) and the general gpt-5.6 family (luna, terra),
-// which drive codex via OpenRouter. gpt-5.1-codex-mini + gpt-5.6-luna verified live
-// 2026-07-22; gpt-5.3-codex/gpt-5.6-terra inferred from their same-family siblings.
+// and with no --max-turns it spins to the run guard), so nano is never offered.
+// The default (first entry, matched by aeon.yml's DEFAULT_HM) is the codex-tuned
+// gpt-5.1-codex-mini, verified live 2026-07-22. gpt-5-mini is the prior default
+// and stays as a universally-safe fallback; the rest are the fuller codex line
+// (gpt-5.3-codex) and the general gpt-5.6 family (luna, terra), all via OpenRouter.
 export const CODEX_MODELS = [
-  { id: 'openai/gpt-5-mini', label: 'GPT-5 Mini' },
   { id: 'openai/gpt-5.1-codex-mini', label: 'GPT-5.1 Codex Mini' },
+  { id: 'openai/gpt-5-mini', label: 'GPT-5 Mini' },
   { id: 'openai/gpt-5.3-codex', label: 'GPT-5.3 Codex' },
   { id: 'openai/gpt-5.6-luna', label: 'GPT-5.6 Luna' },
   { id: 'openai/gpt-5.6-terra', label: 'GPT-5.6 Terra' },

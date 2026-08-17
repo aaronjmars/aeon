@@ -103,7 +103,7 @@ jq -r '.output[] | select(.type == "message") | .content[] | select(.type == "ou
 ```bash
 LIST_ID="${var}"
 jq -n --arg list_id "$LIST_ID" --arg from "$FROM_DATE" --arg to "$TO_DATE" '{
-  model: "grok-4.3",
+  model: "grok-4.6",
   input: [{role: "user", content: ("Look at X list https://x.com/i/lists/" + $list_id + ". Return the 12 most reply-worthy original posts (not retweets, not replies) by members of this list between " + $from + " and " + $to + ". Reply-worthy = has a take, claim, question, or framing worth engaging — NOT pure self-promo, breaking news without analysis, or threads already past 500 replies. For each: @handle, full tweet text, tweet URL, posted_at ISO timestamp, like/reply/retweet counts.")}],
   tools: [{type: "x_search", from_date: $from, to_date: $to}]
 }' > /tmp/xai-rm-payload.json
@@ -113,7 +113,7 @@ jq -n --arg list_id "$LIST_ID" --arg from "$FROM_DATE" --arg to "$TO_DATE" '{
 ```bash
 HANDLE="${var}"
 jq -n --arg handle "$HANDLE" --arg from "$FROM_DATE" --arg to "$TO_DATE" '{
-  model: "grok-4.3",
+  model: "grok-4.6",
   input: [{role: "user", content: ("Look at recent original posts (not retweets, not replies) by " + $handle + " on X between " + $from + " and " + $to + ". Return the 12 most reply-worthy. Reply-worthy = has a take, claim, question, or framing worth engaging — NOT pure self-promo, breaking news without analysis, or threads already past 500 replies. For each: @handle, full tweet text, tweet URL, posted_at ISO timestamp, like/reply/retweet counts.")}],
   tools: [{type: "x_search", from_date: $from, to_date: $to}]
 }' > /tmp/xai-rm-payload.json
@@ -123,7 +123,7 @@ jq -n --arg handle "$HANDLE" --arg from "$FROM_DATE" --arg to "$TO_DATE" '{
 ```bash
 TOPIC="${var}"   # when empty, substitute the top 2–3 topics from memory/MEMORY.md
 jq -n --arg topic "$TOPIC" --arg from "$FROM_DATE" --arg to "$TO_DATE" '{
-  model: "grok-4.3",
+  model: "grok-4.6",
   input: [{role: "user", content: ("Search X for the 12 most reply-worthy original posts (not retweets, not replies) about " + $topic + " between " + $from + " and " + $to + ". Reply-worthy = has a take, claim, question, or framing worth engaging — NOT pure self-promo, breaking news without analysis, or threads already past 500 replies. For each: @handle, full tweet text, tweet URL, posted_at ISO timestamp, like/reply/retweet counts.")}],
   tools: [{type: "x_search", from_date: $from, to_date: $to}]
 }' > /tmp/xai-rm-payload.json
