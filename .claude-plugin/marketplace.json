@@ -1,0 +1,14 @@
+{
+  "name": "aeon",
+  "owner": {
+    "name": "Aeon Inc",
+    "url": "https://github.com/aeonfun"
+  },
+  "plugins": [
+    {
+      "name": "aeon",
+      "source": "./plugin",
+      "description": "Operator console for running an Aeon agent instance from Claude Code."
+    }
+  ]
+}
