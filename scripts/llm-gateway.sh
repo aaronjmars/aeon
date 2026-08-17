@@ -193,6 +193,13 @@ case "${GATEWAY:-direct}" in
     export ANTHROPIC_DEFAULT_SONNET_MODEL="${OPENROUTER_MODEL_SONNET:-anthropic/claude-sonnet-5}"
     export ANTHROPIC_DEFAULT_HAIKU_MODEL="${OPENROUTER_MODEL_HAIKU:-anthropic/claude-haiku-4.5}"
     MODEL="$ANTHROPIC_DEFAULT_OPUS_MODEL"
+    # App attribution: HTTP-Referer + X-Title make aeon's OpenRouter traffic show
+    # up on openrouter.ai's public app leaderboard. Claude Code forwards
+    # ANTHROPIC_CUSTOM_HEADERS (one "Name: Value" per line) to the upstream even on
+    # a third-party gateway base URL. Override per fork with the repo vars
+    # OPENROUTER_SITE_URL / OPENROUTER_APP_TITLE.
+    export ANTHROPIC_CUSTOM_HEADERS="HTTP-Referer: ${OPENROUTER_SITE_URL:-https://aeon.fun}
+X-Title: ${OPENROUTER_APP_TITLE:-Aeon}"
     echo "::notice::Routing through OpenRouter (Anthropic-native) as ${MODEL}"
     ;;
 
