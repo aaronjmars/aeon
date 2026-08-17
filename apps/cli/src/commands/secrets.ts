@@ -3,7 +3,7 @@ import {
   getSecrets, setSecret, deleteSecret, VALID_SECRET_NAME,
 } from '../../../dashboard/lib/secrets-catalog.ts'
 import type { Secret } from '../../../dashboard/lib/types.ts'
-import { emit, table, c, fail, isDryRun, requireGh } from '../output.ts'
+import { emit, table, c, fail, isDryRun, requireGh, truncate } from '../output.ts'
 
 const USAGE = `aeon secrets — the credential vault (names + set-state, never values)
 
@@ -98,8 +98,4 @@ async function rmCmd(args: string[]) {
   }
   await deleteSecret(name)
   emit({ ok: true, deleted: name }, () => console.log(c.green('✓ ') + `deleted ${name}`))
-}
-
-function truncate(s: string, n: number) {
-  return s.length > n ? s.slice(0, n - 1) + '…' : s
 }

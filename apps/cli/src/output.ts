@@ -32,6 +32,10 @@ export function emit(data: unknown, human: () => void) {
 
 // Print a left-aligned column table. `headers` label the columns; each row is a
 // string per column. Column widths size to the widest cell (header included).
+export function truncate(s: string, n: number) {
+  return s.length > n ? s.slice(0, n - 1) + '…' : s
+}
+
 export function table(headers: string[], rows: string[][]) {
   const widths = headers.map((h, i) =>
     Math.max(h.length, ...rows.map(r => stripAnsi(r[i] ?? '').length)))

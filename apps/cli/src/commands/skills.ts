@@ -4,7 +4,7 @@ import { updateSkillInConfig, upsertSkillInConfig, removeSkillFromConfig } from 
 import { getFileContent, saveFile, deleteDirectory, commitAndPush } from '../../../dashboard/lib/github.ts'
 import { runSkill, buildSkillRunArgs } from '../../../dashboard/lib/run-skill.ts'
 import type { Skill } from '../../../dashboard/lib/types.ts'
-import { emit, table, c, fail, isDryRun } from '../output.ts'
+import { emit, table, c, fail, isDryRun, truncate } from '../output.ts'
 import { applyConfig, reportConfig, printSync } from '../mutate.ts'
 
 const USAGE = `aeon skills — inspect and configure the skill roster
@@ -202,8 +202,4 @@ function showSkill(skills: Skill[], name: string) {
     ]
     for (const [k, v] of rows) console.log(c.dim(k.padEnd(10)) + v)
   })
-}
-
-function truncate(s: string, n: number) {
-  return s.length > n ? s.slice(0, n - 1) + '…' : s
 }

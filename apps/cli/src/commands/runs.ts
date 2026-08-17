@@ -1,6 +1,6 @@
 import { parseArgs } from 'node:util'
 import { listRuns, getRunLogs } from '../../../dashboard/lib/runs.ts'
-import { emit, table, c, fail, requireGh } from '../output.ts'
+import { emit, table, c, fail, requireGh, truncate } from '../output.ts'
 
 const USAGE = `aeon runs — recent Aeon-launched workflow runs
 
@@ -80,8 +80,4 @@ function rel(iso: string) {
   if (secs < 3600) return `${Math.round(secs / 60)}m ago`
   if (secs < 86400) return `${Math.round(secs / 3600)}h ago`
   return `${Math.round(secs / 86400)}d ago`
-}
-
-function truncate(s: string, n: number) {
-  return s.length > n ? s.slice(0, n - 1) + '…' : s
 }
