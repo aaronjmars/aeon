@@ -25,6 +25,13 @@ Code's span exporter at Langfuse's OTLP endpoint (`<host>/api/public/otel`).
   nothing is sent to an endpoint that would reject it.
 - **HTTP, not gRPC.** Langfuse only accepts OTLP over HTTP, so the shim pins
   `OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf`.
+- **Langfuse v4 ready.** The OTLP ingestion contract (endpoint, Basic auth, and
+  the `gen_ai.*` attributes) is unchanged from v3, so nothing here is
+  version-specific. The shim also sends `x-langfuse-ingestion-version=4`, which
+  makes directly-ingested spans show up in real time; without that header, direct
+  OTLP data can lag roughly 10-15 minutes in the Langfuse UI. (Langfuse Cloud is
+  v4-only after its Nov 2026 cutover; existing `pk-lf-…`/`sk-lf-…` keys keep
+  working across it.)
 - **Out of band.** Telemetry export is decoupled from the model call — if Langfuse
   is slow or down, the skill run is unaffected. The shim never `exit`s or fails
   the run.
