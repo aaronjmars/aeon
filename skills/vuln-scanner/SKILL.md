@@ -679,7 +679,7 @@ A `.md` file in `memory/pending-disclosures/` is eligible iff:
    plausible email (`^[^@\s]+@[^@\s]+\.[^@\s]+$`).
 3. **Still pending:** `status:` is one of `pending-operator-send`, `auto-send-ready`,
    `pending`, or blank. Anything else (`email-sent`, `email-failed`, `hold`, `sent`,
-   `submitted`, `withdrawn`, `superseded-upstream`) → **skip**. (`email-failed` means
+   `submitted`, `withdrawn`, `superseded-upstream`, `contact-unverified`) → **skip**. (`email-failed` means
    the sender gave up after repeated failures — leave it for the operator.)
 4. **Sendable body present:** the email body can be cleanly isolated (see step C3).
 5. **Not already sent:** no row in `memory/email-log.json` matches this draft
@@ -756,6 +756,15 @@ sending. Only `./secretcurl`, `jq`, `python3`, `grep`, `date`, `echo`, `mkdir`, 
 **Per draft (stop the loop once `BUDGET` sends have gone out):**
 4. **Dedup / status.** Skip if `slug` (repo with `/`→`-`) is already a row in `memory/email-log.json`, or the draft's own `status:` is already `email-sent`/`email-failed`.
 5. **Recipient sanity.** `to` must match `^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$` (`grep -qE`) — else skip + warn.
+5b. **Deliverability (MX/A), fail-closed.** A syntactically valid address can still be a dead or mistyped domain. Before an autonomous send, confirm the recipient **domain can actually receive mail** at the DNS level (port-25 SMTP probing is blocked on hosted runners, so verify over DNS-over-HTTPS - a plain GET, so `./secretcurl` passes the placeholder-free URL straight through):
+   ```bash
+   DOMAIN="${TO#*@}"
+   DNS=$(./secretcurl -sS --max-time 10 "https://dns.google/resolve?name=${DOMAIN}&type=MX")
+   MXN=$(echo "$DNS" | jq -r '[.Answer[]? | select(.type==15)] | length' 2>/dev/null)
+   ```
+   - `MXN >= 1` (domain publishes MX) → **verified, proceed.**
+   - `MXN == 0`: retry once against Cloudflare (`./secretcurl -sS --max-time 10 -H 'accept: application/dns-json' "https://cloudflare-dns.com/dns-query?name=${DOMAIN}&type=MX"`). Still none → look up an A record (`&type=A`, `.type==1`): a domain with an A but no MX still accepts mail at that host (RFC 5321 §5.1), so treat a resolvable A as deliverable.
+   - **No MX and no A, or both lookups error / time out → do NOT send (fail closed).** Flip the draft to `status: contact-unverified` and add a `deliverability: no-mx` frontmatter line so it drops out of the eligible set and surfaces to the operator; do not consume the budget.
 6. **Cooldown.** If this `to` was emailed within `${DISCLOSURE_EMAIL_COOLDOWN_DAYS:-7}` days (latest `.to`→`.sent_at` in the ledger, `python3` datetime diff) → skip, leave queued, retry after the window. A cooled-down draft does **not** consume the budget — move to the next.
 7. **Secret tripwire.** If subject+body match `grep -qE '(sk-[A-Za-z0-9]{20}|re_[A-Za-z0-9]{8}[A-Za-z0-9_]{12}|gh[pousr]_[A-Za-z0-9]{20}|AKIA[0-9A-Z]{16}|AIza[0-9A-Za-z_-]{20}|-----BEGIN [A-Z ]*PRIVATE KEY-----)'` → **do not send**, log `BLOCKED: possible secret in body`, leave for operator review.
 8. **Build cc** = the draft's `cc` (array or comma-string) + `$RESEND_CC` (operator audit copy), minus blanks and the `to`, deduped (`jq`).

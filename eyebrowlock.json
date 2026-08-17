@@ -109,13 +109,15 @@
       "capabilities": {
         "network": [
           "api.resend.com",
+          "cloudflare-dns.com",
+          "dns.google",
           "github.com"
         ]
       },
       "files": [
         {
           "path": "SKILL.md",
-          "hash": "89f69623e9b3eada3d99d2efdfd49adf2d5ae2bf22994d8e3216cf98c0d42276"
+          "hash": "a48fb63798be19f958820e880efc6f1f5cf0d242d6937eb26c4c02b79bb32bd5"
         }
       ],
       "findings": [
@@ -151,12 +153,12 @@
           "severity": "critical",
           "owasp": "ASK-01",
           "file": "SKILL.md",
-          "line": 863,
+          "line": 872,
           "snippet": "1. **Install** \u2014 the binaries (`semgrep`, `trufflehog`, `osv-scanner`, `slither`) are **not pre-installed**. Stage the\u2026",
           "explanation": "downloads and executes remote code via a pipe to a shell"
         }
       ],
-      "contentHash": "sha256-7aec47b988db3c4df8b31755af9d062f0c1715c8704e6880095fcc1cc20f6fde",
+      "contentHash": "sha256-a9cdb0547fa559f53196eef12f5459c6d1f8bace3a56fa257f809e4f309cb1c5",
       "discoveredFrom": "skills/vuln-scanner/SKILL.md"
     },
     {
