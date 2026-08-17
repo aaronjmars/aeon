@@ -68,6 +68,7 @@ export const SKILL_ICONS: Record<string, string> = {
   "spawn-instance": "<path d='M15 12v6M12 15h6'/><rect x='8' y='8' width='14' height='14' rx='2'/><path d='M4 16a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2'/>",
   "spend-watch": "<path d='M4 4v16h16'/><path d='M20 8l-6 7-4-3-5 5'/><path d='M20 12V8h-4'/>",
   "strategy-builder": "<circle cx='12' cy='12' r='9'/><circle cx='12' cy='12' r='5'/><circle cx='12' cy='12' r='1.4' fill='currentColor' stroke='none'/>",
+  "taskmarket-delegate": "<rect x='3' y='4' width='10' height='16' rx='2'/><path d='M6 9h4M6 13h4'/><path d='M13 12h7'/><path d='M17 9l3 3-3 3'/>",
   "token-movers": "<path d='M9 5v4'/><rect x='7' y='9' width='4' height='6' rx='1'/><path d='M9 15v2'/><path d='M17 3v2'/><rect x='15' y='5' width='4' height='8' rx='1'/><path d='M17 13v3'/><path d='M3 3v16a2 2 0 0 0 2 2h16'/>",
   "token-pick": "<path d='M3.9 8.6a4 4 0 0 1 4.7-4.8 4 4 0 0 1 6.8 0 4 4 0 0 1 4.7 4.8 4 4 0 0 1 0 6.8 4 4 0 0 1-4.7 4.7 4 4 0 0 1-6.8 0 4 4 0 0 1-4.7-4.8 4 4 0 0 1 0-6.7z'/><path d='M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8'/><path d='M12 18V6'/>",
   "tx-explain": "<path d='M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1z'/><path d='M14 8H8M16 12H8M13 16H8'/>",
