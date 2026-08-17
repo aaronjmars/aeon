@@ -12,7 +12,7 @@ Where everything lives in an Aeon repo, and the fastest way to see what's on.
 ./aeon skills ls --enabled --json # for building the Mode 2 timeline
 ```
 
-`ls` prints `SKILL / ON / SCHEDULE / PACK / DESCRIPTION` and a footer — `73 skills · 1 enabled`. First run installs the CLI runtime (tsx + yaml, ~12MB, one-time); the noise is expected.
+`ls` prints `SKILL / ON / SCHEDULE / PACK / DESCRIPTION` and a footer — `75 skills · 1 enabled`. First run installs the CLI runtime (tsx + yaml, ~12MB, one-time); the noise is expected.
 
 **The `SCHEDULE` column is populated for disabled skills too** — it's their `aeon.yml` entry, not proof anything fires. Only the `●` in `ON` means it runs.
 

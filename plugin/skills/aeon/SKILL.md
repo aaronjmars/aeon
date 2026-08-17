@@ -251,7 +251,7 @@ metadata:
 Today is ${today}. <the prompt — plain instructions, including judgment calls>
 
 ## Steps
-1. <the procedure — 43 of 73 skills lead with this>
+1. <the procedure — 43 of 75 skills lead with this>
 
 ## Network note
 <curl / WebFetch / `./secretcurl` / `gh api` — how this skill fetches>
@@ -311,9 +311,9 @@ Three at a time, not twelve. Every enabled skill is a recurring notification, an
 ./aeon packs ls                  # the six first-party packs
 ```
 
-`ls` footers with `73 skills · 1 enabled` — read it to them before proposing anything. First run installs the CLI runtime (tsx + yaml, ~12MB); the npm noise is one-time and expected. Grep-only equivalents: `references/layout.md`.
+`ls` footers with `75 skills · 1 enabled` — read it to them before proposing anything. First run installs the CLI runtime (tsx + yaml, ~12MB); the npm noise is one-time and expected. Grep-only equivalents: `references/layout.md`.
 
-Packs are a visibility filter, not a runtime switch — revealing one runs nothing. Core (12), Evolution (9) and Basics (17) show by default; Dev (11), Crypto (14) and Productivity (10) are on demand.
+Packs are a visibility filter, not a runtime switch — revealing one runs nothing. Core (12), Evolution (9) and Basics (17) show by default; Dev (11), Crypto (15) and Productivity (11) are on demand.
 
 Reasonable starting sets:
 

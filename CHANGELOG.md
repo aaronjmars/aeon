@@ -11,6 +11,21 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Added
 
+- **The `/aeon` operator skill is now installable as a Claude Code plugin.**
+  Packages the existing `.claude/skills/aeon` setup skill as a distributable
+  plugin under a self-contained `plugin/` subdirectory (`plugin/.claude-plugin/`
+  manifest + `plugin/skills/aeon/`), published through a repo-root
+  `.claude-plugin/marketplace.json`, so operators can install it from any folder
+  with `/plugin marketplace add aeonfun/aeon` then `/plugin install aeon@aeon`
+  (versioned, `/plugin update`-able) instead of copying files. Rooting the plugin
+  under `plugin/` keeps its `skills/` isolated to the one operator skill and never
+  drags the framework catalog into an installer's Claude Code; the copy is
+  byte-for-byte identical to the source except the five `mine-history.mjs` path
+  lines that resolve via `${CLAUDE_PLUGIN_ROOT}`. `docs/aeon-setup.md` gains
+  install Option B and the README notes the plugin path. (#884, #885)
+- **Five ecosystem partners listed in `docs/ECOSYSTEM.md`** - AgentLink, AI2Human,
+  Mneme, Skim, and TaskMarket, each one alphabetized row, mirrored to
+  aeon.fun/ecosystem automatically via hourly ISR. (#880)
 - **New skill: `taskmarket-delegate`** - delegates work to the TaskMarket
   agent-worker market (`tasks.taskmarket.dev` / `api.taskmarket.dev`) instead of
   burning inference on low-confidence work. `browse` ranks open tasks
@@ -165,6 +180,18 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Changed
 
+- **OpenRouter gateway traffic is now attributed to Aeon.** The `openrouter` case
+  of `scripts/llm-gateway.sh` sets `ANTHROPIC_CUSTOM_HEADERS` so every Claude Code
+  request routed through `openrouter.ai` carries `HTTP-Referer: https://aeon.fun`
+  and `X-Title: Aeon`, ranking the usage on OpenRouter's public app leaderboard
+  instead of counting as anonymous volume. Overridable per fork via the
+  `OPENROUTER_SITE_URL` / `OPENROUTER_APP_TITLE` repo vars; base URL, auth, and
+  model are untouched. (#881)
+- **Documented Langfuse v4 compatibility** in `docs/langfuse.md`: the OTLP
+  ingestion contract is identical across v3 and v4, existing `pk-lf-`/`sk-lf-` keys
+  keep working across the Nov 2026 Cloud cutover, and the shim already sends
+  `x-langfuse-ingestion-version=4` for real-time direct ingestion. No config or
+  behavior change. (#883)
 - **`vuln-scanner` now runs a repo's own `cargo-fuzz` harnesses** during scan arm A
   (new step A3.5). The static tools (semgrep, trufflehog, osv-scanner) only ever
   read files; if the scanned repo ships its own `fuzz/fuzz_targets`, the scanner
@@ -225,6 +252,23 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Fixed
 
+- **`aeon-update` no longer silently deletes a currently-enabled skill retired
+  upstream.** The 3-way classifier CLEAN-DELETEd any `skills/<name>/` path removed
+  upstream and unmodified locally without checking whether `<name>` is still
+  `enabled: true` in the operator's `aeon.yml` - so a sync PR could drop an
+  actively-scheduled skill's directory with nothing in the review flagging it, the
+  break only surfacing later at `validate-config.js` or the skill's next run. That
+  case is now downgraded to a CONFLICT (`enabled-skill-removed-upstream`): the
+  directory stays and the PR body surfaces it in a loud dedicated section so the
+  operator can't merge past it unnoticed. (#874)
+- **`pi` + OpenRouter onboarding fixed.** `aeon auth --harness pi --key sk-or-...`
+  crashed at the launcher's `exec "$TSX"` because `tsx` was a `devDependency` and
+  the container bootstrap's `npm install --omit=dev` skipped it; `tsx` is now a
+  runtime `dependency`. Separately, the dashboard "Run now" gate reported "No
+  provider key set" whenever a flaky `/api/secrets` read (GitHub `503`) threw:
+  a just-saved secret is now optimistically registered, and a failed vault read
+  shows an accurate "couldn't read repo secrets" message instead of blaming a
+  missing key. (#882)
 - **`bin/add-skill` could not install from the standard `skills/<slug>/SKILL.md`
   layout** - the one this repo's own catalog uses. Discovery globbed at
   `-maxdepth 2` (never matching the depth-3 `SKILL.md`) so every repo reported "No
@@ -480,6 +524,8 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Security
 
+- **Bumped `nanoid` to 3.3.18** (GHSA-2v37-7h3g-55p8) in the `remotion` skill's
+  bundled project lockfile - transitive, lockfile-only. (#879)
 - **`ALL_SECRETS` built from an explicit allowlist, not `toJSON(secrets)`.**
   Serializing the entire secret store into a workflow env var is the canonical
   credential-exfiltration primitive, and on 2026-07-28 GitHub began holding
@@ -509,6 +555,11 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Maintenance
 
+- Dead-code sweep from a `ponytail-audit` pass: verified cuts across the CLI,
+  dashboard, mcp-server tracing, and scripts, net -444 lines, no behavior change.
+  (#886)
+- CI: added PR-scoped concurrency to the lint/check workflows so superseded runs
+  cancel instead of piling up. (#887)
 - Dashboard Dependabot security fix: patched `nanoid` advisories (lockfile-only
   transitive bump, no `package.json` change). (#871)
 - Webhook Dependabot batch (undici, `@opentelemetry/core`) plus two CI changes:
