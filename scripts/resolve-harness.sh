@@ -118,6 +118,10 @@ else
 fi
 case "$REQ_MODEL" in claude-*|grok-*|"") REQ_MODEL="" ;; esac   # aeon-native / unset → not an OpenRouter id
 
+# NOTE: changing any per-harness DEFAULT_HM below also requires updating the
+# expected values in scripts/tests/test_resolve_harness.sh (a stale codex pin
+# there broke CI once; fixed in #896). If the same model-pin pass edits skill
+# bodies, run `eyebrow scan` and commit the refreshed eyebrowlock.json too.
 case "$HARNESS" in
   codex) DEFAULT_HM="openai/gpt-5.1-codex-mini" ;;
   vibe)  DEFAULT_HM="mistralai/mistral-medium-3-5" ;;   # vibe's default (VIBE_MODELS[0])
