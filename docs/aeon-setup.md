@@ -38,9 +38,20 @@ Every Aeon instance ships this skill at [`.claude/skills/aeon/`](../.claude/skil
 1. Open your Aeon repo folder in Claude Code — the [VS Code](https://marketplace.visualstudio.com/items?itemName=anthropic.claude-code) or JetBrains extension, or the `claude` CLI in that directory.
 2. Type **`/aeon`** (or just mention Aeon / `aeon.yml` / "schedule a skill") and answer its questions.
 
-### Option B — install it globally (use it from any folder)
+### Option B - install as a Claude Code plugin (from any folder, one command)
 
-Copy the skill into your personal Claude Code skills directory so `/aeon` works in every session:
+The setup skill also ships as a [Claude Code plugin](https://code.claude.com/docs/en/plugins), so you can install it from a marketplace instead of copying files: versioned, and updatable with `/plugin update`.
+
+```
+/plugin marketplace add aeonfun/aeon
+/plugin install aeon@aeon
+```
+
+Then type `/aeon` in any session and point it at your instance when it asks which repo. Update later with `/plugin update aeon@aeon`, or remove it with `/plugin uninstall aeon@aeon`. (The plugin lives in the [`plugin/`](../plugin) subdirectory of this repo, a self-contained copy of the setup skill, so installing it never pulls in the unattended `skills/` catalog.)
+
+### Option C - install it globally by hand (use it from any folder)
+
+Prefer to copy files instead of using the plugin? Drop the skill into your personal Claude Code skills directory so `/aeon` works in every session:
 
 ```bash
 cp -R .claude/skills/aeon ~/.claude/skills/aeon
@@ -48,7 +59,7 @@ cp -R .claude/skills/aeon ~/.claude/skills/aeon
 
 Then open **any** directory in Claude Code and type `/aeon`; point it at your instance when it asks which repo.
 
-### Option C — another agent tool
+### Option D - another agent tool
 
 The skill is a standard `SKILL.md` (plus a `references/` folder). Any agent that supports [Agent Skills](https://code.claude.com/docs/en/skills) — Claude Code, Codex, Hermes, OpenClaw, and others — can use it: drop `.claude/skills/aeon/` into that tool's skills location. Everything it does is plain `gh` + `./aeon` commands, so nothing about it is Claude-Code-specific beyond where the file is loaded from.
 
