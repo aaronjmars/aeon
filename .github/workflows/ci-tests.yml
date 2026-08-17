@@ -23,6 +23,12 @@ on:
 permissions:
   contents: read
 
+# Cancel a superseded in-progress run when a newer commit is pushed to the same PR
+# (reclaims runner-minutes on stacked PR pushes). Never cancels push/main/tag runs.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   test:
     runs-on: ubuntu-latest
