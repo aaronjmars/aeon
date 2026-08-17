@@ -19,11 +19,13 @@ These are the projects we know of that run Aeon, extend it, or integrate with th
 | <img src="https://pbs.twimg.com/profile_images/2083994440113455104/ZZukY_1H_400x400.jpg" width="36" height="36" alt="Aeon City logo"> | Aeon City | [@aeoncityhub](https://x.com/aeoncityhub) |
 | <img src="https://pbs.twimg.com/profile_images/2056143519824166912/W2VGsyMX_400x400.jpg" width="36" height="36" alt="aeonbook logo"> | aeonbook | [@aeonbook_](https://x.com/aeonbook_) |
 | <img src="https://pbs.twimg.com/profile_images/2070127551788527616/gL60uVZj_400x400.jpg" width="36" height="36" alt="AeThree logo"> | AeThree | [@aethree_xyz](https://x.com/aethree_xyz) · [aethree.xyz](https://www.aethree.xyz) |
+| <img src="https://pbs.twimg.com/profile_images/2002059513524789249/mzJQc1tX_400x400.png" width="36" height="36" alt="AgentLink logo"> | AgentLink | [@agentlinkhq](https://x.com/agentlinkhq) · [agentlink.id](https://agentlink.id) |
+| <img src="https://pbs.twimg.com/profile_images/2021447689398030336/eY9wm4_X_400x400.png" width="36" height="36" alt="AI2Human logo"> | AI2Human | [@ai2humannetwork](https://x.com/ai2humannetwork) · [ai2human.io](https://ai2human.io) |
 | <img src="https://pbs.twimg.com/profile_images/2030575047644188673/vaJqbpck_400x400.jpg" width="36" height="36" alt="Amper logo"> | Amper | [@helloamper](https://x.com/helloamper) |
 | <img src="https://pbs.twimg.com/profile_images/2055896281751633920/NeawiT3G_400x400.png" width="36" height="36" alt="AntFleet logo"> | AntFleet | [@AntFleetDev](https://x.com/AntFleetDev) |
 | <img src="https://pbs.twimg.com/profile_images/2061160773208956933/qPhvV6Gb_400x400.jpg" width="36" height="36" alt="Atrium logo"> | Atrium | [@atriumhermes](https://x.com/atriumhermes) · [atriumhermes.tech](https://atriumhermes.tech) |
 | <img src="https://coin-images.coingecko.com/coins/images/102173323/large/autonomopoly.jpg?1779000184" width="36" height="36" alt="Autonomopoly logo"> | Autonomopoly | [GeckoTerminal](https://www.geckoterminal.com/base/pools/0x84771828f44fcfbaae08e271ff74e272cc2934a3348ec724a475941185ce4eb9) |
-| <img src="https://pbs.twimg.com/profile_images/2074866089574502400/7sMmZNhc_400x400.jpg" width="36" height="36" alt="Azzle logo"> | Azzle | [@azzleAI](https://x.com/azzleAI) |
+| <img src="https://pbs.twimg.com/profile_images/2087686997942951937/0kEuCySj_400x400.jpg" width="36" height="36" alt="Azzle logo"> | Azzle | [@azzleAI](https://x.com/azzleAI) |
 | <img src="https://pbs.twimg.com/profile_images/2082476759392698368/LTB7_hF6_400x400.jpg" width="36" height="36" alt="Bankr logo"> | Bankr | [@bankrbot](https://x.com/bankrbot) |
 | <img src="https://pbs.twimg.com/profile_images/2056801122858196992/FNUojvPG_400x400.jpg" width="36" height="36" alt="BaseHouse logo"> | BaseHouse | [@basehouse_org](https://x.com/basehouse_org) |
 | <img src="https://pbs.twimg.com/profile_images/2021187758547664896/7tdqvR2z_400x400.jpg" width="36" height="36" alt="Baseline logo"> | Baseline | [@BaselineMarkets](https://x.com/BaselineMarkets) |
@@ -56,6 +58,7 @@ These are the projects we know of that run Aeon, extend it, or integrate with th
 | <img src="https://pbs.twimg.com/profile_images/2059995800902537220/IngKmW55_400x400.jpg" width="36" height="36" alt="MANAGR logo"> | MANAGR | [@USICAI](https://x.com/USICAI) |
 | <img src="https://pbs.twimg.com/profile_images/2030743130421751808/w4Yi3fC7_400x400.jpg" width="36" height="36" alt="Mei logo"> | Mei | [@MeiMighty1](https://x.com/MeiMighty1) |
 | <img src="https://pbs.twimg.com/profile_images/2060426975718592517/Jdj2fOzg_400x400.jpg" width="36" height="36" alt="MiroShark logo"> | MiroShark | [@miroshark_](https://x.com/miroshark_) |
+| <img src="https://pbs.twimg.com/profile_images/2089264506991976448/9Ki_nVAN_400x400.jpg" width="36" height="36" alt="Mneme logo"> | Mneme | [@mnemeDB](https://x.com/mnemeDB) · [mnemedb.dev](https://mnemedb.dev) |
 | <img src="https://pbs.twimg.com/profile_images/2022853922847887363/7hiICjWl_400x400.jpg" width="36" height="36" alt="MythosForge logo"> | MythosForge | [@mythosforgebot](https://x.com/mythosforgebot) |
 | <img src="https://pbs.twimg.com/profile_images/2059382579107659778/pkh1HmwK_400x400.jpg" width="36" height="36" alt="Noctel logo"> | Noctel | [@noctelxbt](https://x.com/noctelxbt) · [noctel.xyz](https://www.noctel.xyz) |
 | <img src="https://pbs.twimg.com/profile_images/2067718393411579904/PzuiIBSz_400x400.jpg" width="36" height="36" alt="NÜMETAL logo"> | NÜMETAL | [@numetalxyz](https://x.com/numetalxyz) |
@@ -73,10 +76,12 @@ These are the projects we know of that run Aeon, extend it, or integrate with th
 | <img src="https://pbs.twimg.com/profile_images/2056009745040121856/SkTibyEJ_400x400.jpg" width="36" height="36" alt="Sentysis logo"> | Sentysis | [@Sentysislabs](https://x.com/Sentysislabs) |
 | <img src="https://pbs.twimg.com/profile_images/2056291951084032000/QJiBIXV-_400x400.jpg" width="36" height="36" alt="Signa logo"> | Signa | [@Signa_Agent](https://x.com/Signa_Agent) · [signaagent.xyz](https://www.signaagent.xyz) |
 | <img src="https://pbs.twimg.com/profile_images/2064718491668889600/S23rFUM6_400x400.jpg" width="36" height="36" alt="Simmer logo"> | Simmer | [@simmer_markets](https://x.com/simmer_markets) |
+| <img src="https://pbs.twimg.com/profile_images/2056536399864827904/sJpI8LLl_400x400.jpg" width="36" height="36" alt="Skim logo"> | Skim | [@skim402](https://x.com/skim402) · [skim402.com](https://skim402.com) |
 | <img src="https://pbs.twimg.com/profile_images/2074036017712320512/zeatSErP_400x400.jpg" width="36" height="36" alt="Solvr logo"> | Solvr | [@solvrbot](https://x.com/solvrbot) |
 | <img src="https://sparkleware.fun/logo.png" width="36" height="36" alt="Sparkleware logo"> | Sparkleware | [@sparklewarefun](https://x.com/sparklewarefun) · [sparkleware.fun](https://sparkleware.fun) |
 | <img src="https://pbs.twimg.com/profile_images/2059512048598548480/T3S4MoZ4_400x400.jpg" width="36" height="36" alt="Spoon logo"> | Spoon | [@Spoonautobot](https://x.com/Spoonautobot) |
 | <img src="https://pbs.twimg.com/profile_images/2077110134409469952/ZYgPG9di_400x400.jpg" width="36" height="36" alt="Tachi logo"> | Tachi | [@smolekoma](https://x.com/smolekoma) |
+| <img src="https://pbs.twimg.com/profile_images/2081554686981939200/WqnWbHND_400x400.jpg" width="36" height="36" alt="TaskMarket logo"> | TaskMarket | [@daydreamsagents](https://x.com/daydreamsagents) · [taskmarket.dev](https://taskmarket.dev) |
 | <img src="https://pbs.twimg.com/profile_images/2056143447829135360/GG04R1u8_400x400.jpg" width="36" height="36" alt="Venice Deity logo"> | Venice Deity | [@vvveity](https://x.com/vvveity) |
 | <img src="https://pbs.twimg.com/profile_images/2045582133826142208/NCXRNpY5_400x400.jpg" width="36" height="36" alt="Venice Kernel logo"> | Venice Kernel | [@VeniceKernel](https://x.com/VeniceKernel) |
 | <img src="https://pbs.twimg.com/profile_images/2029609210124849155/xjVy8biJ_400x400.jpg" width="36" height="36" alt="Vexor logo"> | Vexor | [@Vexora_x](https://x.com/Vexora_x) |
