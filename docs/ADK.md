@@ -188,7 +188,7 @@ Everything on-demand goes through one workflow - `aeon.yml` accepts `workflow_di
 |---|---|
 | `skill` | required; must match `^[a-zA-Z0-9_-]+$` and a directory under `skills/` |
 | `var` | the skill's input for this run |
-| `model` | override, e.g. `claude-opus-5` - must be one of the workflow's `choice` options or GitHub rejects with **422** |
+| `model` | override, e.g. `claude-opus-4-8` - must be one of the workflow's `choice` options or GitHub rejects with **422** |
 | `harness` | `claude` (default) or `grok` - see [Harnesses](harnesses.md) |
 
 ```ts

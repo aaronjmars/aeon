@@ -26,7 +26,7 @@ skills:
   # --- Hound onchain investigation (on-demand; var = address / tx hash) ---
   investigation-report: { enabled: false, schedule: "workflow_dispatch", var: "" } # var: <token-address> [--checks=rug,contract,deployer,holders,honeypot,lp] [--depth=quick|deep] — composite investigation (folds in rug-scan/contract-audit/deployer-trace/holder-concentration/honeypot-check/lp-lock). read-only
   tx-explain: { enabled: false, schedule: "workflow_dispatch", var: "" } # var: tx hash — plain-English decode
-  deploy-uni-hook: { enabled: false, schedule: "workflow_dispatch", harness: "claude", model: "claude-opus-5", var: "" } # generate+audit+simulate+deploy a Uniswap v4 hook + test pool on any v4 chain. var: [arm:][template:dynamic|noop|skim] [chain:base-sepolia] <brief>. Dry-run by default; arm: to broadcast (needs HOOK_DEPLOYER_PRIVATE_KEY burner). Testnet default; mainnet behind arm:+explicit chain:+HOOK_MAINNET_OK=1. Opus-pinned: freeform hook-gen is hard.
+  deploy-uni-hook: { enabled: false, schedule: "workflow_dispatch", harness: "claude", model: "claude-opus-4-8", var: "" } # generate+audit+simulate+deploy a Uniswap v4 hook + test pool on any v4 chain. var: [arm:][template:dynamic|noop|skim] [chain:base-sepolia] <brief>. Dry-run by default; arm: to broadcast (needs HOOK_DEPLOYER_PRIVATE_KEY burner). Testnet default; mainnet behind arm:+explicit chain:+HOOK_MAINNET_OK=1. Opus-pinned: freeform hook-gen is hard.
 
   monitor-polymarket: { enabled: false, schedule: "30 12 * * *", var: "" } # prediction-market monitor (Polymarket + Kalshi) — 24h moves, volume, comments, conviction alerts. var: empty=both | polymarket | kalshi | polymarket:<slug> | kalshi:<ticker>
   token-pick: { enabled: false, schedule: "0 12 * * *" }
@@ -185,7 +185,7 @@ chains:
   #     - skill: routine, consume: [token-movers, hn-digest, issue-triage, github-trending]
 
 # Default model for all skills. Override per-run via workflow_dispatch.
-# Options: claude-sonnet-5, claude-opus-5, claude-haiku-4-5-20251001
+# Options: claude-sonnet-5, claude-opus-4-8, claude-haiku-4-5-20251001
 # (Grok harness model: grok-4.5, the flagship reasoning model and grok's current
 #  default, run with --no-subagents in CI. It's the only id the grok CLI accepts on an
 #  X-account login, and it's the gateway default too. The older coding ids

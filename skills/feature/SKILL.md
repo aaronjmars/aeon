@@ -79,7 +79,7 @@ All branches read operator-controlled files under `memory/` (runtime config — 
 
   ## Current models (suggest these as replacements)
   - claude-sonnet-5
-  - claude-opus-5
+  - claude-opus-4-8
   - gpt-5
   - gemini-3
   - grok-4.6

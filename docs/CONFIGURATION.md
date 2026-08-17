@@ -210,7 +210,7 @@ The default model for all skills is set in `aeon.yml` (or from the dashboard hea
 model: claude-sonnet-5
 ```
 
-Options: `claude-sonnet-5` (default), `claude-opus-5`, `claude-haiku-4-5-20251001`. Per-run overrides are available via workflow dispatch, and individual skills can override to optimize cost:
+Options: `claude-sonnet-5` (default), `claude-opus-4-8`, `claude-haiku-4-5-20251001`. Per-run overrides are available via workflow dispatch, and individual skills can override to optimize cost:
 
 ```yaml
 skills:

@@ -35,7 +35,7 @@ skills:
   market-pulse: { enabled: true, schedule: "0 12 * * *", model: "claude-sonnet-5" }
   heartbeat: { enabled: true, schedule: "0 12 * * *" }
 
-model: claude-opus-5
+model: claude-opus-4-8
 
 gateway:
   provider: direct
@@ -65,7 +65,7 @@ describe("parseConfig", () => {
     assert.equal(config.skills["morning-brief"].schedule, "0 7 * * *");
     assert.equal(config.skills["market-pulse"].enabled, true);
     assert.equal(config.skills["market-pulse"].model, "claude-sonnet-5");
-    assert.equal(config.model, "claude-opus-5");
+    assert.equal(config.model, "claude-opus-4-8");
     assert.equal(config.gateway.provider, "direct");
     assert.equal(config.jsonrenderEnabled, true);
   });
@@ -164,9 +164,9 @@ describe("updateSkillInConfig", () => {
 
 describe("updateModelInConfig", () => {
   it("updates the top-level model", () => {
-    const updated = updateModelInConfig(MINIMAL_YAML, "claude-opus-5");
+    const updated = updateModelInConfig(MINIMAL_YAML, "claude-opus-4-8");
     const config = parseConfig(updated);
-    assert.equal(config.model, "claude-opus-5");
+    assert.equal(config.model, "claude-opus-4-8");
   });
 
   it("replaces an existing model", () => {
@@ -353,9 +353,9 @@ describe("round-trip config mutations", () => {
   });
 
   it("update model and gateway independently", () => {
-    let yaml = updateModelInConfig(MINIMAL_YAML, "claude-opus-5");
+    let yaml = updateModelInConfig(MINIMAL_YAML, "claude-opus-4-8");
     const config1 = parseConfig(yaml);
-    assert.equal(config1.model, "claude-opus-5");
+    assert.equal(config1.model, "claude-opus-4-8");
 
     // Model change should not affect skills
     assert.equal(config1.skills["heartbeat"].enabled, true);

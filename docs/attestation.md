@@ -201,7 +201,7 @@ To read the richer metadata, verify the manifest and inspect its bytes:
 ```bash
 gh attestation verify output/.attest/<skill>-<run_id>.json --repo <owner>/<repo>
 cat output/.attest/<skill>-<run_id>.json
-# { "skill": "...", "model": "claude-opus-5", "mode": "read-only",
+# { "skill": "...", "model": "claude-opus-4-8", "mode": "read-only",
 #   "trigger": "schedule", "commit": "<sha>", "run_id": "<id>",
 #   "output": { "path": "output/.attest/<skill>-<run_id>.md", "sha256": "<digest>" } }
 ```
