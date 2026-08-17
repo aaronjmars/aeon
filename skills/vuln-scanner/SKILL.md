@@ -271,9 +271,60 @@ different things, and they route differently:
    setup code outside the code path being fuzzed). Not a finding — drop it,
    same as a scanner false positive.
 
+### A3.6. Agentic logic audit (what SAST and fuzzing both miss)
+
+Semgrep matches syntactic patterns and has weak dataflow reachability on custom code; fuzzing (A3.5) only reaches what a harness already drives. Both are blind to **authorization, business-logic, and multi-step trust-boundary** bugs. That whole class is what an agentic reviewer catches - and here **you are the agentic scanner**. Do the source-to-sink reasoning the tools can't, over this repo's real entrypoints. This pass runs on every scan (unlike A3.5, which only fires when the repo ships a fuzz harness) and produces *candidates*, not verdicts - everything still goes through A4 triage (the model surfacing a finding is not evidence it is real).
+
+**Bounded so it can't run away on run time.** Size the repo first, then set the entrypoint review budget `N` from it - deep-review the **top-N highest-exposure** entrypoints only, and note the rest in the A7 report as reviewed-but-not-deep so coverage stays honest:
+
+```bash
+# Cheap size probe (excludes the usual noise dirs). Drives the review budget below.
+CODE_FILES=$(find . -type f \( -name '*.js' -o -name '*.ts' -o -name '*.jsx' -o -name '*.tsx' \
+  -o -name '*.py' -o -name '*.go' -o -name '*.rs' -o -name '*.sol' -o -name '*.rb' \
+  -o -name '*.java' -o -name '*.php' \) \
+  -not -path '*/node_modules/*' -not -path '*/vendor/*' -not -path '*/dist/*' \
+  -not -path '*/build/*' -not -path '*/.git/*' 2>/dev/null | wc -l | tr -d ' ')
+if   [ "${CODE_FILES:-0}" -le 300 ];  then N=15   # small repo - review broadly
+elif [ "${CODE_FILES:-0}" -le 1500 ]; then N=10
+else                                       N=6; fi # large repo - top exposure only
+echo "agentic-budget: CODE_FILES=$CODE_FILES N=$N"
+```
+
+**0. Frame the threat model first (one paragraph, before you enumerate).** State what this app is, the 2-3 things an attacker most wants from it (RCE, auth bypass / IDOR, secret/data exfil, SSRF into internal infra), and its trust boundaries (who is authenticated where, what input is server- vs user-controlled). This targets the ranking in step 2 so the top-`N` budget lands on what actually matters, not just the first entrypoints you find. Keep it to a few lines; it is the plan, not a deliverable.
+
+**1. Build the entrypoint inventory** - every place untrusted input enters. Grep + read to enumerate; record `file:symbol` and a `kind` for each:
+
+- HTTP / route handlers, API endpoints, GraphQL resolvers, webhook receivers
+- CLI arg + env parsing
+- Deserializers (JSON / YAML / pickle / XML), file uploads, path handling (traversal)
+- Template rendering / HTML construction (XSS), SQL / NoSQL query building (injection)
+- `exec` / `spawn` / `system` / `eval` sinks + subprocess with string interpolation (RCE)
+- Auth / session / token / crypto code (authz bypass, IDOR, weak crypto)
+- Outbound network clients + redirect handling (SSRF, open redirect)
+
+**2. Rank by exposure, deep-review the top N.** Order entrypoints by attack surface **against the step-0 threat model** (unauthenticated + reachable + dangerous-sink, weighted toward what the attacker most wants, first). For the top `N`: trace source-to-sink - what the attacker controls, where it flows, the sink, and the guard (if any) between. Write the one-sentence attacker-control claim (the A4 bar). Prioritize reachable **production** paths; ignore tests/examples/docs. Note entrypoints past `N` in the A7 report as not-deep-reviewed - do not silently drop them.
+
+**3. Emit candidates** in the same shape the tool outputs feed A4. Write one JSON array (may be `[]`) to `/tmp/vuln-scan/agentic.json` with the **Write** tool:
+
+```json
+[
+  {"file":"src/api/user.ts","line":88,"severity":"high","category":"idor",
+   "claim":"unauthenticated GET /user/:id returns any user's record - no owner check"}
+]
+```
+
+```bash
+# after writing /tmp/vuln-scan/agentic.json, record the source status:
+echo "agentic=ok" >> /tmp/vuln-scan/sources.txt   # 0 candidates on a reviewed surface is still `ok`;
+                                                  # use `agentic=skipped` only if the repo is unreadable/opaque
+                                                  # (minified-only, generated, no source you can reason about)
+```
+
+**Optional - codex-security as an extra source.** If `OPENAI_API_KEY` is present **and** `npx` is allow-listed and the CLI is staged, `npx @openai/codex-security scan . --json` produces an independent agentic `findings.json`; merge its findings into `/tmp/vuln-scan/agentic.json` and record `codex=ok`. **Off by default** - it needs Node 22.13+, model credits, and an allow-listed `npx`; the Claude-native pass above is the baseline and needs no new infra. (Verify the subcommand/flags against the installed version first - it is early 0.1.x and churns.)
+
 ### A4. Triage — read every finding before trusting it
 
-A scanner hit is a candidate, not a vulnerability. For each candidate:
+A scanner hit - or a candidate from the A3.6 agentic pass - is a candidate, not a vulnerability. Merge the array in `/tmp/vuln-scan/agentic.json` (if present) into the tool findings, then for each candidate:
 
 1. **Open the file at the reported line** and read the surrounding 30–50 lines.
 2. **Write one sentence** describing what an attacker controls and what they achieve. If you can't, discard it.
@@ -459,7 +510,7 @@ Scanners: semgrep=<ok|fail>, trufflehog=<ok|fail>, osv=<ok|fail>, fuzz=<ok|fail|
 If the audit was clean:
 ```
 *Vuln Scanner — <repo>*
-Clean audit. <M> candidates reviewed, 0 confirmed. Scanners: semgrep=ok, trufflehog=ok, osv=ok, fuzz=skip.
+Clean audit. <M> candidates reviewed, 0 confirmed. Scanners: semgrep=ok, trufflehog=ok, osv=ok, fuzz=skip, agentic=ok.
 ```
 
 Then log per the **Log** section below with `Mode: scan`.
@@ -782,7 +833,7 @@ specific bullets.
 - Target: owner/repo (stars, language)
 - Candidates: N | Confirmed: M
 - Channels used: PVR (x), public PR (y), skipped (z)
-- Scanner status: semgrep=ok trufflehog=ok osv=ok fuzz=ok|fail|skip
+- Scanner status: semgrep=ok trufflehog=ok osv=ok fuzz=ok|fail|skip agentic=ok|skip
 - Advisory/PR links: [...]
 ```
 
