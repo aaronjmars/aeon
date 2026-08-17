@@ -267,7 +267,7 @@ export default function Dashboard() {
               : <SoulPanel soul={soul} style={soulStyle} loading={!soulLoaded} saving={soulSaving} building={soulBuilding} installing={soulInstalling} onSave={saveSoul} onBuild={buildSoul} onInstallExample={installSoulExample} />
           )}
           {view === 'hq' && !selectedSkill && (
-            <HQOverview skills={visibleSkills} runs={runs} enabledCount={enabledCount} workingCount={workingCount} categoryFilter={categoryFilter} onCategoryClick={(key) => setCategoryFilter(categoryFilter === key ? null : key)} onViewRun={() => {}} onOpenPacks={() => setView('packs')} />
+            <HQOverview skills={visibleSkills} runs={runs} enabledCount={enabledCount} workingCount={workingCount} categoryFilter={categoryFilter} onCategoryClick={(key) => setCategoryFilter(categoryFilter === key ? null : key)} onOpenPacks={() => setView('packs')} />
           )}
           {view === 'packs' && !selectedSkill && (
             packsError
@@ -280,7 +280,6 @@ export default function Dashboard() {
               onToggle={toggleSkill} onRun={runSkill} onDelete={deleteSkill}
               onUpdateSchedule={updateSchedule} onUpdateVar={updateVar} onUpdateModel={updateSkillModel}
               onGoToSecret={goToSecret} onGoToMcp={goToMcp}
-              onViewRun={() => {}}
             />
           )}
         </div>

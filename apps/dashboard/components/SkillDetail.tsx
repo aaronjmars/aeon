@@ -26,7 +26,6 @@ interface SkillDetailProps {
   onUpdateModel: (name: string, m: string) => void
   onGoToSecret: (name: string) => void
   onGoToMcp: () => void
-  onViewRun: (run: Run) => void
 }
 
 function Section({ label, action, children }: { label: string; action?: React.ReactNode; children: React.ReactNode }) {
@@ -125,7 +124,7 @@ function McpRow({ mref, installed, onGoTo }: { mref: SkillMcpRef; installed: boo
   )
 }
 
-export function SkillDetail({ skill, runs, model, harness, secrets, mcpServers, busy, onToggle, onRun, onDelete, onUpdateSchedule, onUpdateVar, onUpdateModel, onGoToSecret, onGoToMcp, onViewRun }: SkillDetailProps) {
+export function SkillDetail({ skill, runs, model, harness, secrets, mcpServers, busy, onToggle, onRun, onDelete, onUpdateSchedule, onUpdateVar, onUpdateModel, onGoToSecret, onGoToMcp }: SkillDetailProps) {
   // Per-skill model-override options must track the active harness, like the
   // global picker (TopBar/page.tsx) — otherwise a non-claude harness only offers
   // Claude models here, so an operator can't pin a skill to e.g. kimi-k3 and
@@ -389,17 +388,16 @@ export function SkillDetail({ skill, runs, model, harness, secrets, mcpServers, 
       <Section label="Activity log">
         <div className="border border-[rgba(250,250,250,0.10)] divide-y divide-[rgba(250,250,250,0.08)]">
           {skillRuns.slice(0, 10).map(run => (
-            <button
+            <div
               key={run.id}
-              onClick={() => onViewRun(run)}
-              className="w-full flex items-center gap-4 px-5 py-3 hover:bg-aeon-panel transition-colors text-left group"
+              className="w-full flex items-center gap-4 px-5 py-3 text-left group"
             >
               <span className={`text-sm w-4 shrink-0 ${runStatusColor(run)}`}>{runStatusGlyph(run)}</span>
-              <span className="text-xs text-primary-70 truncate flex-1 font-mono group-hover:text-aeon-fg transition-colors">
+              <span className="text-xs text-primary-70 truncate flex-1 font-mono">
                 {run.conclusion === 'success' ? 'Task completed' : run.conclusion === 'failure' ? 'Task failed' : run.status === 'in_progress' ? 'Working…' : 'Queued'}
               </span>
               <span className="text-[10px] text-primary-35 font-mono tabular-nums uppercase tracking-[0.14em]">{timeAgo(run.created_at)}</span>
-            </button>
+            </div>
           ))}
           {!skillRuns.length && (
             <div className="px-6 py-12 text-center">

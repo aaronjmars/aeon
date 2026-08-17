@@ -164,7 +164,7 @@ fi
 
 # Success rate
 if [ "$COMPLETED" -gt 0 ]; then
-  RATE=$(echo "scale=0; $SUCCEEDED * 100 / $COMPLETED" | bc)
+  RATE=$(( SUCCEEDED * 100 / COMPLETED ))
   echo ""
   echo "Success rate: ${RATE}% (${SUCCEEDED}/${COMPLETED} completed)"
 fi

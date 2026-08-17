@@ -150,8 +150,6 @@ export function visibleText(html) {
   ).replace(/\s+/g, ' ').trim()
 }
 
-const first = (arr, pred) => arr.find(pred)
-
 // --- The checks ------------------------------------------------------------
 // Pure: HTML in, findings out. No network, so the tests can drive it directly.
 
@@ -184,7 +182,7 @@ export function analyze(html, { url, statusCode, finalUrl, elapsedMs, robotsHead
 
   // Meta description
   const metas = tags(html, 'meta')
-  const descTag = first(metas, (m) => (m.name || '').toLowerCase() === 'description')
+  const descTag = metas.find((m) => (m.name || '').toLowerCase() === 'description')
   const desc = descTag ? decode(descTag.content || '').trim() : ''
   if (!desc) {
     findings.push(finding('meta_description', FAIL, 'Missing meta description'))
@@ -197,7 +195,7 @@ export function analyze(html, { url, statusCode, finalUrl, elapsedMs, robotsHead
   }
 
   // Canonical
-  const canonical = first(tags(html, 'link'),
+  const canonical = tags(html, 'link').find(
     (l) => (l.rel || '').toLowerCase().includes('canonical') && l.href)
   findings.push(canonical
     ? finding('canonical', PASS, 'Canonical URL declared', { canonical: canonical.href })
@@ -304,7 +302,7 @@ export function analyze(html, { url, statusCode, finalUrl, elapsedMs, robotsHead
   }
 
   // Mobile / viewport / lang
-  const viewport = first(metas, (m) => (m.name || '').toLowerCase() === 'viewport')
+  const viewport = metas.find((m) => (m.name || '').toLowerCase() === 'viewport')
   findings.push(finding('viewport', viewport ? PASS : FAIL,
     viewport ? 'Viewport meta present' : 'Missing viewport meta (mobile rendering)'))
 
@@ -322,7 +320,7 @@ export function analyze(html, { url, statusCode, finalUrl, elapsedMs, robotsHead
   findings.push(finding('open_graph', haveOg ? PASS : WARN,
     haveOg ? 'Open Graph title+description set' : 'Incomplete Open Graph tags', { og }))
 
-  const tw = first(metas, (m) => (m.name || '').toLowerCase() === 'twitter:card')
+  const tw = metas.find((m) => (m.name || '').toLowerCase() === 'twitter:card')
   findings.push(finding('twitter_card', tw ? PASS : INFO,
     tw ? 'twitter:card set' : 'No twitter:card tag'))
 

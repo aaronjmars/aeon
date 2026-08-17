@@ -52,8 +52,3 @@ export function initTracing(): Tracer {
   }
   return trace.getTracer(name);
 }
-
-/** Flush and shut down the provider (no-op when tracing is off). */
-export function shutdownTracing(): Promise<void> {
-  return provider ? provider.shutdown().catch(() => {}) : Promise.resolve();
-}

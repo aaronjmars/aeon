@@ -13,11 +13,6 @@ tools_has_write() {
   return 1
 }
 
-tools_bash_cmds() {
-  # extract CMD from every Bash(CMD:*) token, one per line
-  tr ',' '\n' <<<"$1" | sed -n 's/^Bash(\(.*\):\*)$/\1/p'
-}
-
 tools_to_pi_exclude() {
   # Claude allowedTools / mode -> pi --exclude-tools value. pi has no permission
   # system ("YOLO mode"); the only native lever is subsetting its toolset.
