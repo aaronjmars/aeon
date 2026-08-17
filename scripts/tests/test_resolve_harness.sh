@@ -95,7 +95,7 @@ mkfixture grok
 # nothing at all. Passing a raw id to vibe/kimi breaks them (they resolve an ALIAS
 # declared in the staged config), so empty is the correct answer, not a fallback.
 mkfixture codex
-[ "$(get MODEL_ARG)" = "openai/gpt-5-mini" ] \
+[ "$(get MODEL_ARG)" = "openai/gpt-5.1-codex-mini" ] \
   && pass "codex: MODEL_ARG is a bare OpenRouter id" || bad "codex MODEL_ARG"
 mkfixture pi
 [ "$(get MODEL_ARG)" = "openrouter/deepseek/deepseek-v4-flash" ] \
@@ -120,10 +120,10 @@ esac
 # picker still reads `model: claude-sonnet-5`, and forwarding that would pin the
 # run to a dead id while every downstream record named it.
 mkfixture codex claude-sonnet-5
-[ "$(get MODEL_ARG)" = "openai/gpt-5-mini" ] \
+[ "$(get MODEL_ARG)" = "openai/gpt-5.1-codex-mini" ] \
   && pass "claude-* config model ignored → per-harness default" || bad "claude-* model passthrough"
 mkfixture codex grok-4.5
-[ "$(get MODEL_ARG)" = "openai/gpt-5-mini" ] \
+[ "$(get MODEL_ARG)" = "openai/gpt-5.1-codex-mini" ] \
   && pass "grok-* config model ignored → per-harness default" || bad "grok-* model passthrough"
 mkfixture codex openai/gpt-5
 [ "$(get MODEL_ARG)" = "openai/gpt-5" ] \
