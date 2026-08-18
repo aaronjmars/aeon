@@ -85,7 +85,14 @@ Or skip the file entirely: the dashboard's **MCP** tab writes `.mcp.json` for yo
 
 ## Cross-repo access
 
-The built-in `GITHUB_TOKEN` is scoped to this repo only. For `github-monitor`, `pr-review`, and `feature` to work on your other repos, add a `GH_GLOBAL` personal access token: github.com/settings/tokens → Fine-grained → set repo access → grant Contents, Pull requests, Issues (read/write) → add as `GH_GLOBAL` secret. Skills use it when available and fall back to `GITHUB_TOKEN` automatically.
+The built-in `GITHUB_TOKEN` is scoped to this repo only. For skills that reach other repos (`github-monitor`, `pr-review`, `feature`, `changelog` push-to, cross-repo reads) add **one classic** personal access token as the `GH_GLOBAL` secret: github.com/settings/tokens -> **Tokens (classic)** -> scopes **`repo`** + **`workflow`** -> add as `GH_GLOBAL`. Skills use it when available and fall back to `GITHUB_TOKEN` automatically, and it is auto-promoted to the run's `GITHUB_TOKEN`.
+
+One classic PAT covers the whole instance - no separate read or secrets PAT is needed:
+
+- **`repo`** - cross-repo and private-repo read/write, repository security advisories + private vulnerability reports (the disclosure/PVR skills), and writing Actions secrets back (the OAuth-MCP / Grok refresh path).
+- **`workflow`** - required only for skills that push changes under `.github/workflows/` (`aeon-update`, `spawn-instance`, `auto-workflow`); without it those pushes 403.
+
+`read:org` and `admin:org` are **not** needed - listing an org's repos (e.g. fleet KPIs) works on `repo` scope plus org membership, and nothing administers an org. If your org enforces SAML SSO, authorize the token for the org from the token page. **Classic** (not fine-grained) is recommended: the repository-advisories / PVR API is unreliable with fine-grained PATs.
 
 ## Durable state without the churn
 
