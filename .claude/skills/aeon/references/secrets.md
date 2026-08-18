@@ -68,11 +68,13 @@ Telegram is the fastest to set up and the only one with inline buttons and slash
 | Secret | Where to get it |
 |---|---|
 | `GITHUB_TOKEN` | Built in — nothing to set. Scoped to this repo only |
-| `GH_GLOBAL` | github.com/settings/tokens → Fine-grained → select repos → Contents, Pull requests, Issues (read/write). Needed for anything cross-repo (`github-monitor`, `pr-review`, `feature`, `changelog push-to`). Auto-promoted to the run's `GITHUB_TOKEN` |
-| `GH_READ_PAT` | Same page, read-only. Optional — enriches cross-repo/private reads (`bd-radar`) without granting write |
-| `GH_SECRETS_PAT` | github.com/settings/personal-access-tokens → **add this repo under Repository access** (a PAT without it 404s) → Repository permissions → Secrets: Read and write. Only needed for OAuth-connected MCP servers or the Grok X-account harness |
+| `GH_GLOBAL` | github.com/settings/tokens -> **Tokens (classic)** -> scopes **`repo`** + **`workflow`** -> add as `GH_GLOBAL`. One token covers everything cross-repo (`github-monitor`, `pr-review`, `feature`, `changelog` push-to), private reads, repository security advisories / PVR (disclosure skills), and secrets writeback. Auto-promoted to the run's `GITHUB_TOKEN` |
+| `GH_READ_PAT` | *Legacy / optional.* Folded into `GH_GLOBAL`. Keep a separate read-only PAT only to give `bd-radar`'s private cross-repo enrichment a read token without granting the run write |
+| `GH_SECRETS_PAT` | *Optional.* Folds into `GH_GLOBAL` (its `repo` scope already writes secrets). Set a dedicated PAT only to isolate secrets-write from the main token: github.com/settings/personal-access-tokens -> add this repo under Repository access (a PAT without it 404s) -> Repository permissions -> Secrets: Read and write. Used by OAuth-connected MCP servers or the Grok X-account harness |
 
 `GH_SECRETS_PAT` gotcha: providers rotate the refresh token every run, and the runner needs this PAT to save each rotation back. Without it, auth breaks exactly one run after you connect. After adding it, re-connect any already-connected server once.
+
+**Scope summary (one classic PAT as `GH_GLOBAL`):** `repo` = cross-repo + private read/write, security advisories / PVR, and secrets writeback; `workflow` = pushing `.github/workflows/` changes (`aeon-update`, `spawn-instance`, `auto-workflow`). `read:org` / `admin:org` are not needed. Use a **classic** PAT - the advisories / PVR API is unreliable with fine-grained tokens.
 
 ## 4. Skill API keys — all optional
 
