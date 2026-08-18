@@ -109,7 +109,7 @@ jobs:
   run:
     if: github.event_name != 'issues' || github.event.label.name == 'ai-build'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 50
 
     steps:
       - name: Early checkout
@@ -823,7 +823,7 @@ jobs:
           # refused outright.
           CLAUDE_OK=0
           RH="${GITHUB_WORKSPACE}/harness-adapter/run-harness"
-          RH_ARGS=(--mode "$SKILL_MODE" --allowed-tools "$ALLOWED" --timeout 900)
+          RH_ARGS=(--mode "$SKILL_MODE" --allowed-tools "$ALLOWED" --timeout 1800)
           # Pass --mcp-config only when the MCP preflight actually ENABLED MCP (every
           # required ${VAR} resolved) — MCP_FLAGS is set to the flags in that case and
           # left empty otherwise, so it doubles as the "MCP on" gate. run-harness does
