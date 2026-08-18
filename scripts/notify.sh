@@ -52,6 +52,18 @@ while [ $# -gt 0 ]; do
     --placeholder) PLACEHOLDER="${2:-}"; shift 2 ;;
     --context)     CONTEXT="${2:-}"; shift 2 ;;
     --mute-key)    MUTE_KEY="${2:-}"; shift 2 ;;
+    -h|--help)
+      # Print usage to stderr and exit WITHOUT sending. Without this, a skill agent that
+      # probes `./notify --help` to inspect flags had the string fall through the catch-all
+      # below and get broadcast to every channel as the message body (self-reported
+      # 2026-08-10; recurred). Never page the operator with a usage probe.
+      echo "notify: usage: ./notify [--title T] [--severity info|success|warn|critical] [--link URL] [--mute-key K] [-f FILE | \"message\"]" >&2
+      exit 0 ;;
+    --*)
+      # An unrecognised long flag is almost certainly a mistyped option or a usage probe,
+      # never a real message. Error instead of silently becoming the body.
+      echo "notify: unknown flag '$1' (run with -h for usage); refusing to send it as a message" >&2
+      exit 2 ;;
     *)             if [ "$have_body" = false ]; then MSG="$1"; have_body=true; fi; shift ;;
   esac
 done
