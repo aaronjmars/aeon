@@ -153,6 +153,8 @@ skills:
 
 Full reference - scheduling, `var`, models, [authentication](../docs/CONFIGURATION.md#authentication), [notification channels](../docs/CONFIGURATION.md#notifications), API keys, guardrails: **[Configuration](../docs/CONFIGURATION.md)**.
 
+**GitHub permissions:** the built-in `GITHUB_TOKEN` covers same-repo work; add **one classic PAT** as `GH_GLOBAL` with **`repo`** + **`workflow`** scopes to drive every cross-repo, private, disclosure, and workflow-editing skill. No `read:org` / `admin:org`. See [Cross-repo access](../docs/CONFIGURATION.md#cross-repo-access).
+
 ---
 
 ## Integrate Aeon
