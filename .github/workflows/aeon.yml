@@ -1601,7 +1601,7 @@ jobs:
           else
             git commit -m "chore($LABEL): auto-commit $(date +%Y-%m-%d)"
           fi
-          for i in 1 2 3 4 5; do
+          for i in 1 2 3 4 5 6 7 8 9 10; do
             # Pull and rebase onto latest remote
             if ! git pull --rebase origin main 2>/dev/null; then
               echo "Rebase conflict on attempt $i, auto-resolving..."
@@ -1630,7 +1630,7 @@ jobs:
               exit 0
             fi
             echo "Push attempt $i failed (ref moved), retrying in ${i}s..."
-            sleep "$i"
+            sleep "$(( (RANDOM % 4) + i ))"  # jittered backoff - a deterministic sleep re-collides lockstep writers under push contention
           done
           echo "Failed to push after 5 attempts"
           exit 1
@@ -1766,7 +1766,7 @@ jobs:
           fi
 
           git commit -m "chore(cron): $SKILL $CRON_STATUS"
-          for i in 1 2 3 4 5; do
+          for i in 1 2 3 4 5 6 7 8 9 10; do
             if git pull --rebase origin main 2>/dev/null && git push -u origin HEAD 2>/dev/null; then
               echo "Cron state updated: $SKILL=$CRON_STATUS"
               exit 0
@@ -1787,7 +1787,7 @@ jobs:
             git add "$STATE_FILE"
             git diff --staged --quiet && { echo "State already up to date"; exit 0; }
             git commit -m "chore(cron): $SKILL $CRON_STATUS"
-            sleep "$i"
+            sleep "$(( (RANDOM % 4) + i ))"  # jittered backoff - a deterministic sleep re-collides lockstep writers under push contention
           done
           echo "::warning::Failed to commit cron state (non-fatal)"
 
