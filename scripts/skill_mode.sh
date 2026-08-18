@@ -38,6 +38,18 @@ BASE_TOOLS="$BASE_TOOLS,Bash(./notify:*),Bash(./notify-jsonrender:*),Bash(./secr
 BASE_TOOLS="$BASE_TOOLS,Bash(mkdir:*),Bash(ls:*),Bash(cat:*),Bash(chmod:*)"
 BASE_TOOLS="$BASE_TOOLS,Bash(date:*),Bash(echo:*),Bash(node:*),Bash(npm:*),Bash(npx:*)"
 BASE_TOOLS="$BASE_TOOLS,Bash(head:*),Bash(tail:*),Bash(wc:*),Bash(sort:*),Bash(grep:*)"
+# The run-audit wrapper. Five skills (skill-health, heartbeat, cost-report,
+# retrospective, self-review) document ./scripts/skill-runs as a primary data
+# source, but no tier granted it, so every documented call was denied. That was
+# the trigger for ISS-001 on aeon-compute: skill-health, unable to reach its own
+# data source, burned turns working around the denial and hit the 30m GH Actions
+# job timeout on two consecutive runs. Safe in the base tier: the script only
+# does `gh api` GET reads + jq + date (no repo/network mutation), and its inner
+# `gh` runs inside the script's own subshell, so granting the wrapper does NOT
+# re-open the broad `Bash(gh:*)` write vector that the read-only base
+# deliberately withholds: a read-only skill gets audited GitHub run data with no
+# write capability.
+BASE_TOOLS="$BASE_TOOLS,Bash(./scripts/skill-runs:*)"
 
 # Write tier additionally gets repo-mutation tools + python (an interpreter is itself
 # a write vector, so it stays out of the read-only base; skills' python helpers run here).
