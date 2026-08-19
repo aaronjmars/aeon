@@ -149,10 +149,14 @@ skills:
 # evaluates their trigger rules after processing cron skills.
 #
 # Format: trigger: { on: <source-skill>, when: "<condition>" }
-# Conditions:
-#   consecutive_failures >= N    — source skill failed N+ times in a row
-#   success_rate < X             — source skill success rate below threshold
-#   last_status = success        — source skill just succeeded (for chaining)
+# Conditions (evaluated by scripts/reactive_when.sh):
+#   consecutive_failures >= N    - source skill failed N+ times in a row
+#   success_rate <op> X          - success rate vs threshold; op is < <= > >= and X
+#                                  is a 0.0-1.0 float. Only checked once the source
+#                                  skill has run at least once (a never-run skill is
+#                                  0.0 and would otherwise false-fire `< X`).
+#   last_status = <value>        - source skill's last run ended <value> (e.g.
+#                                  success), for chaining
 #
 # Multiple triggers: trigger: [{ on: a, when: "..." }, { on: b, when: "..." }]
 # Any matching trigger fires the skill (OR logic).

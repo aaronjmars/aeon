@@ -394,22 +394,21 @@ jobs:
                 [ "${SKILL_ENABLED[$CHECK_SKILL]}" = "false" ] && continue
                 [ "$ON" != "*" ] && [ "$ON" != "$CHECK_SKILL" ] && continue
 
-                if [[ "$WHEN" =~ consecutive_failures\ *\>=\ *([0-9]+) ]]; then
-                  THRESHOLD="${BASH_REMATCH[1]}"
-                  CONSEC=$(echo "$STATE" | jq -r --arg s "$CHECK_SKILL" '.[$s].consecutive_failures // 0')
-                  if [ "$CONSEC" -ge "$THRESHOLD" ]; then
-                    echo "Reactive trigger: $RSKILL (${CHECK_SKILL} has ${CONSEC} consecutive failures >= ${THRESHOLD})"
-                    TRIGGERED=true
-                    break
-                  fi
-                elif [[ "$WHEN" =~ last_status\ *=\ *([a-z]+) ]]; then
-                  EXPECTED="${BASH_REMATCH[1]}"
-                  ACTUAL=$(echo "$STATE" | jq -r --arg s "$CHECK_SKILL" '.[$s].last_status // "none"')
-                  if [ "$ACTUAL" = "$EXPECTED" ]; then
-                    echo "Reactive trigger: $RSKILL (${CHECK_SKILL} last_status = ${EXPECTED})"
-                    TRIGGERED=true
-                    break
-                  fi
+                # Condition evaluation lives in scripts/reactive_when.sh so it can be
+                # unit-tested (scripts/tests/test_reactive_when.sh) and so all three
+                # documented conditions (consecutive_failures, last_status,
+                # success_rate) are handled in one place. success_rate was advertised
+                # in the reactive docs but had no evaluator branch here before.
+                SKILL_STATE=$(echo "$STATE" | jq -c --arg s "$CHECK_SKILL" '.[$s] // {}')
+                WRC=0
+                printf '%s' "$SKILL_STATE" | bash scripts/reactive_when.sh "$WHEN" || WRC=$?
+                if [ "$WRC" -eq 0 ]; then
+                  echo "Reactive trigger: $RSKILL (${CHECK_SKILL} matched: ${WHEN})"
+                  TRIGGERED=true
+                  break
+                elif [ "$WRC" -eq 2 ]; then
+                  echo "::warning::reactive trigger for '$RSKILL' has an unparseable condition: ${WHEN}"
+                  break
                 fi
               done
 
