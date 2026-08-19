@@ -24,6 +24,10 @@
 //      reactive: block resolves to a real skill, and every `when:` parses to a
 //      condition scripts/reactive_when.sh can evaluate (same dangling-reference /
 //      dead-config class as 3, for the event-driven dispatch path).
+//   5. Chain `when:` expression syntax - a chain step's routing condition
+//      (`when: "score > 5"`) must be a well-formed <key> <op> <value> expression,
+//      with ordering ops requiring an integer value, so an invalid expression is
+//      caught at config time rather than when the chain runs.
 //
 // Output contract:
 //   - Exit 0 + only PASS lines  => CLEAN
@@ -318,6 +322,32 @@ function checkReactiveRefs(lines) {
   } else {
     pass('PASS reactive: ' + targets.length + ' target(s), ' + sources.length + ' source ref(s), ' + conditions.length + ' condition(s) all valid');
   }
+// Check 5 - chain `when:` expression syntax. A chain step can route on a score
+// (`when: "score > 5"`, evaluated at runtime by scripts/chain_when.sh). Catch a
+// malformed expression here, at config time, instead of when the chain runs at
+// 3am. Grammar: <key> <op> <value>; ordering ops (< <= > >=) require an integer
+// value so the runtime never string-compares "10" < "9".
+// ---------------------------------------------------------------------------
+function validateChainWhen(expr) {
+  const m = String(expr).trim().match(/^([a-zA-Z_][a-zA-Z0-9_]*)\s*(==|!=|<=|>=|<|>)\s*(.+?)\s*$/);
+  if (!m) return false;
+  const op = m[2];
+  const val = m[3].trim();
+  if (['<', '<=', '>', '>='].includes(op)) return /^-?\d+$/.test(val);
+  return val.length > 0;
+}
+
+function checkChainWhen(lines) {
+  const problems = [];
+  for (const [i, raw] of blockLines(lines, 'chains')) {
+    if (/^\s*#/.test(raw)) continue;
+    const m = raw.match(/when:\s*"([^"]+)"/);
+    if (m && !validateChainWhen(m[1])) {
+      problems.push('FAIL: aeon.yml chain when: "' + m[1] + '" (line ' + (i + 1) + ') is not a valid <key> <op> <value> expression (ordering ops < <= > >= require an integer value)');
+    }
+  }
+  if (problems.length > 0) problems.forEach(fail);
+  else pass('PASS chain-when: all chain when: expressions are well-formed');
 }
 
 function main() {
@@ -330,6 +360,7 @@ function main() {
     checkDuplicateKeys(lines);
     checkSkillRefs(lines);
     checkReactiveRefs(lines);
+    checkChainWhen(lines);
   }
 
   out.forEach((l) => console.log(l));
@@ -344,4 +375,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { analyzeCheckout, parseSteps, collectReactiveRefs, validateWhen };
+module.exports = { analyzeCheckout, parseSteps, collectReactiveRefs, validateWhen, validateChainWhen };

@@ -13,7 +13,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { analyzeCheckout, collectReactiveRefs, validateWhen } = require('./validate-config.js');
+const { analyzeCheckout, collectReactiveRefs, validateWhen, validateChainWhen } = require('./validate-config.js');
 
 // Wrap an indented steps body in a minimal single-job workflow.
 const wf = (steps) => `name: run
@@ -158,4 +158,20 @@ test('the live aeon.yml has no uncommented reactive references', () => {
   const lines = fs.readFileSync(ymlPath, 'utf8').split('\n');
   const r = collectReactiveRefs(lines);
   assert.equal(r.targets.length, 0, 'unexpected uncommented reactive target(s)');
+// --- Check 5: chain when: expression syntax ---
+
+test('validateChainWhen: accepts score ordering and string equality', () => {
+  assert.equal(validateChainWhen('score > 5'), true);
+  assert.equal(validateChainWhen('score <= 5'), true);
+  assert.equal(validateChainWhen('score >= 10'), true);
+  assert.equal(validateChainWhen('verdict == pass'), true);
+  assert.equal(validateChainWhen('verdict != fail'), true);
+});
+
+test('validateChainWhen: rejects malformed and non-integer ordering', () => {
+  assert.equal(validateChainWhen('score > abc'), false); // ordering needs integer
+  assert.equal(validateChainWhen('score is big'), false); // no valid operator
+  assert.equal(validateChainWhen('score >'), false);      // no value
+  assert.equal(validateChainWhen('> 5'), false);          // no key
+  assert.equal(validateChainWhen(''), false);
 });

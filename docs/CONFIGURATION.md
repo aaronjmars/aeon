@@ -23,6 +23,30 @@ chains:
 
 Each step runs as a separate workflow dispatch; outputs are saved to `output/.chains/{skill}.md` and injected into downstream steps that `consume:` them. `fail-fast` aborts on any failure, `continue` keeps going.
 
+### Conditional routing (`when:`)
+
+A step can run only when a condition holds for the score of the skill it consumes. Aeon already scores every run 1-5 with Haiku (`memory/skill-health/<skill>.json`); `when:` turns that number into a branch:
+
+```yaml
+chains:
+  editorial:
+    schedule: "0 9 * * *"
+    max_dispatches: 10           # optional; hard-caps total dispatches (default 10)
+    steps:
+      - skill: draft
+      - skill: review, consume: [draft]
+      - skill: polish,  consume: [review], when: "score > 3"    # good draft -> polish
+      - skill: rewrite, consume: [review], when: "score <= 3"   # weak draft -> rewrite
+```
+
+- **Operators:** `== != < > <= >=`. Equality compares as strings; ordering (`< <= > >=`) requires an integer on both sides and fails loudly otherwise (no `"10" < "9"` surprises).
+- **The score** is the consumed skill's latest quality score (the first skill in `consume:`, or the previous step's skill if the step has no `consume:`).
+- **A `when:` whose key is missing does not fire** - the step is skipped, not failed. So every routing path must either produce a score or fall through to an unconditional step; a chain where every branch is skipped is a no-op, not an error.
+- **Invalid expressions are rejected at config time** by `validate-config.js` (in CI), not at 3am.
+- **`max_dispatches:`** caps the chain's total dispatches (default 10). A chain that trips it hard-fails with the step sequence - the budget replaces chassis's `pkill`, since Aeon runs on billed Actions minutes.
+
+The expression evaluator is `scripts/chain_when.sh` (unit-tested in `scripts/tests/test_chain_when.sh`).
+
 ## Reactive triggers
 
 Skills with `schedule: "reactive"` fire on conditions, not cron. The scheduler evaluates triggers after processing cron skills:

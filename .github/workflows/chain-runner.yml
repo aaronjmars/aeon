@@ -178,12 +178,20 @@ jobs:
           ON_ERROR=$(echo "$CHAIN_BLOCK" | grep -oP 'on_error:\s*\K[a-z-]+' || echo "fail-fast")
           echo "Error mode: $ON_ERROR"
 
+          # Total-dispatch budget for the whole chain. Chassis lets cycles run because
+          # the operator owns the box; Aeon runs on billed Actions minutes and a shared
+          # rate limit, so a chain that routes back on itself (via when:) gets a hard
+          # cap instead of a pkill. Default low; override per chain with max_dispatches:.
+          MAX_DISPATCHES=$(echo "$CHAIN_BLOCK" | grep -oP 'max_dispatches:\s*\K[0-9]+' || echo "10")
+          DISPATCH_COUNT=0
+          echo "Dispatch budget: $MAX_DISPATCHES"
+
           # Parse steps into an ordered array
           # Each step is either:
           #   - parallel: [a, b, c]
           #   - skill: name [, var: "val"] [, consume: [a, b]]
           STEP_INDEX=0
-          declare -A STEP_TYPE STEP_SKILLS STEP_VAR STEP_CONSUME
+          declare -A STEP_TYPE STEP_SKILLS STEP_VAR STEP_CONSUME STEP_WHEN
 
           while IFS= read -r line; do
             # Skip empty lines and non-step lines
@@ -204,6 +212,10 @@ jobs:
               # Extract optional consume
               if [[ "$line" =~ consume:\ *\[([^\]]+)\] ]]; then
                 STEP_CONSUME[$STEP_INDEX]=$(echo "${BASH_REMATCH[1]}" | tr -d ' ')
+              fi
+              # Extract optional when: conditional routing on the consumed skill's score
+              if [[ "$line" =~ when:\ *\"([^\"]+)\" ]]; then
+                STEP_WHEN[$STEP_INDEX]="${BASH_REMATCH[1]}"
               fi
               STEP_INDEX=$((STEP_INDEX + 1))
             fi
@@ -229,6 +241,40 @@ jobs:
               continue
             fi
 
+            # Conditional routing: a step with when: runs only if the condition holds
+            # for the scored source skill (the first consumed skill, else the previous
+            # step's first skill). The score comes from the Haiku scorer, committed to
+            # memory/skill-health/<skill>.json by the source's own run and pulled in
+            # after the prior step completed. A missing key does NOT fire (the step is
+            # skipped, not failed), which forces every routing path to either publish a
+            # score or fall through to an unconditional step. An invalid expression
+            # hard-fails the chain rather than silently mis-routing.
+            WHEN="${STEP_WHEN[$i]:-}"
+            if [ -n "$WHEN" ]; then
+              SRC=""
+              if [ -n "$CONSUME" ]; then
+                SRC="${CONSUME%%,*}"
+              elif [ "$i" -gt 0 ]; then
+                SRC=$(echo "${STEP_SKILLS[$((i-1))]}" | cut -d, -f1)
+              fi
+              VERDICT='{}'
+              if [ -n "$SRC" ] && [ -f "memory/skill-health/${SRC}.json" ]; then
+                SC=$(jq -r '.quality_score // empty' "memory/skill-health/${SRC}.json" 2>/dev/null || true)
+                [ -n "$SC" ] && VERDICT=$(jq -cn --argjson s "$SC" '{score:$s}')
+              fi
+              WRC=0
+              printf '%s' "$VERDICT" | bash scripts/chain_when.sh "$WHEN" || WRC=$?
+              if [ "$WRC" -eq 1 ]; then
+                echo "  Skip: when \"$WHEN\" not satisfied for '${SRC:-<none>}' (verdict=$VERDICT)"
+                continue
+              elif [ "$WRC" -eq 2 ]; then
+                echo "::error::Step $((i+1)) has an invalid when expression: \"$WHEN\""
+                CHAIN_FAILED=true
+                break
+              fi
+              echo "  when \"$WHEN\" satisfied (verdict=$VERDICT)"
+            fi
+
             # Build list of skills to dispatch
             IFS=',' read -ra SKILL_LIST <<< "$SKILLS"
             RUN_IDS=()
@@ -249,6 +295,15 @@ jobs:
                     sleep "$attempt"
                   done
                 fi
+              fi
+
+              # Dispatch budget: hard-fail before overspending Actions minutes on a
+              # chain that routes back on itself.
+              DISPATCH_COUNT=$((DISPATCH_COUNT + 1))
+              if [ "$DISPATCH_COUNT" -gt "$MAX_DISPATCHES" ]; then
+                echo "::error::Chain '$CHAIN' hit its dispatch budget ($MAX_DISPATCHES) at step $((i+1)), skill '$skill'. Steps so far: $DISPATCH_COUNT dispatches. Raise max_dispatches: if this is intentional."
+                CHAIN_FAILED=true
+                break 2
               fi
 
               RUN_ID=$(dispatch_skill "$skill" "$VAR" "$CTX_FILE")
