@@ -405,6 +405,7 @@ jobs:
                 if [ "$WRC" -eq 0 ]; then
                   echo "Reactive trigger: $RSKILL (${CHECK_SKILL} matched: ${WHEN})"
                   TRIGGERED=true
+                  MATCHED_SOURCE="$CHECK_SKILL"   # the skill that tripped this trigger
                   break
                 elif [ "$WRC" -eq 2 ]; then
                   echo "::warning::reactive trigger for '$RSKILL' has an unparseable condition: ${WHEN}"
@@ -419,6 +420,13 @@ jobs:
                 MINUTES_SINCE=$(( (NOW_EPOCH - LAST_DISPATCH_EPOCH) / 60 ))
                 if [ "$MINUTES_SINCE" -ge 90 ]; then
                   ORDERED+=("$RSKILL")
+                  # Hand the handler the skill that tripped it, so a reactive handler
+                  # (e.g. skill-repair on `on: "*"`) knows WHICH skill to act on. Only
+                  # when the handler declares no var of its own -- an explicit var wins.
+                  if [ -z "${SKILL_VAR[$RSKILL]:-}" ] && [ -n "${MATCHED_SOURCE:-}" ]; then
+                    SKILL_VAR["$RSKILL"]="$MATCHED_SOURCE"
+                    echo "Reactive $RSKILL var <- source skill '$MATCHED_SOURCE'"
+                  fi
                 else
                   echo "Skipping reactive $RSKILL (dispatched ${MINUTES_SINCE}m ago)"
                 fi

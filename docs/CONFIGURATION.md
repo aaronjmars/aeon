@@ -25,7 +25,7 @@ Each step runs as a separate workflow dispatch; outputs are saved to `output/.ch
 
 ## Reactive triggers
 
-Skills with `schedule: "reactive"` fire on conditions, not cron. The scheduler evaluates triggers after processing cron skills:
+Skills with `schedule: "reactive"` fire on conditions, not cron. The scheduler evaluates triggers after processing cron skills, reading each source skill's state from `memory/cron-state.json`:
 
 ```yaml
 reactive:
@@ -33,6 +33,27 @@ reactive:
     trigger:
       - { on: "*", when: "consecutive_failures >= 3" }
 ```
+
+`on:` is a source skill name (or `*` for any skill); `when:` is one of three conditions, evaluated by `scripts/reactive_when.sh`:
+
+| Condition | Fires when |
+|-----------|-----------|
+| `consecutive_failures >= N` | the source skill has failed N+ times in a row |
+| `success_rate <op> X` | the source's success rate crosses `X` (a `0.0`-`1.0` float; `op` is `<` `<=` `>` `>=`); only after the source has run at least once |
+| `last_status = <value>` | the source's last run ended `<value>` (e.g. `success`), for chaining |
+
+**This is the per-skill failure edge.** Rather than waiting for the daily `heartbeat` audit to open a `health:` issue, a reactive trigger acts on the next scheduler tick after the source's state changes. A single-failure handler is one line:
+
+```yaml
+reactive:
+  notify-operator:                 # any skill you want to run on failure
+    trigger:
+      - { on: digest, when: "consecutive_failures >= 1" }
+```
+
+The handler is dispatched with **the source skill's name as its `var`** (so `skill-repair` knows *which* skill tripped it), unless the handler declares a `var` of its own, which wins. The `heartbeat` -> `health:` issue path still runs in parallel and remains the catch-all for skills that fail silently.
+
+**Loop safety.** A reactive dispatch is deduped per handler for 90 minutes, so a source that stays broken can't re-fire its handler every tick, and a handler that itself fails can't spin a tight loop. (Reactive runs on billed Actions minutes and a shared rate limit, so this bound matters -- there is no `pkill` off-switch here.)
 
 ## Scheduler frequency
 
