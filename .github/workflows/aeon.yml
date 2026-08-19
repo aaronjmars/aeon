@@ -245,9 +245,18 @@ jobs:
       # the same thing on all six.
       - name: Install bubblewrap (read-only sandbox)
         if: steps.work.outputs.mode != ''
+        # Bound this step. apt can block on the runner's unattended-upgrades dpkg
+        # lock, and with no cap a stall here consumed the entire 50-min job wall and
+        # the run was cancelled before the skill ever executed (nur create-skill/
+        # digest/heartbeat + data kpi-daily all self-flagged run_failed 2026-08-19,
+        # each a ~50-min hang on this exact step). timeout-minutes fails the step
+        # fast; DPkg::Lock::Timeout waits a bounded time for the lock instead of
+        # hanging indefinitely.
+        timeout-minutes: 5
         run: |
           set -euo pipefail
-          sudo apt-get update -qq && sudo apt-get install -y -qq bubblewrap
+          APT_OPTS="-o DPkg::Lock::Timeout=120"
+          sudo apt-get $APT_OPTS update -qq && sudo apt-get $APT_OPTS install -y -qq bubblewrap
           # Ubuntu 24.04 (including GitHub's ubuntu-latest) restricts unprivileged
           # user namespaces via AppArmor, so bwrap dies with 'setting up uid map:
           # Permission denied' and run-harness fails CLOSED on every read-only
@@ -472,7 +481,10 @@ jobs:
         # render_card.py's fallback picks it up. Best-effort: never fails the run; without
         # it the skill degrades to the SVG + a text notify.
         if: steps.work.outputs.mode != '' && steps.skill.outputs.name == 'weekly-aeoncard'
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq librsvg2-bin || true
+        # Best-effort, but `|| true` only catches a non-zero exit, not a hang on the
+        # dpkg lock, so bound the lock wait too and an apt stall can't eat the job wall.
+        timeout-minutes: 5
+        run: sudo apt-get -o DPkg::Lock::Timeout=120 update -qq && sudo apt-get -o DPkg::Lock::Timeout=120 install -y -qq librsvg2-bin || true
 
       # Single-source standing instructions. AGENTS.md is the full, self-contained
       # mirror of CLAUDE.md (operating manual + @STRATEGY.md inlined) that the
