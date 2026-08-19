@@ -93,3 +93,5 @@ jobs:
         run: bash scripts/tests/test_skill_scan_calibration.sh
       - name: audit-log redaction tests
         run: bash scripts/tests/test_audit.sh
+      - name: dry-run gate (synthetic secrets, no real leak, pass criteria)
+        run: bash scripts/tests/test_dry_run.sh

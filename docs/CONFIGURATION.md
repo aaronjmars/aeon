@@ -71,6 +71,18 @@ mode: write       # full access (the default): adds Write / Edit / git / gh / py
 
 `read-only` strips the repo-mutation tools from Claude Code's `--allowedTools` (`Write`, `Edit`, `Bash(git:*)`, `Bash(gh:*)`) **and** the OS sandbox write-locks the whole workspace for the run (see [Capabilities → enforcement layers](CAPABILITIES.md)), so a research-and-notify skill **physically can't** commit, push, open a PR, or write anywhere in the checkout — `memory/` and `output/` included. Don't write those directly; route persistence through your **final message** (the run's captured output) and `./notify`. After the run, outside the sandbox, the workflow persists your captured output to `output/.chains/`, appends a `memory/logs/` run entry on your behalf, and reverts any stray write that slipped through. Use it for pure read-and-notify skills; `write` (the default, a strict superset) for anything that writes code. It's the runtime half of the install-time [`capabilities:`](../docs/CAPABILITIES.md) hint.
 
+## Dry-run gate for self-authored skills
+
+`create-skill` and `self-improve` write skills that reach `main` through auto-merging PRs. Left alone, the only thing between a generated skill and production is a Haiku score computed *after* it has already run with real secrets against real repos. For the part of the system that writes its own code, that ordering is backwards.
+
+Before either skill opens its PR, it dry-runs the candidate through `scripts/dry-run.sh`:
+
+- **Synthetic secrets.** Every key the skill declares in `requires:` gets a fake but well-formed value (marked `DRYRUN`), never the real one. `ANTHROPIC_API_KEY` is the sole exception -- the run needs a live model -- and it is never written into the synthetic env (asserted, not eyeballed). The inherited channel/GitHub tokens are faked too, so a rogue push or notify can't reach a real repo or channel.
+- **Structural pass criteria:** exit 0, non-empty output, no write outside the declared `mode`, no secret used outside `requires:`. Content is **not** re-scored here -- the Haiku scorer already does that, after the fact.
+- **Gate on it.** `passed: false` blocks the PR (exit `CREATE_SKILL_DRYRUN_FAILED` / revert-and-stop); the verdict JSON goes in the PR body either way.
+
+Turn it off per repo with the variable **`SKILL_DRYRUN=0`** (default on), so a fork hitting a false positive at 3am can bypass without editing workflows. The evaluator's primitives are unit-tested in `scripts/tests/test_dry_run.sh`, including the assertion that no real secret can reach the synthetic env.
+
 ## MCP servers in skill runs
 
 Let skills **call** MCP servers (GitHub, a database, a paid API, your own) while they run in GitHub Actions. Opt-in and safe - with no `.mcp.json` at the repo root, runs are byte-identical to before.

@@ -73,6 +73,12 @@ Improve the agent itself based on recent performance. **ONE change per run.**
    - Change the core architecture
    - Modify secrets or environment variables
 
+4b. **Dry-run gate.** Before opening the PR, execute the improved skill once with **synthetic** secrets, so a regression never reaches production having run only with real credentials. Let `$skill` be the skill you edited:
+   ```bash
+   DRYRUN_VERDICT="output/.dry-run/$skill.json" bash scripts/dry-run.sh run "$skill" || true
+   ```
+   Read `output/.dry-run/$skill.json`: `passed: true` (or `skipped: true`, when the `SKILL_DRYRUN` repo variable is `0`) continues. `passed: false` means **revert the edit and stop** (log `self-improve: dry-run gate failed for $skill` with the verdict `reasons[]`; do not open the PR). Put the verdict under a `## Dry-run` section in the PR body. The gate is structural (exit, output, declared `mode`, declared `requires:`); no real credential enters the run.
+
 5. **Create a branch and PR:**
    ```bash
    git checkout -b fix/self-improve-${today}
