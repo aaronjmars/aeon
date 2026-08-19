@@ -694,6 +694,12 @@ jobs:
           : > "$AEON_AUDIT_LOG"
           echo "AEON_AUDIT_LOG=$AEON_AUDIT_LOG" >> "$GITHUB_ENV"
           export AEON_AUDIT_LOG
+          # Name the running skill in every audit record (audit.sh reads AEON_SKILL).
+          # Without this the notify/secretcurl subprocesses don't see $SKILL and each
+          # record's skill field falls back to "unknown".
+          AEON_SKILL="${{ steps.skill.outputs.name }}"
+          echo "AEON_SKILL=$AEON_SKILL" >> "$GITHUB_ENV"
+          export AEON_SKILL
 
           # notify / notify-jsonrender are the committed scripts/*.sh (testable; see scripts/tests/).
           cp scripts/notify.sh ./notify
