@@ -23,6 +23,8 @@ chains:
 
 Each step runs as a separate workflow dispatch; outputs are saved to `output/.chains/{skill}.md` and injected into downstream steps that `consume:` them. `fail-fast` aborts on any failure, `continue` keeps going.
 
+> **Note:** a real (uncommented) chain step with multiple keys must use flow-brace form -- `- { skill: review, consume: [draft], when: "score > 3" }` -- not the bare `- skill: review, consume: [...]` shown in the commented examples. The bare form is convenient in a comment but is not valid YAML once uncommented (the second `:` trips the parser). The chain runner reads either form.
+
 ### Conditional routing (`when:`)
 
 A step can run only when a condition holds for the score of the skill it consumes. Aeon already scores every run 1-5 with Haiku (`memory/skill-health/<skill>.json`); `when:` turns that number into a branch:

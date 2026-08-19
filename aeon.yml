@@ -179,14 +179,15 @@ reactive:
 #       on_error: fail-fast          # fail-fast (default) | continue
 #       max_dispatches: 10           # optional total-dispatch cap for the chain
 #       steps:
-#         - parallel: [skill-a, skill-b]
-#         - skill: skill-c, consume: [skill-a, skill-b]
+#         # Multi-key steps use flow-brace form so they stay valid YAML when uncommented.
+#         - { parallel: [skill-a, skill-b] }
+#         - { skill: skill-c, consume: [skill-a, skill-b] }
 #         # Conditional routing on the consumed skill's Haiku score (1-5). A step
 #         # with when: runs only if the condition holds; a missing score does NOT
 #         # fire, so always pair branches with an unconditional fall-through.
 #         # Operators: == != < > <= >= (ordering needs an integer on both sides).
-#         - skill: polish,  consume: [skill-c], when: "score > 3"
-#         - skill: rewrite, consume: [skill-c], when: "score <= 3"
+#         - { skill: polish,  consume: [skill-c], when: "score > 3" }
+#         - { skill: rewrite, consume: [skill-c], when: "score <= 3" }
 chains:
   # routine:
   #   schedule: "0 7 * * *"

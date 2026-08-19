@@ -322,6 +322,9 @@ function checkReactiveRefs(lines) {
   } else {
     pass('PASS reactive: ' + targets.length + ' target(s), ' + sources.length + ' source ref(s), ' + conditions.length + ' condition(s) all valid');
   }
+}
+
+// ---------------------------------------------------------------------------
 // Check 5 - chain `when:` expression syntax. A chain step can route on a score
 // (`when: "score > 5"`, evaluated at runtime by scripts/chain_when.sh). Catch a
 // malformed expression here, at config time, instead of when the chain runs at

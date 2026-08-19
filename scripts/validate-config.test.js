@@ -158,6 +158,8 @@ test('the live aeon.yml has no uncommented reactive references', () => {
   const lines = fs.readFileSync(ymlPath, 'utf8').split('\n');
   const r = collectReactiveRefs(lines);
   assert.equal(r.targets.length, 0, 'unexpected uncommented reactive target(s)');
+});
+
 // --- Check 5: chain when: expression syntax ---
 
 test('validateChainWhen: accepts score ordering and string equality', () => {
