@@ -4,10 +4,11 @@
 // Pricing, aggregation and table generation are deterministic, so they live in
 // committed code rather than being left to the model — the skill run just invokes this.
 //
-// Auth: reads its token from the environment — GH_READ_PAT (a read-only PAT injected via
-// the skill's `requires:`, needed to read PRIVATE managed instances) is preferred, else
-// GH_TOKEN / GITHUB_TOKEN. The token is read from process.env INSIDE this script, so no
-// secret ever touches a command line (the caller runs a bare `node scripts/fleet-scorecard.mjs`).
+// Auth: reads its token from the environment — GH_READ_PAT (an optional read-only PAT injected
+// via the skill's `requires:`) is preferred; otherwise it falls back to GH_GLOBAL / GH_TOKEN /
+// GITHUB_TOKEN (the run's repo-wide token), which reads the same PRIVATE managed instances — the
+// normal single-key setup, not a degraded path. The token is read from process.env INSIDE this
+// script, so no secret ever touches a command line (the caller runs a bare `node scripts/fleet-scorecard.mjs`).
 //
 // Writes /tmp/fleet-scorecard/{scorecard-body.md,metrics.json} — the same shape the
 // fleet-control scorecard view consumes. Token mapping + pricing match skills/cost-report:
@@ -15,7 +16,7 @@
 //   cost   = input·in + output·out + cache_creation·cw + cache_read·cr  (per-1M list price)
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 
-const TOKEN = process.env.GH_READ_PAT || process.env.GH_TOKEN || process.env.GITHUB_TOKEN || '';
+const TOKEN = process.env.GH_READ_PAT || process.env.GH_GLOBAL || process.env.GH_TOKEN || process.env.GITHUB_TOKEN || '';
 const DIR = '/tmp/fleet-scorecard';
 const WINDOW_DAYS = 14;
 mkdirSync(DIR, { recursive: true });
@@ -64,7 +65,7 @@ if (!repos.length) {
   console.error('fleet-scorecard: no repos resolved (no GITHUB_REPOSITORY, empty registry) — skipping');
   process.exit(0);
 }
-console.error(`fleet-scorecard: fleet = ${repos.join(' ')}${TOKEN ? '' : ' (UNAUTHENTICATED — set GH_READ_PAT)'}`);
+console.error(`fleet-scorecard: fleet = ${repos.join(' ')}${TOKEN ? '' : ' (UNAUTHENTICATED — set GH_READ_PAT or GH_GLOBAL)'}`);
 
 // ---- 1. fetch runs + defined-skill counts + token-usage.csv ----------------
 const runs = [];          // {repo,name,conclusion,created_at,head_branch}
