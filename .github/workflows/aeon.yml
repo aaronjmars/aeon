@@ -684,6 +684,17 @@ jobs:
           echo "AEON_PENDING_DIR=$AEON_PENDING_DIR" >> "$GITHUB_ENV"
           export AEON_PENDING_DIR
 
+          # Structured audit log (scripts/audit.sh): one append-only JSON line per
+          # privileged action that reaches outside the run (notify send, secretcurl,
+          # git push). Lives beside the notify queue OUTSIDE the workspace so a
+          # read-only-sandboxed skill can still append to it, then a post-run step
+          # uploads it as an artifact. Touch it now so a run that performs no
+          # privileged action ends with an empty file, not a missing one.
+          AEON_AUDIT_LOG="$AEON_PENDING_DIR/audit.jsonl"
+          : > "$AEON_AUDIT_LOG"
+          echo "AEON_AUDIT_LOG=$AEON_AUDIT_LOG" >> "$GITHUB_ENV"
+          export AEON_AUDIT_LOG
+
           # notify / notify-jsonrender are the committed scripts/*.sh (testable; see scripts/tests/).
           cp scripts/notify.sh ./notify
           cp scripts/notify-jsonrender.sh ./notify-jsonrender
@@ -1627,6 +1638,7 @@ jobs:
             # Try to push — if it fails, another job beat us, loop and re-pull
             if git push -u origin HEAD 2>/dev/null; then
               echo "Pushed successfully on attempt $i"
+              bash scripts/audit.sh "git.push" "$GITHUB_REPOSITORY@$(git rev-parse --abbrev-ref HEAD)" 0 "GH_GLOBAL" || true
               exit 0
             fi
             echo "Push attempt $i failed (ref moved), retrying in ${i}s..."
@@ -1822,3 +1834,28 @@ jobs:
           else
             echo "no regression for $SKILL; health issue silent"
           fi
+
+      # Structured audit log (scripts/audit.sh) -> run artifact. Runs on failure too
+      # so a run that pushed a commit or sent a notify before dying still leaves its
+      # trail. The log lives outside the workspace (beside the notify queue); stage a
+      # copy into the workspace so upload-artifact picks it up, guaranteeing a file
+      # even when nothing privileged happened (empty, not missing).
+      - name: Stage audit log
+        if: always()
+        run: |
+          mkdir -p audit-artifact
+          if [ -n "${AEON_AUDIT_LOG:-}" ] && [ -f "$AEON_AUDIT_LOG" ]; then
+            cp "$AEON_AUDIT_LOG" audit-artifact/audit.jsonl
+          else
+            : > audit-artifact/audit.jsonl
+          fi
+          echo "audit records: $(wc -l < audit-artifact/audit.jsonl)"
+
+      - name: Upload audit log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-log-${{ github.run_id }}
+          path: audit-artifact/audit.jsonl
+          if-no-files-found: warn
+          retention-days: 30

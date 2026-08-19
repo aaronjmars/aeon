@@ -37,4 +37,28 @@ subst() {
 
 args=()
 for a in "$@"; do args+=("$(subst "$a")"); done
+
+# When auditing is off (AEON_AUDIT_LOG unset), stay a transparent exec passthrough
+# -- byte-identical to the original behaviour. When on, run curl in the foreground
+# (stdout/stderr/exit all pass through unchanged) so we can record the call after.
+if [ -n "${AEON_AUDIT_LOG:-}" ]; then
+  # Credential placeholders that were substituted (NAMES only) and the target URL,
+  # both read from the ORIGINAL placeholder args so no secret value is handled here.
+  _SECS=""
+  for a in "$@"; do
+    for n in $(printf '%s\n' "$a" | grep -oE '\{[A-Z_][A-Z0-9_]*\}' | tr -d '{}' | sort -u || true); do
+      case "$n" in *_API_KEY|*_KEY|*_TOKEN|*_SECRET|*_PAT|*_WEBHOOK_URL) _SECS="${_SECS}${n}," ;; esac
+    done
+  done
+  _URL=""
+  for a in "$@"; do case "$a" in http://*|https://*) _URL="$a"; break ;; esac; done
+  set +e
+  curl "${args[@]}"; _RC=$?
+  set -e
+  _HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for _c in "scripts/audit.sh" "$_HERE/audit.sh" "$_HERE/scripts/audit.sh"; do
+    if [ -f "$_c" ]; then bash "$_c" "secretcurl" "${_URL%%\?*}" "$_RC" "${_SECS%,}" || true; break; fi
+  done
+  exit "$_RC"
+fi
 exec curl "${args[@]}"

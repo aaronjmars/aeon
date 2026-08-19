@@ -263,6 +263,16 @@ Set the secret → channel activates. No code changes needed.
 
 Want ~1s Telegram replies instead of up-to-5-min polling? See [Telegram instant mode](../apps/webhook/README.md).
 
+## Audit log
+
+Every run writes an append-only JSON-lines record of the privileged actions that reached outside it - notify sends, `secretcurl` calls, and git pushes - and uploads it as the `audit-log-<run_id>` artifact on the run (kept 30 days). It answers "what did this run actually do" without reading the whole Actions transcript. One line per action:
+
+```json
+{"ts":"2026-08-18T14:03:11Z","run_id":"1234567890","skill":"digest","action":"notify","target":"channels=telegram delivered=true","exit":0,"secrets_used":["TELEGRAM_BOT_TOKEN"]}
+```
+
+`secrets_used` lists env-var **names** only. Secret **values** never reach the file: `scripts/audit.sh` scrubs every credential-shaped env var - in its raw, base64, and url-encoded forms - out of each record before writing, failing toward over-redaction. The log is written outside the workspace (beside the notify queue) so a read-only-sandboxed skill can still append to it, and it is always produced - a run that performs no privileged action uploads an empty file, not a missing one. Nothing to configure; it is on by default.
+
 ## API keys per skill
 
 Skills that call third-party APIs declare their credentials in a `requires:` frontmatter list, so the dashboard shows **which skill needs which key**:

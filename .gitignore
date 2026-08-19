@@ -28,6 +28,11 @@
 .pending-*.md
 apps/dashboard/outputs/.pending-*.md
 
+# Audit log staged into the workspace only to be uploaded as a run artifact
+# (scripts/audit.sh). The authoritative copy lives outside the repo in
+# $AEON_PENDING_DIR; this staged copy must never be committed.
+audit-artifact/
+
 # deploy-uni-hook stages its key-safe runner + chain registry at the repo root
 # (like ./notify / ./secretcurl) from skills/deploy-uni-hook/templates/; these are
 # run-time copies, not sources, so they must never be committed.

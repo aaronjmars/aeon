@@ -399,3 +399,24 @@ fi
 if [ "$DELIVERED" = "true" ]; then
   rm -f "$PENDING_DIR/notify-queue/${TS}.md"
 fi
+
+# Audit trail (no-op unless AEON_AUDIT_LOG is set; see scripts/audit.sh). One record
+# per notify call listing which channels were configured and whether any delivery
+# succeeded. Channel token VALUES never reach the record -- audit.sh redacts, and we
+# pass NAMES only. if-blocks keep this set -e safe.
+if [ -n "${AEON_AUDIT_LOG:-}" ]; then
+  _AUDIT=""
+  for _c in "scripts/audit.sh" "$_HERE/audit.sh" "$_HERE/scripts/audit.sh"; do
+    if [ -f "$_c" ]; then _AUDIT="$_c"; break; fi
+  done
+  if [ -n "$_AUDIT" ]; then
+    _CHANS=""; _SECS=""
+    if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then _CHANS="${_CHANS}telegram,"; _SECS="${_SECS}TELEGRAM_BOT_TOKEN,"; fi
+    if [ -n "${DISCORD_WEBHOOK_URL:-}" ]; then _CHANS="${_CHANS}discord,"; _SECS="${_SECS}DISCORD_WEBHOOK_URL,"; fi
+    if [ -n "${SLACK_WEBHOOK_URL:-}" ]; then _CHANS="${_CHANS}slack,"; _SECS="${_SECS}SLACK_WEBHOOK_URL,"; fi
+    if [ -n "${BUZZ_PRIVATE_KEY:-}" ] && [ -n "${BUZZ_CHANNEL_ID:-}" ]; then _CHANS="${_CHANS}buzz,"; _SECS="${_SECS}BUZZ_PRIVATE_KEY,"; fi
+    if [ -n "${RESEND_API_KEY:-}" ] && [ -n "${NOTIFY_EMAIL_TO:-}" ]; then _CHANS="${_CHANS}email,"; _SECS="${_SECS}RESEND_API_KEY,"; fi
+    if [ "$DELIVERED" = "true" ]; then _RC=0; else _RC=1; fi
+    bash "$_AUDIT" "notify" "channels=${_CHANS%,} delivered=${DELIVERED}" "$_RC" "${_SECS%,}" || true
+  fi
+fi
