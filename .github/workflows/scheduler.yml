@@ -373,7 +373,10 @@ jobs:
               REACTIVE_SKILL="${BASH_REMATCH[1]}"
               continue
             fi
-            if [ -n "$REACTIVE_SKILL" ] && [[ "$line" =~ on:\ *\"([^\"]+)\".*when:\ *\"([^\"]+)\" ]]; then
+            # Accept both quoted and unquoted `on:` values (`on: "digest"` and
+            # `on: digest`). The docs' own examples use the unquoted form, so the
+            # strict quoted-only regex silently dropped a trigger written that way.
+            if [ -n "$REACTIVE_SKILL" ] && [[ "$line" =~ on:\ *\"?([^\",\}\ ]+)\"?.*when:\ *\"([^\"]+)\" ]]; then
               ON="${BASH_REMATCH[1]}"
               WHEN="${BASH_REMATCH[2]}"
               REACTIVE_TRIGGERS["$REACTIVE_SKILL"]+="${ON}:${WHEN};"

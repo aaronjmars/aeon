@@ -53,6 +53,8 @@ reactive:
 
 The handler is dispatched with **the source skill's name as its `var`** (so `skill-repair` knows *which* skill tripped it), unless the handler declares a `var` of its own, which wins. The `heartbeat` -> `health:` issue path still runs in parallel and remains the catch-all for skills that fail silently.
 
+**The source skill must be enabled.** A trigger's `on:` source is evaluated only while that skill is `enabled: true` (a disabled skill never runs, so its state never changes). Point a trigger at a skill you have turned off and it silently never fires. `on:` may be written quoted or bare (`on: "digest"` or `on: digest`).
+
 **Loop safety.** A reactive dispatch is deduped per handler for 90 minutes, so a source that stays broken can't re-fire its handler every tick, and a handler that itself fails can't spin a tight loop. (Reactive runs on billed Actions minutes and a shared rate limit, so this bound matters -- there is no `pkill` off-switch here.)
 
 ## Scheduler frequency
