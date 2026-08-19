@@ -20,6 +20,10 @@
 //      exists. This validates the full reference surface a forker edits by hand: the
 //      whole skills: block (enabled or not, inline `{ }` or multi-line) AND every
 //      skill wired into a chains: pipeline (parallel / skill / consume).
+//   4. Reactive-trigger integrity - every target skill and `on:` source in the
+//      reactive: block resolves to a real skill, and every `when:` parses to a
+//      condition scripts/reactive_when.sh can evaluate (same dangling-reference /
+//      dead-config class as 3, for the event-driven dispatch path).
 //
 // Output contract:
 //   - Exit 0 + only PASS lines  => CLEAN
@@ -248,6 +252,74 @@ function checkSkillRefs(lines) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Check 4 - reactive-trigger integrity. The `reactive:` block wires event-driven
+// dispatch: a target skill fires when a `when:` condition holds for a source
+// skill (scripts/reactive_when.sh evaluates the condition at scheduler time).
+// Nothing validated these references before, so a reactive trigger naming a
+// pruned skill, or a mistyped `when:`, was a silent no-op that only showed up as
+// a dispatch that never happened. Mirror the skill-refs check for both the target
+// and the `on:` source, and reject a `when:` the evaluator cannot parse.
+// ---------------------------------------------------------------------------
+
+// A `when:` the scheduler's evaluator (scripts/reactive_when.sh) can parse. Keep
+// these three patterns in lockstep with that script.
+function validateWhen(when) {
+  const w = String(when).trim();
+  return /^consecutive_failures\s*>=\s*\d+$/.test(w)
+    || /^last_status\s*=\s*[a-z]+$/.test(w)
+    || /^success_rate\s*(<=|>=|<|>)\s*[0-9]+(\.[0-9]+)?$/.test(w);
+}
+
+// Pure: returns { targets, sources, conditions }, each an array of {name/when, lineNum}.
+// Skips comment lines so the documented (commented-out) example doesn't register.
+function collectReactiveRefs(lines) {
+  const targets = [];
+  const sources = [];
+  const conditions = [];
+  for (const [i, raw] of blockLines(lines, 'reactive')) {
+    if (/^\s*#/.test(raw)) continue;
+    let m;
+    // A target skill is a 2-space key with nothing after the colon (`trigger:` is
+    // deeper-indented and the `- { on:, when: }` rows carry no bare 2-space key).
+    if ((m = raw.match(/^ {2}([a-z][a-z0-9-]+):\s*$/))) targets.push({ name: m[1], lineNum: i + 1 });
+    if ((m = raw.match(/\bon:\s*"?([a-zA-Z0-9_*-]+)"?/))) sources.push({ name: m[1], lineNum: i + 1 });
+    if ((m = raw.match(/\bwhen:\s*"([^"]+)"/))) conditions.push({ when: m[1], lineNum: i + 1 });
+  }
+  return { targets, sources, conditions };
+}
+
+function checkReactiveRefs(lines) {
+  if (!fs.existsSync(SKILLS_DIR)) return; // checkSkillRefs already failed on this
+  const { targets, sources, conditions } = collectReactiveRefs(lines);
+  const problems = [];
+
+  for (const t of targets) {
+    if (!skillExists(t.name)) {
+      problems.push('FAIL: aeon.yml reactive target "' + t.name + '" (line ' + t.lineNum + ') has no skills/' + t.name + '/SKILL.md');
+    }
+  }
+  for (const s of sources) {
+    if (s.name === '*') continue; // wildcard: any source skill
+    if (!skillExists(s.name)) {
+      problems.push('FAIL: aeon.yml reactive trigger on: "' + s.name + '" (line ' + s.lineNum + ') names no skills/' + s.name + '/SKILL.md');
+    }
+  }
+  for (const c of conditions) {
+    if (!validateWhen(c.when)) {
+      problems.push('FAIL: aeon.yml reactive when: "' + c.when + '" (line ' + c.lineNum + ') is not a condition reactive_when.sh can evaluate (consecutive_failures >= N | last_status = <v> | success_rate <op> X)');
+    }
+  }
+
+  if (problems.length > 0) {
+    problems.forEach(fail);
+  } else if (targets.length === 0) {
+    pass('PASS reactive: no reactive triggers defined');
+  } else {
+    pass('PASS reactive: ' + targets.length + ' target(s), ' + sources.length + ' source ref(s), ' + conditions.length + ' condition(s) all valid');
+  }
+}
+
 function main() {
   checkCheckoutOrdering();
 
@@ -257,6 +329,7 @@ function main() {
   } else {
     checkDuplicateKeys(lines);
     checkSkillRefs(lines);
+    checkReactiveRefs(lines);
   }
 
   out.forEach((l) => console.log(l));
@@ -271,4 +344,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { analyzeCheckout, parseSteps };
+module.exports = { analyzeCheckout, parseSteps, collectReactiveRefs, validateWhen };

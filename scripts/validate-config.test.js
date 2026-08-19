@@ -13,7 +13,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
-const { analyzeCheckout } = require('./validate-config.js');
+const { analyzeCheckout, collectReactiveRefs, validateWhen } = require('./validate-config.js');
 
 // Wrap an indented steps body in a minimal single-job workflow.
 const wf = (steps) => `name: run
@@ -102,4 +102,60 @@ test('PASS: the live .github/workflows/aeon.yml', () => {
   const wfPath = path.resolve(__dirname, '..', '.github', 'workflows', 'aeon.yml');
   const r = analyzeCheckout(fs.readFileSync(wfPath, 'utf8'));
   assert.equal(r.ok, true, r.line);
+});
+
+// --- Check 4: reactive-trigger reference + condition parsing ---
+
+// A reactive: block with one target, one wildcard source, and a valid condition.
+const reactiveBlock = (body) => `reactive:
+${body}
+chains:
+  # example
+`.split('\n');
+
+test('collectReactiveRefs: parses target, on: source, and when:', () => {
+  const r = collectReactiveRefs(reactiveBlock(
+`  skill-repair:
+    trigger:
+      - { on: "*", when: "consecutive_failures >= 3" }
+  autoresearch:
+    trigger:
+      - { on: skill-health, when: "last_status = success" }`));
+  assert.deepEqual(r.targets.map((t) => t.name), ['skill-repair', 'autoresearch']);
+  assert.deepEqual(r.sources.map((s) => s.name), ['*', 'skill-health']);
+  assert.deepEqual(r.conditions.map((c) => c.when), ['consecutive_failures >= 3', 'last_status = success']);
+});
+
+test('collectReactiveRefs: ignores commented-out example rows', () => {
+  const r = collectReactiveRefs(reactiveBlock(
+`  # skill-repair:
+  #   trigger:
+  #     - { on: "*", when: "consecutive_failures >= 3" }`));
+  assert.equal(r.targets.length, 0);
+  assert.equal(r.sources.length, 0);
+  assert.equal(r.conditions.length, 0);
+});
+
+test('validateWhen: accepts the three documented condition forms', () => {
+  assert.equal(validateWhen('consecutive_failures >= 3'), true);
+  assert.equal(validateWhen('last_status = success'), true);
+  assert.equal(validateWhen('success_rate < 0.5'), true);
+  assert.equal(validateWhen('success_rate >= 0.9'), true);
+});
+
+test('validateWhen: rejects malformed / unsupported conditions', () => {
+  assert.equal(validateWhen('score > abc'), false);
+  assert.equal(validateWhen('consecutive_failures > 3'), false); // only >= supported
+  assert.equal(validateWhen('success_rate = 0.5'), false);       // no = for rate
+  assert.equal(validateWhen('last_status = 5'), false);          // value not [a-z]+
+  assert.equal(validateWhen(''), false);
+});
+
+// The live aeon.yml ships the reactive examples commented out, so it must parse to
+// zero references (and therefore never fail the reactive check).
+test('the live aeon.yml has no uncommented reactive references', () => {
+  const ymlPath = path.resolve(__dirname, '..', 'aeon.yml');
+  const lines = fs.readFileSync(ymlPath, 'utf8').split('\n');
+  const r = collectReactiveRefs(lines);
+  assert.equal(r.targets.length, 0, 'unexpected uncommented reactive target(s)');
 });
