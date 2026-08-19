@@ -418,11 +418,11 @@ Every run logs exactly one of these to memory:
 
 **Control view (health / status / dispatch):** always use `gh api` over raw curl (it handles auth internally, so no `$SECRET` appears on the command line for the Bash permission layer to refuse). All cross-repo calls go through `gh api` or `gh workflow run`. No outbound HTTP needed beyond what `gh` does internally.
 
-**Scorecard view:** gathers its data **in-run** by executing `node scripts/fleet-scorecard.mjs` (step 0), which fetches workflow runs + token usage from the GitHub API and computes the tables into `/tmp/fleet-scorecard/`. The collector authenticates with `GH_READ_PAT` when set (a read-only PAT with cross-repo scope, declared in this skill's `requires:` and injected into the run) so **private** managed instances are readable; without it, only self + public repos resolve. It reads the token from `process.env` internally, so the secret never appears on a command line. A repo the token can't read is simply absent from the tables rather than crashing the collector.
+**Scorecard view:** gathers its data **in-run** by executing `node scripts/fleet-scorecard.mjs` (step 0), which fetches workflow runs + token usage from the GitHub API and computes the tables into `/tmp/fleet-scorecard/`. The collector authenticates with `GH_READ_PAT` when set (a read-only PAT with cross-repo scope, declared in this skill's `requires:` and injected into the run) so **private** managed instances are readable; when unset, the run's `GH_TOKEN` (= `GH_GLOBAL`) reads the same private members, the standard single-key setup. It reads the token from `process.env` internally, so the secret never appears on a command line. A repo the token can't read is simply absent from the tables rather than crashing the collector.
 
 ## Required env vars
 
-`GH_READ_PAT` (optional, read-only) — declared in `requires:` and read from `process.env` by `scripts/fleet-scorecard.mjs` (scorecard view) to reach private managed instances; it falls back to `GH_TOKEN`/`GITHUB_TOKEN` (self + public only) when unset, and reads `GITHUB_REPOSITORY` to resolve "self". The control view relies on the workflow-provided `GITHUB_TOKEN` for its live `gh` calls.
+`GH_READ_PAT` (optional, read-only) — declared in `requires:` and read from `process.env` by `scripts/fleet-scorecard.mjs` (scorecard view) to reach private managed instances; it falls back to `GH_GLOBAL`/`GH_TOKEN`/`GITHUB_TOKEN` (the run's repo-wide token, which also reads private members) when unset, and reads `GITHUB_REPOSITORY` to resolve "self". The control view relies on the workflow-provided `GITHUB_TOKEN` for its live `gh` calls.
 
 ## Constraints
 
