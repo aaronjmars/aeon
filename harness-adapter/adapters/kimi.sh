@@ -16,6 +16,25 @@
 #   * no --json-schema flag -> prompt-with-schema + validate + one retry.
 #   * MCP: kimi's mcp.json is the SAME {mcpServers:...} shape as ours; injected
 #     via a temp KIMI_CODE_HOME so nothing touches the user's config or workspace.
+#
+# rh-meta-start - capability manifest source of truth (bin/generate-harnesses-json)
+# {
+#   "id": "kimi",
+#   "label": "Kimi Code",
+#   "cli": { "install": "", "bin": "kimi", "min_version": "0.28.0" },
+#   "invoke": "kimi -p --output-format stream-json",
+#   "round_trip": true,
+#   "token_usage": "none",
+#   "cost": false,
+#   "read_only": "sandbox",
+#   "structured_output": "shim",
+#   "mcp": "native+overlay",
+#   "max_turns": "timeout",
+#   "claude_md": "native",
+#   "auth": { "native_oauth": ["KIMI_AUTH"], "native_key": ["MOONSHOT_API_KEY"], "openrouter": true },
+#   "native_control_path": "run-harness"
+# }
+# rh-meta-end
 set -uo pipefail
 . "$RH_LIB/envelope.sh"
 . "$RH_LIB/schema-retry.sh"

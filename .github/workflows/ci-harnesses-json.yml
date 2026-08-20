@@ -1,0 +1,53 @@
+name: ci-harnesses-json
+
+# harness-adapter/harnesses.json is the capability manifest for the six adapters -
+# the local analog of a UHP GET /v1/harnesses discovery response. It is generated
+# from each adapters/<h>.sh rh-meta block by
+# harness-adapter/bin/generate-harnesses-json. This workflow fails any PR that
+# edits a generator input without committing the regenerated manifest, so the
+# manifest cannot drift from the adapters it describes.
+#
+# Same shape as ci-skills-json.yml. There are no git-derived fields here, so only
+# the `generated` timestamp is normalized out of the diff.
+
+on:
+  pull_request:
+    paths:
+      - 'harness-adapter/adapters/**'
+      - 'harness-adapter/bin/generate-harnesses-json'
+      - 'harness-adapter/harnesses.json'
+      - '.github/workflows/ci-harnesses-json.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'harness-adapter/adapters/**'
+      - 'harness-adapter/bin/generate-harnesses-json'
+      - 'harness-adapter/harnesses.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Cancel a superseded in-progress run when a newer commit is pushed to the same PR
+# (reclaims runner-minutes on stacked PR pushes). Never cancels push/main/tag runs.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Regenerate harnesses.json and diff (ignoring generated timestamp)
+        run: |
+          set -euo pipefail
+          norm() { sed -E 's/"generated": *"[^"]*"/"generated":""/' "$1"; }
+          norm harness-adapter/harnesses.json > /tmp/hn.committed.json
+          harness-adapter/bin/generate-harnesses-json
+          norm harness-adapter/harnesses.json > /tmp/hn.regenerated.json
+          if ! diff -u /tmp/hn.committed.json /tmp/hn.regenerated.json; then
+            echo "::error::harnesses.json is stale - run harness-adapter/bin/generate-harnesses-json and commit the result (the 'generated' timestamp is ignored)."
+            exit 1
+          fi
+          echo "harnesses-json: OK - committed manifest matches a fresh regen (generated timestamp aside)."

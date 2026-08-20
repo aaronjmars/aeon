@@ -13,6 +13,25 @@
 #   * no project .mcp.json support -> translated to -c mcp_servers.* overrides.
 #   * CLAUDE.md ignored by default -> added as an AGENTS.md fallback filename.
 #   * no --max-turns -> the dispatcher's wall-clock timeout is the runaway guard.
+#
+# rh-meta-start - capability manifest source of truth (bin/generate-harnesses-json)
+# {
+#   "id": "codex",
+#   "label": "OpenAI Codex CLI",
+#   "cli": { "install": "npm i -g @openai/codex", "bin": "codex", "min_version": "0.144.6" },
+#   "invoke": "codex exec --json -",
+#   "round_trip": true,
+#   "token_usage": "full",
+#   "cost": false,
+#   "read_only": "native",
+#   "structured_output": "native",
+#   "mcp": "native+inline-toml",
+#   "max_turns": "timeout",
+#   "claude_md": "fallback",
+#   "auth": { "native_oauth": ["CODEX_AUTH"], "native_key": ["OPENAI_API_KEY"], "openrouter": true },
+#   "native_control_path": "run-harness"
+# }
+# rh-meta-end
 set -uo pipefail
 . "$RH_LIB/envelope.sh"
 . "$RH_LIB/mcp-translate.sh"

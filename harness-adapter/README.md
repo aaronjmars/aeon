@@ -168,11 +168,37 @@ For aeon, these installs + auth are automated by `aeon.yml`'s *Install harness C
 step and the native-auth secrets (`CODEX_AUTH`, `KIMI_AUTH`, `MISTRAL_API_KEY`,
 `OPENROUTER_API_KEY`, …). See [docs/aeon-integration.md](docs/aeon-integration.md).
 
+## Capability manifest
+
+[`harnesses.json`](harnesses.json) is the machine-readable capability manifest for
+the six adapters - the local analog of a UHP [`GET /v1/harnesses`](https://unifiedharnessprotocol.org)
+discovery response. One queryable file answers *does this harness report token
+cost? enforce read-only natively or via the wrapper sandbox? support MCP, and
+how? what auth does it take?* - instead of that knowledge living only in the
+tables above and in `scripts/resolve-harness.sh`.
+
+It is generated, never hand-edited. Each `adapters/<h>.sh` carries an
+`rh-meta-start … rh-meta-end` block (one JSON object) as the source of truth;
+`bin/generate-harnesses-json` aggregates them, sorted and validated:
+
+```sh
+bin/generate-harnesses-json            # writes harnesses.json (pretty)
+jq '.harnesses[] | select(.mcp != "unsupported") | .id' harnesses.json
+```
+
+`.github/workflows/ci-harnesses-json.yml` fails any PR whose committed manifest
+does not match a fresh regen, so it cannot drift from the adapters it describes.
+The manifest covers harness *capabilities* only; the resolver's default-model
+policy stays in `scripts/resolve-harness.sh`, so a model-pin edit never
+staleness-fails this gate.
+
 ## Layout
 
 ```
 run-harness            dispatcher: args → RH_* env → sandbox/timeout → adapter → validate
 adapters/<h>.sh        one per harness: invoke, translate, normalize (claude grok codex pi vibe kimi)
+harnesses.json         generated capability manifest (UHP GET /v1/harnesses analog)
+bin/generate-harnesses-json  aggregate adapters' rh-meta blocks → harnesses.json
 lib/envelope.sh        emit/validate the contract envelope
 lib/tools-grammar.sh   --allowedTools → per-harness permissions
 lib/mcp-translate.sh   .mcp.json → codex -c flags / vibe TOML / kimi home; ${VAR} expansion

@@ -11,6 +11,9 @@ on:
       - 'scripts/**'
       - 'bin/**'
       - 'aeon.yml'
+      - 'harness-adapter/adapters/**'
+      - 'harness-adapter/bin/**'
+      - 'harness-adapter/harnesses.json'
       - '.github/workflows/ci-tests.yml'
   push:
     branches: [main]
@@ -18,6 +21,9 @@ on:
       - 'scripts/**'
       - 'bin/**'
       - 'aeon.yml'
+      - 'harness-adapter/adapters/**'
+      - 'harness-adapter/bin/**'
+      - 'harness-adapter/harnesses.json'
   workflow_dispatch:
 
 permissions:
@@ -60,6 +66,8 @@ jobs:
         run: bash scripts/tests/test_run_grok.sh
       - name: harness-adapter grok tests
         run: bash scripts/tests/test_harness_adapter_grok.sh
+      - name: harness capability manifest tests
+        run: bash scripts/tests/test_generate_harnesses_json.sh
       - name: harness resolution tests
         run: bash scripts/tests/test_resolve_harness.sh
       - name: harness install/config tests

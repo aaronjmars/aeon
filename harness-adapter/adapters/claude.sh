@@ -1,6 +1,25 @@
 #!/usr/bin/env bash
 # claude adapter — the identity adapter. Claude Code already speaks the contract;
 # this just maps RH_* env to flags and folds structured output into .result.
+#
+# rh-meta-start - capability manifest source of truth (bin/generate-harnesses-json)
+# {
+#   "id": "claude",
+#   "label": "Claude Code",
+#   "cli": { "install": "npm i -g @anthropic-ai/claude-code", "bin": "claude", "min_version": "2.1" },
+#   "invoke": "claude -p - --output-format json",
+#   "round_trip": true,
+#   "token_usage": "full",
+#   "cost": true,
+#   "read_only": "sandbox",
+#   "structured_output": "native",
+#   "mcp": "native",
+#   "max_turns": "native",
+#   "claude_md": "native+imports",
+#   "auth": { "native_oauth": ["CLAUDE_CODE_OAUTH_TOKEN"], "native_key": ["ANTHROPIC_API_KEY"], "openrouter": false },
+#   "native_control_path": "gateway"
+# }
+# rh-meta-end
 set -uo pipefail
 . "$RH_LIB/envelope.sh"
 

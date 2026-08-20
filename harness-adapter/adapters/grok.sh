@@ -17,6 +17,25 @@
 #   * .thought (chain-of-thought) must NEVER leak into .result. streaming-json
 #     interleaves {"type":"thought"} chunks with {"type":"text"} chunks, so the
 #     firewall here is structural: .result is built ONLY from type=="text".
+#
+# rh-meta-start - capability manifest source of truth (bin/generate-harnesses-json)
+# {
+#   "id": "grok",
+#   "label": "Grok Build",
+#   "cli": { "install": "npm i -g @xai-official/grok", "bin": "grok", "min_version": "0.2.101" },
+#   "invoke": "grok -p --output-format streaming-json",
+#   "round_trip": true,
+#   "token_usage": "full",
+#   "cost": true,
+#   "read_only": "sandbox",
+#   "structured_output": "native",
+#   "mcp": "native+trust",
+#   "max_turns": "native",
+#   "claude_md": "native",
+#   "auth": { "native_oauth": ["GROK_CREDENTIALS"], "native_key": ["XAI_API_KEY"], "openrouter": true },
+#   "native_control_path": "run-grok.sh"
+# }
+# rh-meta-end
 set -uo pipefail
 . "$RH_LIB/envelope.sh"
 
