@@ -114,7 +114,7 @@ jobs:
     steps:
       - name: Early checkout
         if: github.event_name == 'issues'
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           token: ${{ secrets.GH_GLOBAL || secrets.GITHUB_TOKEN }}
 
@@ -145,7 +145,7 @@ jobs:
 
       - name: Checkout repo
         if: steps.work.outputs.mode != ''
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           token: ${{ secrets.GH_GLOBAL || secrets.GITHUB_TOKEN }}
 
@@ -157,7 +157,7 @@ jobs:
 
       - name: Setup Node.js
         if: steps.work.outputs.mode != ''
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '22'
 
@@ -168,7 +168,7 @@ jobs:
         # ~100% hit after the first run of a version, shared with messages.yml). The
         # restore-keys prefix degrades gracefully on a version bump. Keep the version
         # in the key in sync with the pin below.
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: ~/.npm
           key: claude-code-${{ runner.os }}-2.1.168
@@ -457,7 +457,7 @@ jobs:
         # sufficient key; bump the -vN salt to force-bust. Only restores/saves for
         # the remotion skill (path is empty for every other skill = cheap no-op).
         if: steps.work.outputs.mode != '' && steps.skill.outputs.name == 'remotion'
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: skills/remotion/project/node_modules
           key: remotion-${{ runner.os }}-v1-${{ hashFiles('skills/remotion/project/package-lock.json') }}
@@ -1205,7 +1205,7 @@ jobs:
         # Multi-subject: one attestation over both run-scoped artifacts (the output
         # snapshot and its manifest). Both paths are ${GITHUB_RUN_ID}-unique, so the
         # committed bytes always match what was attested.
-        uses: actions/attest-build-provenance@v4
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
         with:
           subject-path: |
             ${{ steps.manifest.outputs.snapshot }}
@@ -1871,7 +1871,7 @@ jobs:
 
       - name: Upload audit log
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: audit-log-${{ github.run_id }}
           path: audit-artifact/audit.jsonl

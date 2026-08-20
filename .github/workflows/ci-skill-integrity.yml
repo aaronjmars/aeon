@@ -63,7 +63,7 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       # A skill added without regenerating the lockfile would otherwise be
       # silently ungated (drift is advisory by policy, and a brand-new skill has
       # no baseline to expand against). This makes coverage itself a hard gate.
