@@ -159,14 +159,32 @@ bin/generate-skills-json && bin/generate-packs-json && bin/generate-skill-icons
 node scripts/gen-agents-md.js || true
 ```
 
-**Refresh the eyebrow integrity lock for any NEWLY-ADDED skill.** `ci-skill-integrity` fails a PR when a present skill's `skills/<slug>/SKILL.md` has no `"discoveredFrom": "skills/<slug>/SKILL.md"` entry in `eyebrowlock.json`. That entry is produced only by the `eyebrow` binary, which is **not preinstalled in this run** - so a CLEAN-ADD of a new skill would otherwise land the PR CI-red. Fetch the binary (the version `ci-skill-integrity.yml` pins - currently `v0.4.1` from `alexverify/eyebrow`; read `gh release view -R alexverify/eyebrow` for the asset matching this runner's OS/arch), then rescan:
+**Refresh the eyebrow integrity lock for any NEWLY-ADDED skill.** `ci-skill-integrity` fails a PR when a present skill's `skills/<slug>/SKILL.md` has no `"discoveredFrom": "skills/<slug>/SKILL.md"` entry in `eyebrowlock.json`. That entry is produced only by the `eyebrow` binary, which is **not preinstalled in this run** - so a CLEAN-ADD of a new skill would otherwise land the PR CI-red. Fetch the binary (the version `ci-skill-integrity.yml` pins - currently `v0.4.1` from `alexverify/eyebrow`), verifying the release asset against a **pinned SHA256** (the tag is mutable, and this runs in the full secret env), then rescan:
 
 ```bash
 EYEBROW_OK=0
 EB=$(command -v eyebrow || true)
 if [ -z "$EB" ]; then
-  gh release download v0.4.1 -R alexverify/eyebrow -D "$WORK/eb" 2>/dev/null \
-    && EB=$(find "$WORK/eb" -type f -name 'eyebrow*' | head -1) && chmod +x "$EB" 2>/dev/null || true
+  # SHA256-pin the release asset (trust-on-first-pin). The v0.4.1 tag is mutable -
+  # a re-uploaded asset would otherwise be fetched AND executed in this run's full
+  # secret env. Verify the tarball hash against the constant below BEFORE extract
+  # or exec; a mismatch means the tag moved, so do NOT run it - fall through to the
+  # fail-safe. Linux runner (ubuntu-latest) assumed; unknown arch => skip.
+  case "$(uname -m)" in
+    x86_64)        A=amd64; EB_SHA=f1b6b88f80565082dfc37e3b91d3579c87dc6aaf0de70874ef41f461f711a48c ;;
+    aarch64|arm64) A=arm64; EB_SHA=a848055492dd545ad3f73890379098e103b5bed4f18009d81d3a4bbbf1f985b6 ;;
+    *)             A=; EB_SHA= ;;
+  esac
+  TB="eyebrow_0.4.1_linux_${A}.tar.gz"
+  if [ -n "$EB_SHA" ] && gh release download v0.4.1 -R alexverify/eyebrow -p "$TB" -D "$WORK/eb" 2>/dev/null; then
+    GOT=$(sha256sum "$WORK/eb/$TB" | awk '{print $1}')
+    if [ "$GOT" = "$EB_SHA" ]; then
+      tar xzf "$WORK/eb/$TB" -C "$WORK/eb" 2>/dev/null \
+        && EB=$(find "$WORK/eb" -type f -name eyebrow | head -1) && chmod +x "$EB" 2>/dev/null || true
+    else
+      echo "::warning::eyebrow $TB sha256 mismatch (got $GOT, pinned $EB_SHA) - tag moved, not executing"; EB=
+    fi
+  fi
 fi
 [ -n "$EB" ] && "$EB" scan --path . --lockfile eyebrowlock.json 2>/dev/null && EYEBROW_OK=1
 ```

@@ -70,7 +70,12 @@ case "$H" in
     # PINNED, like aeon pins claude-code. Unpinned, this step silently tracked
     # latest: two cells that passed on 2026-07-21 failed hours later with an
     # OpenRouter 400 and nothing in the repo had changed.
-    npm install -g @openai/codex@0.144.6
+    # --ignore-scripts (same hardening as pi/kimi): codex ships its binary via
+    # optional platform packages (@openai/codex-<os>-<arch>), NOT a postinstall
+    # fetch, so blocking lifecycle scripts is safe and denies a compromised
+    # release an auto-run install hook in the run's secret env. If a future pin
+    # needs a postinstall binary fetch, drop this flag (keep the pin).
+    npm install -g --ignore-scripts @openai/codex@0.144.6
     mkdir -p "$HOME/.codex"
     case "$AUTH_MODE" in
       native-oauth)
