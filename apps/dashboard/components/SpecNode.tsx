@@ -23,8 +23,20 @@ export function SpecNode({ id, elements }: { id: string; elements: Record<string
     case 'Stack': return <div className={`flex ${p.direction === 'horizontal' ? 'flex-row' : 'flex-col'} ${p.gap === 'lg' ? 'gap-[var(--space-lg)]' : p.gap === 'sm' ? 'gap-[var(--space-xs)]' : 'gap-[var(--space-sm)]'} min-w-0 [&>*]:min-w-0`}>{kids}</div>
     // auto-fit + a min track width means the requested column count is a target, not
     // a mandate: cells that can't reach the min width wrap to a new row instead of
-    // being crushed. `min(100%, …)` keeps a single wide child from overflowing.
-    case 'Grid': { const cols = typeof p.columns === 'number' ? p.columns : 2; const min = cols >= 3 ? 92 : 120; return <div className="grid gap-[var(--space-sm)] min-w-0 [&>*]:min-w-0" style={{ gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, ${min}px), 1fr))` }}>{kids}</div> }
+    // being crushed. The min is content-aware - driven by the widest Stat value in
+    // the grid - so a row of long-number stats (e.g. $0.000002025) collapses to a
+    // single full-width column where the value fits on one line, instead of three
+    // narrow columns each wrapping the number one character per line. Short-value
+    // grids keep their columns. `min(100%, …)` keeps a single wide child in-box.
+    case 'Grid': {
+      const cols = typeof p.columns === 'number' ? p.columns : 2
+      let maxLen = 0
+      const visit = (cid: string) => { const c = elements[cid]; if (!c) return; if (c.type === 'Stat') { const v = String((c.props as Record<string, unknown> | undefined)?.value ?? ''); if (v.length > maxLen) maxLen = v.length } c.children?.forEach(visit) }
+      el.children?.forEach(visit)
+      const base = cols >= 3 ? 92 : 120
+      const min = Math.min(260, Math.max(base, maxLen ? maxLen * 13 + 24 : base))
+      return <div className="grid gap-[var(--space-sm)] min-w-0 [&>*]:min-w-0" style={{ gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, ${min}px), 1fr))` }}>{kids}</div>
+    }
     case 'Heading': { const cls = p.level === 'h1' ? 'font-display text-2xl' : p.level === 'h2' ? 'font-display text-lg' : 'font-display text-sm text-primary-70'; return <div className={`${cls} ${soft}`}>{String(p.text || '')}</div> }
     case 'Text': { const cls = p.variant === 'caption' ? 'text-micro text-primary-40' : p.variant === 'muted' ? 'text-xs text-primary-50' : p.variant === 'lead' ? 'text-sm text-primary-70' : 'text-xs text-primary-70'; return <p className={`${cls} ${soft}`}>{String(p.text || '')}</p> }
     case 'Badge': { const v = p.variant || 'default'; const cls = v === 'destructive' ? 'bg-aeon-red-alert/10 text-aeon-red-alert border-aeon-red-alert/30' : v === 'secondary' ? 'bg-aeon-bg text-primary-50 border-[rgba(250,250,250,0.08)]' : 'bg-aeon-green/10 text-aeon-green border-aeon-green/30'; return <span className={`inline-block max-w-full text-[11px] px-2 py-0.5 border font-mono ${soft} ${cls}`}>{String(p.text || '')}</span> }
