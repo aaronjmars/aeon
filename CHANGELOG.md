@@ -11,6 +11,56 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Added
 
+- **Codex plugin parity + a repo-root `llms.txt`.** The `/aeon` operator skill now
+  installs on Codex too (`plugin/.codex-plugin/plugin.json` +
+  `.agents/plugins/marketplace.json`: `codex plugin marketplace add aeonfun/aeon`
+  then `codex plugin add aeon@aeon`), and a new repo-root `llms.txt` gives any
+  coding agent a doc map of the core entry points, setup/config docs, catalog, and
+  harness docs. (#919)
+- **Generated harness capability manifest (`harness-adapter/harnesses.json`).** A
+  queryable, CI-validated file of capability facts for the six adapters (claude,
+  grok, codex, pi, vibe, kimi) - token-cost reporting, read-only enforcement, MCP
+  flavor, auth - sourced from an `rh-meta` block in each `adapters/<h>.sh`. The CLI
+  analog of a UHP `GET /v1/harnesses` discovery response. (#916)
+- **Chain steps can route on Haiku quality scores (`when:` on chain steps).** The
+  1-5 score Aeon already writes to `memory/skill-health/<skill>.json` becomes a
+  control-flow edge: a chain step runs only when a condition holds for the score of
+  the skill it consumes (e.g. `when: "score > 3"`). A `when:` whose key is missing
+  skips the step rather than failing it. Chassis INTEGRATION.md item 2. (#911)
+- **Dry-run gate for self-authored skills before auto-merge.** `create-skill` and
+  `self-improve` now run a candidate with synthetic `DRYRUN`-marked secrets and a
+  structural pass check (exit 0, output present, no write outside declared mode, no
+  secret used outside `requires:`) before its PR opens - the live model credential
+  is the only real secret allowed near the run. Chassis INTEGRATION.md item 4.
+  (#914)
+- **Structured audit log of privileged actions.** An append-only JSONL record (one
+  line per action that reaches outside the run: notify, secretcurl) uploaded as the
+  `audit-log-<run_id>` artifact. `secrets_used` is names only - values are scrubbed
+  in raw, base64, and url-encoded forms before writing, failing toward
+  over-redaction. Chassis INTEGRATION.md item 5. (#908)
+- **Reactive failure handlers learn which skill tripped them.** A handler fired by
+  `on: "*"` now receives the matched source skill as its `var` (unless it declares
+  its own), so `skill-repair` no longer re-derives the failed skill. Reactive is
+  documented as the blessed per-skill failure edge in `docs/CONFIGURATION.md`.
+  Chassis INTEGRATION.md item 3. (#910)
+- **`validate-config` checks reactive triggers.** Every reactive target and
+  non-wildcard `on:` source must resolve to a real skill, and every `when:` must
+  parse to a condition the runtime evaluator understands - a dangling reference or
+  mistyped condition now fails CI instead of being a silent no-op. (#907)
+- **`aeon-update` 3-way merges OWNED conflicts.** An operator-customized file that
+  upstream also changed (commonly a hand-narrowed `aeon.yml`) now attempts a real
+  `git merge-file --diff3`: disjoint hunks merge cleanly and keep the customization,
+  genuine overlaps still surface as CONFLICT. Adds an eyebrow-lock fail-safe. (#903)
+- **`vuln-scanner` A3.6 agentic logic audit.** A new source-to-sink reasoning pass
+  over a repo's real entrypoints (threat model, ranked entrypoint inventory,
+  deep-review of the top N by a size budget) that catches authorization,
+  business-logic, and trust-boundary bugs the syntactic (A3) and fuzz (A3.5) passes
+  miss. Candidates go through the same A4 triage. (#894)
+- **`vuln-scanner` deliverability gate before autonomous disclosure email.** A new
+  fail-closed DoH MX/A check (dns.google, then Cloudflare) confirms a resolved
+  maintainer domain can actually receive mail before Arm C spends its one daily send
+  slot; an unreachable domain flips the draft to `contact-unverified` and surfaces
+  to the operator without burning the budget. (#895)
 - **The `/aeon` operator skill is now installable as a Claude Code plugin.**
   Packages the existing `.claude/skills/aeon` setup skill as a distributable
   plugin under a self-contained `plugin/` subdirectory (`plugin/.claude-plugin/`
@@ -180,6 +230,31 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Changed
 
+- **GitHub token model corrected to a single classic PAT.** `GH_GLOBAL` is now
+  documented as one classic PAT with `repo` + `workflow` scopes (was fine-grained
+  Contents/PRs/Issues); `GH_READ_PAT` / `GH_SECRETS_PAT` are reframed as legacy and
+  optional, both folding into `GH_GLOBAL`. `read:org` / `admin:org` are not needed,
+  and classic is preferred because the advisories / PVR API is unreliable with
+  fine-grained tokens. Updated in `docs/CONFIGURATION.md`, the README, and the aeon
+  setup skill's `references/secrets.md` (plus its plugin copy and the hosted
+  mirror). (#905)
+- **README agent-onboarding callout + harness section.** A top-of-README line
+  points any coding agent at `read https://www.aeon.fun/skills/aeon.md and follow
+  the instructions` (Claude Code, Codex, Hermes, OpenClaw), and a new "Six engines,
+  one socket" section illustrates the `run-harness` contract across the six CLIs;
+  plus an image-optimization pass trimming ~2.6M of oversized banner assets. (#922)
+- **Security and dependency hardening.** All GitHub Actions are SHA-pinned to
+  immutable commit refs, codex install scripts are blocked and the eyebrow download
+  is SHA256-pinned, and the `messages.yml` `ALL_SECRETS` dump was narrowed to a
+  named allowlist. (#904, #917, #918)
+- **Maintenance.** Model pins refreshed to the current generation (Opus 5 to
+  opus-4-8, fable-5 dropped from the Venice passthrough), the skill-run harness
+  timeout raised to 30m (job cap 50m), cron-state commit given a jittered backoff,
+  `skill_mode` grants `./scripts/skill-runs` in the base tier, `./notify` and
+  `./secretcurl` cleanup plus a usage-probe guard, bounded apt installs, a dashboard
+  feed-card layout fix, a main-CI unbreak, and README harness-section iterations.
+  (#891, #892, #893, #896, #897, #898, #899, #900, #901, #902, #915, #920, #923,
+  #924, #925)
 - **OpenRouter gateway traffic is now attributed to Aeon.** The `openrouter` case
   of `scripts/llm-gateway.sh` sets `ANTHROPIC_CUSTOM_HEADERS` so every Claude Code
   request routed through `openrouter.ai` carries `HTTP-Referer: https://aeon.fun`
@@ -252,6 +327,28 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Fixed
 
+- **Reactive `success_rate` conditions now actually fire.** The scheduler's inline
+  evaluator only handled `consecutive_failures` and `last_status`; a trigger written
+  as `when: "success_rate < 0.5"` matched no branch and was silently dropped.
+  Single-condition evaluation moved to a tested `scripts/reactive_when.sh` covering
+  all three documented conditions, with a `total_runs > 0` guard so a never-run
+  skill does not false-fire. (#906)
+- **`bd-radar` / `fleet-control` read private forks on the single-key setup.** With
+  `GH_READ_PAT` optional and unset fleet-wide, `bd-radar` logged a false source-miss
+  every run and read zero forks/issues; it now falls back to the run's `GH_GLOBAL`
+  (which reads the same private data) and treats an unset `GH_READ_PAT` as the
+  normal one-key config instead of a 401 / rotation follow-up. (#909)
+- **Post-run quality scorer grades the full output, aligned to STRATEGY.** The judge
+  previously saw only the first 3000 bytes (grading the intro, never the payoff); it
+  now samples head 10KB + tail 4KB of large output, injects `STRATEGY.md` so
+  correctness and verifiability outrank looks-finished polish, and adds a
+  fabrication flag for invented IDs / URLs / figures. (#921)
+- **`vuln-tracker` / `vuln-scanner` correctness ports from `aeon-vuln`.** The tracker
+  now reads a flat-array `vuln-scanned.json` (not just the legacy `{scans:[...]}`
+  shape, which silently yielded zero rows) and matches `fix(deps)` / `fix(security)`
+  / bare `security:` PR titles on the `security/` branch (was `fix(security):`-only,
+  dropping most in-flight PRs); the scanner installs osv-scanner v2 and scans
+  gitignored lockfiles. (#890)
 - **`aeon-update` no longer silently deletes a currently-enabled skill retired
   upstream.** The 3-way classifier CLEAN-DELETEd any `skills/<name>/` path removed
   upstream and unmodified locally without checking whether `<name>` is still
