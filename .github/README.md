@@ -87,6 +87,14 @@ The prompt *is* the skill. You schedule it, hand it a `var`, chain it into other
 
 <p align="center"><a href="../docs/community-skill-packs.md#listed-packs"><b>Community skill packs →</b></a></p>
 
+## Support six harnesses: Claude, Grok, Codex, Pi, Vibe, Kimi
+
+<p align="center">
+  <img src="../docs/assets/harnesses-aeon.jpg" alt="Six engines, one socket - a SKILL.md flows through run-harness into any of six agent CLIs: Claude, Grok, Codex, Pi, Vibe, and Kimi. Every harness honors the same contract: result, usage, session." width="100%" />
+</p>
+
+The same `SKILL.md` runs on any of six agent CLIs - **Claude**, **Grok**, **Codex**, **Pi**, **Vibe**, **Kimi** - behind one `run-harness` contract (same result, usage, and session shape). Swap the harness; nothing else changes. How the contract works: [`docs/harnesses.md`](../docs/harnesses.md).
+
 ## Why "the most autonomous"
 
 Most agent tools keep you in the loop - approve this call, review this diff. Aeon is built for the work you want done while you're away, and it's the only framework that does all four unattended: runs on a schedule, remembers across runs, reacts to conditions, and repairs its own broken skills. The most autonomous agent is the one that never asks.
@@ -126,16 +134,6 @@ A model scores every run 1–5; `heartbeat` → `skill-health` → `skill-repair
 </p>
 
 `spawn-instance` forks Aeon into a new specialized instance (`var: "crypto-tracker: monitor DeFi protocols"`), picks relevant skills, and registers it - no secrets propagated, billing isolated. `fleet-control` health-checks and dispatches across the fleet.
-
----
-
-## Support six harnesses: Claude, Grok, Codex, Pi, Vibe, Kimi
-
-<p align="center">
-  <img src="../docs/assets/harnesses-aeon.jpg" alt="Six engines, one socket - a SKILL.md flows through run-harness into any of six agent CLIs: Claude, Grok, Codex, Pi, Vibe, and Kimi. Every harness honors the same contract: result, usage, session." width="100%" />
-</p>
-
-The same `SKILL.md` runs on any of six agent CLIs - **Claude**, **Grok**, **Codex**, **Pi**, **Vibe**, **Kimi** - behind one `run-harness` contract (same result, usage, and session shape). Swap the harness; nothing else changes. How the contract works: [`docs/harnesses.md`](../docs/harnesses.md).
 
 ---
 
