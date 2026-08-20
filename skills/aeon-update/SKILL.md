@@ -186,7 +186,12 @@ if [ -z "$EB" ]; then
     fi
   fi
 fi
-[ -n "$EB" ] && "$EB" scan --path . --lockfile eyebrowlock.json 2>/dev/null && EYEBROW_OK=1
+# Run with a SCRUBBED env (allowlist PATH+HOME only). eyebrow scan is a local
+# file-hasher - it needs no secrets and no network - so denying it the run's
+# secret env (GH_GLOBAL + provider/notify keys) means even a bad binary that
+# slipped the SHA pin cannot read or exfiltrate them. If the scan fails, EYEBROW_OK
+# stays 0 and the fail-safe below covers it.
+[ -n "$EB" ] && env -i PATH="$PATH" HOME="$HOME" "$EB" scan --path . --lockfile eyebrowlock.json 2>/dev/null && EYEBROW_OK=1
 ```
 
 **Fail-safe - guarantees a green PR without the binary.** If `EYEBROW_OK` is still `0` (binary unavailable or scan failed) and this run has any **CLEAN-ADD of a `skills/**` SKILL.md**, do not ship a skill the lock cannot cover: revert each such new skill from the branch (`git rm -r --cached skills/<slug>` + drop it from the working tree) and re-classify it as **CONFLICT** with reason `needs-eyebrowlock-scan`. S9 surfaces it with the exact operator command (`eyebrow scan --path . --lockfile eyebrowlock.json` then commit). A **CLEAN-UPDATE / CLEAN-MERGE of an existing** skill needs no rescan - `eyebrow verify` allows content drift (it fails only on a new egress host or a new CRITICAL), and the skill already has a lock entry. This trades auto-installing a brand-new upstream skill (rare) for never landing a red PR; the skill still arrives, just as a one-line manual step in the PR.
