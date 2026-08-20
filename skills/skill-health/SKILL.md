@@ -1,6 +1,7 @@
 ---
 name: skill-health
 description: Fleet skill observability with two views - health audits per-skill metrics and files/resolves issues in memory/issues/; analytics ranks the fleet by 7d runs, success rates, and anomaly flags.
+scorable: false  # meta skill: no gradable output, skip the post-run quality scorer
 metadata:
   title: Skill Health
   category: evolution

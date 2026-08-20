@@ -1,6 +1,7 @@
 ---
 name: memory-flush
 description: Promote important recent log entries into MEMORY.md and prune stale ones
+scorable: false  # meta skill: no gradable output, skip the post-run quality scorer
 metadata:
   title: Memory Flush
   category: core

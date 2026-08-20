@@ -1,6 +1,7 @@
 ---
 name: heartbeat
 description: Ambient fleet-health check that surfaces anything worth attention (default), or an on-demand priority brief - the 3 things to focus on, why now, and what moved (var=brief)
+scorable: false  # meta skill: no gradable output, skip the post-run quality scorer
 metadata:
   title: Heartbeat
   category: core

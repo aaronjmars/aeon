@@ -1252,8 +1252,15 @@ jobs:
         run: |
           SKILL="${{ steps.skill.outputs.name }}"
 
-          # Skip analysis for meta skills (they don't produce scorable output)
-          case "$SKILL" in heartbeat|skill-health|skill-analytics|reflect|memory-flush|self-review|cost-report) echo "Skipping analysis for meta skill"; exit 0;; esac
+          # Skip skills that declare `scorable: false` in their frontmatter - meta
+          # skills that produce no gradable output. Frontmatter-driven so a new meta
+          # skill opts out in its own SKILL.md instead of by editing a name regex
+          # here (which had drifted: skill-analytics/reflect/self-review/cost-report
+          # no longer exist as skills).
+          SKILL_MD="skills/${SKILL}/SKILL.md"
+          if [ -f "$SKILL_MD" ] && [ -n "$(awk 'NR==1&&/^---/{f=1;next} f&&/^---/{exit} f&&/^scorable:[[:space:]]*false([[:space:]#]|$)/{print 1;exit}' "$SKILL_MD")" ]; then
+            echo "Skipping analysis for non-scorable skill"; exit 0
+          fi
 
           HARNESS="${{ steps.run.outputs.HARNESS }}"
           # Route the scorer's claude call through the gateway (claude harness only).
@@ -1268,30 +1275,54 @@ jobs:
             AEON_OTEL_COMPONENT=scorer source "${GITHUB_WORKSPACE}/scripts/langfuse-otel.sh"
           fi
 
-          # Read and truncate skill output for analysis
+          # Read skill output for analysis. Sample head + tail so the judge sees the
+          # conclusion of long outputs, not just the intro - a flat 3KB head-truncate
+          # graded only the opening and biased the score against skills that build to
+          # their payoff (articles, digests, research compendia routinely exceed a few
+          # KB). `iconv -c` drops any partial UTF-8 char left at a byte cut.
           OUTPUT=""
           if [ -f /tmp/skill-result.txt ] && [ -s /tmp/skill-result.txt ]; then
-            OUTPUT=$(head -c 3000 /tmp/skill-result.txt)
+            BYTES=$(wc -c < /tmp/skill-result.txt)
+            if [ "$BYTES" -le 14000 ]; then
+              OUTPUT=$(iconv -f UTF-8 -t UTF-8 -c < /tmp/skill-result.txt)
+            else
+              OHEAD=$(head -c 10000 /tmp/skill-result.txt | iconv -f UTF-8 -t UTF-8 -c)
+              OTAIL=$(tail -c 4000 /tmp/skill-result.txt | iconv -f UTF-8 -t UTF-8 -c)
+              OUTPUT=$(printf '%s\n\n[... middle truncated ...]\n\n%s' "$OHEAD" "$OTAIL")
+            fi
           fi
           [ -z "$OUTPUT" ] && { echo "No output to analyze"; exit 0; }
+
+          # Ground the rubric in the operator's north-star so the judge grades
+          # strategic alignment and correctness, not just surface polish. STRATEGY.md
+          # is short by design; inject it whole (byte-capped for safety). Absent or
+          # placeholder file leaves the block empty and grading falls back to generic.
+          STRATEGY_CTX=""
+          [ -f STRATEGY.md ] && STRATEGY_CTX=$(head -c 4000 STRATEGY.md)
 
           ANALYSIS_PROMPT="Score this autonomous agent skill output on a 1-5 scale. Respond with ONLY valid JSON.
 
           Scoring:
           1 = Failed/empty/error output
-          2 = Ran but low quality, generic, or boilerplate
-          3 = Acceptable — completed the task adequately
-          4 = Good — substantive, well-structured, useful
-          5 = Excellent — insightful, well-sourced, actionable
+          2 = Ran but low quality, generic, boilerplate, or fluent-but-unverifiable
+          3 = Acceptable - completed the task adequately
+          4 = Good - substantive, well-structured, useful, and verifiable
+          5 = Excellent - insightful, well-sourced, actionable
 
-          Flag any issues from: api_error, empty_output, low_quality, stale_data, generic_content, rate_limited
+          Correctness and verifiability outrank polish: a well-written output that invents specifics scores no higher than 2. Grade alignment to the operator strategy below - reward work that serves the stated priorities, not work that merely looks finished.
 
-          Flag strictly against the FINAL output above — not against sources or steps it merely mentions:
-          - empty_output: ONLY when the skill produced no usable result (no report, analysis, or draft). A legitimate no-op — an empty inbox, an empty watchlist, 'nothing met the threshold', a clean scan with no findings — is a COMPLETED task, not empty_output. A run that delivered its output is not empty_output even if its log notes an upstream source came back empty.
-          - api_error / rate_limited: ONLY when the error blocked the skill's output — not for a sub-call that was retried or fell back cleanly.
+          Operator strategy:
+          $STRATEGY_CTX
+
+          Flag any issues from: api_error, empty_output, low_quality, stale_data, generic_content, rate_limited, unverifiable_claim
+
+          Flag strictly against the FINAL output above - not against sources or steps it merely mentions:
+          - empty_output: ONLY when the skill produced no usable result (no report, analysis, or draft). A legitimate no-op - an empty inbox, an empty watchlist, 'nothing met the threshold', a clean scan with no findings - is a COMPLETED task, not empty_output. A run that delivered its output is not empty_output even if its log notes an upstream source came back empty.
+          - api_error / rate_limited: ONLY when the error blocked the skill's output - not for a sub-call that was retried or fell back cleanly.
+          - unverifiable_claim: the output asserts specific facts, IDs, URLs, figures, or quotes that read as invented or that the skill could not plausibly have obtained from a real source. Cap such an output at 2 and set this flag.
 
           Skill: $SKILL
-          Output (truncated):
+          Output:
           $OUTPUT
 
           JSON format: {\"score\": N, \"assessment\": \"one line\", \"flags\": []}"
@@ -1363,9 +1394,12 @@ jobs:
           ASSESSMENT=$(echo "$PARSED" | jq -r '.assessment // "analysis incomplete"')
           FLAGS=$(echo "$PARSED" | jq -c '.flags // []')
 
-          # Validate score range
-          if [ "$SCORE" -lt 1 ] || [ "$SCORE" -gt 5 ] 2>/dev/null; then
-            SCORE=0
+          # A missing or out-of-range score means the judge malformed its reply, not
+          # that the skill scored zero. Treat it as unscored and skip the write, so a
+          # judge error can't append a 0 to history and drag avg_score down. (`.score
+          # // 0` above makes an absent field 0, which fails the >=1 test here.)
+          if ! { [ "$SCORE" -ge 1 ] && [ "$SCORE" -le 5 ]; } 2>/dev/null; then
+            echo "::notice::Judge returned no valid score - skipping write (non-fatal)."; exit 0
           fi
 
           echo "QUALITY_SCORE=$SCORE" >> "$GITHUB_OUTPUT"
