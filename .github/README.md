@@ -129,7 +129,7 @@ A model scores every run 1–5; `heartbeat` → `skill-health` → `skill-repair
 
 ---
 
-## Six engines, one socket
+## Support six harnesses: Claude, Grok, Codex, Pi, Vibe, Kimi
 
 <p align="center">
   <img src="../docs/assets/harnesses-aeon.jpg" alt="Six engines, one socket - a SKILL.md flows through run-harness into any of six agent CLIs: Claude, Grok, Codex, Pi, Vibe, and Kimi. Every harness honors the same contract: result, usage, session." width="100%" />
