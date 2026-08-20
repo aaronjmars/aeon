@@ -93,7 +93,7 @@ export function RightPanel({ runs, outputs, feedLoading, feedError, analyticsDat
         >&#8250;</button>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
         {/* Feed */}
         {rightTab === 'feed' && (
           feedLoading ? <div className="flex justify-center py-12"><div className="w-2 h-2 rounded-full bg-aeon-red animate-pulse" /></div> :
@@ -101,7 +101,7 @@ export function RightPanel({ runs, outputs, feedLoading, feedError, analyticsDat
           outputs.length > 0 ? (
           <div className="space-y-3 p-3">
             {outputs.map(o => (
-              <div key={o.filename}>
+              <div key={o.filename} className="min-w-0">
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className="text-[11px] font-mono text-aeon-red">{o.skill}</span>
                   <span className="text-[11px] text-primary-35 font-mono">{timeAgo(o.timestamp)}</span>
