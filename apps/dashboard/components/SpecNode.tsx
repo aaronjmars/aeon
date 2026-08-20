@@ -20,7 +20,12 @@ export function SpecNode({ id, elements }: { id: string; elements: Record<string
   const kids = el.children?.map(cid => <SpecNode key={cid} id={cid} elements={elements} />)
   switch (el.type) {
     case 'Card': return (<div className="card-hst p-[var(--space-md)] min-w-0 overflow-hidden">{(p.title || p.description) && <div className="mb-3 min-w-0">{p.title && <h3 className={`font-display text-lg text-primary-100 ${soft}`}>{String(p.title)}</h3>}{p.description && <p className={`text-xs text-primary-50 mt-0.5 ${soft}`}>{String(p.description)}</p>}</div>}<div className="space-y-3 min-w-0">{kids}</div></div>)
-    case 'Stack': return <div className={`flex ${p.direction === 'horizontal' ? 'flex-row' : 'flex-col'} ${p.gap === 'lg' ? 'gap-[var(--space-lg)]' : p.gap === 'sm' ? 'gap-[var(--space-xs)]' : 'gap-[var(--space-sm)]'} min-w-0 [&>*]:min-w-0`}>{kids}</div>
+    // A horizontal Stack of Stats must wrap, not crush: without this, three stats in
+    // the 288px panel each shrink to a sliver and their labels shatter into vertical
+    // letters. flex-wrap + a 7rem basis on the stat children makes surplus stats wrap
+    // to the next row at a readable width. Vertical stacks keep min-w-0 so long
+    // content wraps instead of overflowing.
+    case 'Stack': { const horizontal = p.direction === 'horizontal'; const gap = p.gap === 'lg' ? 'gap-[var(--space-lg)]' : p.gap === 'sm' ? 'gap-[var(--space-xs)]' : 'gap-[var(--space-sm)]'; return <div className={`flex min-w-0 ${gap} ${horizontal ? 'flex-row flex-wrap [&>[data-stat]]:basis-[7rem] [&>[data-stat]]:grow [&>[data-stat]]:shrink-0' : 'flex-col [&>*]:min-w-0'}`}>{kids}</div> }
     // auto-fit + a min track width means the requested column count is a target, not
     // a mandate: cells that can't reach the min width wrap to a new row instead of
     // being crushed. The min is content-aware - driven by the widest Stat value in
@@ -30,18 +35,30 @@ export function SpecNode({ id, elements }: { id: string; elements: Record<string
     // grids keep their columns. `min(100%, …)` keeps a single wide child in-box.
     case 'Grid': {
       const cols = typeof p.columns === 'number' ? p.columns : 2
-      let maxLen = 0
-      const visit = (cid: string) => { const c = elements[cid]; if (!c) return; if (c.type === 'Stat') { const v = String((c.props as Record<string, unknown> | undefined)?.value ?? ''); if (v.length > maxLen) maxLen = v.length } c.children?.forEach(visit) }
+      // Width a cell needs so its Stat value fits (display font ~16px/char) and its
+      // longest label word stays whole (label font ~10px/char). Sizing off the label
+      // too is what stops short-value grids ("PRs 23 / COMMITS 41 / REPOS 4") from
+      // staying three narrow columns whose labels shatter into vertical letters.
+      let need = 0
+      const visit = (cid: string) => {
+        const c = elements[cid]; if (!c) return
+        if (c.type === 'Stat') {
+          const cp = c.props as Record<string, unknown> | undefined
+          const v = String(cp?.value ?? ''); need = Math.max(need, v.length * 16)
+          const word = String(cp?.label ?? '').split(/\s+/).reduce((m, w) => Math.max(m, w.length), 0); need = Math.max(need, word * 10)
+        }
+        c.children?.forEach(visit)
+      }
       el.children?.forEach(visit)
-      const base = cols >= 3 ? 92 : 120
-      const min = Math.min(260, Math.max(base, maxLen ? maxLen * 13 + 24 : base))
+      const base = cols >= 3 ? 112 : 120
+      const min = Math.min(260, Math.max(base, need ? need + 32 : base))
       return <div className="grid gap-[var(--space-sm)] min-w-0 [&>*]:min-w-0" style={{ gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, ${min}px), 1fr))` }}>{kids}</div>
     }
     case 'Heading': { const cls = p.level === 'h1' ? 'font-display text-2xl' : p.level === 'h2' ? 'font-display text-lg' : 'font-display text-sm text-primary-70'; return <div className={`${cls} ${soft}`}>{String(p.text || '')}</div> }
     case 'Text': { const cls = p.variant === 'caption' ? 'text-micro text-primary-40' : p.variant === 'muted' ? 'text-xs text-primary-50' : p.variant === 'lead' ? 'text-sm text-primary-70' : 'text-xs text-primary-70'; return <p className={`${cls} ${soft}`}>{String(p.text || '')}</p> }
     case 'Badge': { const v = p.variant || 'default'; const cls = v === 'destructive' ? 'bg-aeon-red-alert/10 text-aeon-red-alert border-aeon-red-alert/30' : v === 'secondary' ? 'bg-aeon-bg text-primary-50 border-[rgba(250,250,250,0.08)]' : 'bg-aeon-green/10 text-aeon-green border-aeon-green/30'; return <span className={`inline-block max-w-full text-[11px] px-2 py-0.5 border font-mono ${soft} ${cls}`}>{String(p.text || '')}</span> }
     case 'Table': { const columns = (p.columns || []) as string[]; const rows = (p.rows || []) as string[][]; return (<div className="overflow-x-auto"><table className="w-full text-[11px] font-mono"><thead><tr>{columns.map((c, i) => <th key={i} className="text-left text-primary-40 font-medium px-2 py-1.5 border-b border-[rgba(250,250,250,0.08)]">{c}</th>)}</tr></thead><tbody>{rows.map((row, ri) => <tr key={ri}>{row.map((cell, ci) => <td key={ci} className={`px-2 py-1.5 text-primary-70 border-b border-[rgba(250,250,250,0.04)] ${hard}`}>{cell}</td>)}</tr>)}</tbody></table></div>) }
-    case 'Stat': { const trend = p.trend as string | undefined; const dc = trend === 'up' ? 'text-aeon-green' : trend === 'down' ? 'text-aeon-red' : 'text-primary-50'; return (<div className="bg-aeon-bg p-3 min-w-0 overflow-hidden">{p.label && <div className={`text-label mb-1 ${soft}`}>{String(p.label)}</div>}<div className={`font-display text-xl text-primary-100 leading-tight ${hard}`}>{String(p.value || '')}</div>{p.delta && <div className={`text-xs font-mono ${dc} ${hard}`}>{String(p.delta)}</div>}</div>) }
+    case 'Stat': { const trend = p.trend as string | undefined; const dc = trend === 'up' ? 'text-aeon-green' : trend === 'down' ? 'text-aeon-red' : 'text-primary-50'; return (<div data-stat className="bg-aeon-bg p-3 min-w-0 overflow-hidden">{p.label && <div className={`text-label mb-1 ${soft}`}>{String(p.label)}</div>}<div className={`font-display text-xl text-primary-100 leading-tight ${hard}`}>{String(p.value || '')}</div>{p.delta && <div className={`text-xs font-mono ${dc} ${hard}`}>{String(p.delta)}</div>}</div>) }
     case 'Progress': { const pct = Math.min(100, (Number(p.value || 0) / Number(p.max || 100)) * 100); return (<div className="min-w-0">{p.label && <div className={`text-label mb-1.5 ${soft}`}>{String(p.label)}</div>}<div className="progress-bar"><div className="progress-bar-fill" style={{ width: `${pct}%` }} /></div></div>) }
     case 'TweetCard': return (<div className="card-hst p-3 min-w-0 overflow-hidden">{p.author && <div className="flex items-center gap-1.5 mb-1 min-w-0"><span className={`text-xs font-medium text-primary-100 ${soft}`}>{String(p.author)}</span>{p.handle && <span className={`text-[11px] text-primary-40 ${hard}`}>{String(p.handle)}</span>}</div>}<p className={`text-xs text-primary-70 leading-relaxed ${soft}`}>{String(p.text || '')}</p>{(p.likes || p.retweets) && <div className="flex gap-3 mt-1.5 text-[11px] text-primary-40 font-mono">{p.likes && <span>{String(p.likes)} likes</span>}{p.retweets && <span>{String(p.retweets)} RTs</span>}</div>}</div>)
     case 'StoryLink': return (<a href={String(p.href || '#')} target="_blank" rel="noopener noreferrer" className="block card-hst card-hst-orange p-3 min-w-0 overflow-hidden"><div className={`text-xs text-primary-100 ${soft}`}>{String(p.title || '')}</div><div className="flex gap-2 mt-0.5 text-[11px] text-primary-40 font-mono min-w-0">{p.source && <span className={hard}>{String(p.source)}</span>}{p.score && <span>{String(p.score)}</span>}</div></a>)
