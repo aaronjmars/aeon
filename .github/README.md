@@ -16,7 +16,7 @@
   <strong>No approval loops. No babysitting. Configure once, forget forever.</strong>
 </p>
 
-> **🤖 Using a coding agent?** Point it here: **read https://www.aeon.fun/skills/aeon.md and follow the instructions to set up your Aeon agent.** Works with **Claude Code**, **Codex**, **Hermes**, and **OpenClaw**.
+> **🤖 Using a coding agent?** Point it here: **read https://www.aeon.fun/skills/aeon.md and follow the instructions to set up your Aeon agent.**
 
 <div align="center">
 
