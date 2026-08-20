@@ -46,7 +46,7 @@ git clone https://github.com/<you>/aeon   # skip if you used `gh repo fork --clo
 cd aeon && ./aeon
 ```
 
-Open [localhost:5555](http://localhost:5555) and follow the dashboard: **Authenticate** (any of six [harnesses](../docs/harnesses.md)) → **add a channel** → **pick skills** → **Run**. That's it - Aeon runs unattended. Everything is also an `./aeon` command ([CLI](../apps/cli/README.md)) or a `/aeon` chat command ([setup skill](../docs/aeon-setup.md), installable as a [Claude Code plugin](../docs/aeon-setup.md#install)).
+Open [localhost:5555](http://localhost:5555) and follow the dashboard: **Authenticate** (any of six [harnesses](../docs/harnesses.md)) → **add a channel** → **pick skills** → **Run**. That's it - Aeon runs unattended. Everything is also an `./aeon` command ([CLI](../apps/cli/README.md)) or a `/aeon` chat command ([setup skill](../docs/aeon-setup.md), installable as a [Claude Code or Codex plugin](../docs/aeon-setup.md#install)).
 
 <details>
 <summary><strong>No admin rights / can't install <code>gh</code>?</strong></summary>

@@ -38,7 +38,7 @@ Every Aeon instance ships this skill at [`.claude/skills/aeon/`](../.claude/skil
 1. Open your Aeon repo folder in Claude Code — the [VS Code](https://marketplace.visualstudio.com/items?itemName=anthropic.claude-code) or JetBrains extension, or the `claude` CLI in that directory.
 2. Type **`/aeon`** (or just mention Aeon / `aeon.yml` / "schedule a skill") and answer its questions.
 
-### Option B - install as a Claude Code plugin (from any folder, one command)
+### Option B - install as a Claude Code or Codex plugin (from any folder, one command)
 
 The setup skill also ships as a [Claude Code plugin](https://code.claude.com/docs/en/plugins), so you can install it from a marketplace instead of copying files: versioned, and updatable with `/plugin update`.
 
