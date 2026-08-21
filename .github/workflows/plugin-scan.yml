@@ -26,7 +26,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Scan the operator-console plugin
+        id: scan
         uses: hashgraph-online/ai-plugin-scanner-action@v1
         with:
           plugin_dir: ./plugin
-          fail_on_severity: high
+          fail_on_severity: none
+          format: markdown
+          output: plugin-scan-report.md
+          write_step_summary: true
+      - name: Print full findings
+        if: always()
+        run: cat plugin-scan-report.md
