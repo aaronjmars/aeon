@@ -31,9 +31,29 @@ jobs:
         with:
           plugin_dir: ./plugin
           fail_on_severity: none
-          format: markdown
-          output: plugin-scan-report.md
+          format: json
+          output: plugin-scan-report.json
           write_step_summary: true
-      - name: Print full findings
+      - name: Print rule ids for findings
         if: always()
-        run: cat plugin-scan-report.md
+        run: |
+          python3 - <<'PY'
+          import json
+          d = json.load(open('plugin-scan-report.json'))
+          def walk(o, path=()):
+              if isinstance(o, dict):
+                  keys = set(o)
+                  if {'severity'} & keys and ({'rule_id','ruleId','rule','id','check'} & keys):
+                      print(json.dumps({k: o.get(k) for k in
+                          ('severity','rule_id','ruleId','rule','id','check','title','path','file','location') if k in o}))
+                  for k, v in o.items():
+                      walk(v, path+(k,))
+              elif isinstance(o, list):
+                  for v in o:
+                      walk(v, path)
+          walk(d)
+          print("=== TOP-LEVEL KEYS ===", list(d)[:40])
+          PY
+      - name: Dump raw json (fallback)
+        if: always()
+        run: cat plugin-scan-report.json
