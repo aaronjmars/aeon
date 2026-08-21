@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getFileContent, saveFile } from '@/lib/github'
 import { errorResponse, syncResult } from '@/lib/http'
+import { ensureSecretsAllowlisted, referencedSecrets } from '@/lib/workflow-secrets'
 import type { McpServers } from '@/lib/types'
 
 const FILE = '.mcp.json'
@@ -34,7 +35,12 @@ export async function PUT(request: Request) {
       updateMsg: 'chore: update .mcp.json from dashboard',
       createMsg: 'chore: add .mcp.json from dashboard',
     })
-    return NextResponse.json(syncResult(sync))
+    // Auto-allowlist any secret the servers reference into the workflow
+    // ALL_SECRETS blob, so a headless run can actually inject it. Without this a
+    // key-based MCP connects fine but the first scheduled run reports the secret
+    // "not set" and skips the server. Best-effort: never fails the .mcp.json save.
+    const allowlist = await ensureSecretsAllowlisted(referencedSecrets(body.servers))
+    return NextResponse.json({ ...syncResult(sync), allowlist })
   } catch (error: unknown) {
     return errorResponse(error, 'Unknown error')
   }
