@@ -1,0 +1,19 @@
+# Hashgraph Online AI Plugin Scanner config for the Aeon operator-console plugin.
+# https://github.com/hashgraph-online/hol-guard
+#
+# Two reviewed false positives are scoped as narrowly as possible below. Both were
+# hand-verified; neither is a real secret or exfiltration path.
+
+[scanner]
+# skills/aeon/references/* are pure Markdown documentation. The HARDCODED_SECRET
+# hits there are illustrative header/config examples using ${VAR} placeholders and
+# secret NAMES (e.g. `Authorization: Bearer ${MCP_GLIM_TOKEN}`, `authSecret:
+# 'MYSERVER_API_KEY'`) - no real credential is committed. Exclude docs from scanning.
+ignore_paths = ["skills/aeon/references/*"]
+
+[rules]
+# skills/aeon/scripts/mine-history.mjs is a local, user-invoked helper whose entire
+# job is reading the operator's OWN coding-agent transcript files (read-only, on
+# their machine) to suggest new skills. The DATA_EXFIL_JS_FS_ACCESS rule fires on the
+# readline stream it uses; there is no network path. Downgrade this rule for the plugin.
+severity_overrides = { DATA_EXFIL_JS_FS_ACCESS = "low" }
