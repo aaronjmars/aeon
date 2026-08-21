@@ -31,7 +31,7 @@ jobs:
         uses: hashgraph-online/ai-plugin-scanner-action@v1
         with:
           plugin_dir: ./plugin
-          config: ./plugin/.plugin-scanner.toml
+          config: .plugin-scanner.toml
           fail_on_severity: high
           format: markdown
           output: plugin-scan-report.md
