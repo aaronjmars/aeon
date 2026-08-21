@@ -116,7 +116,7 @@ export function updateSkillInConfig(
     }
   }
 
-  return doc.toString()
+  return serialize(doc)
 }
 
 /**
@@ -125,7 +125,7 @@ export function updateSkillInConfig(
 export function updateModelInConfig(raw: string, model: string): string {
   const doc = parseDocument(raw)
   doc.set('model', model)
-  return doc.toString()
+  return serialize(doc)
 }
 
 /**
@@ -134,7 +134,7 @@ export function updateModelInConfig(raw: string, model: string): string {
 export function updateHarnessInConfig(raw: string, harness: Harness): string {
   const doc = parseDocument(raw)
   doc.set('harness', harness)
-  return doc.toString()
+  return serialize(doc)
 }
 
 /**
@@ -143,7 +143,7 @@ export function updateHarnessInConfig(raw: string, harness: Harness): string {
 export function updateGatewayInConfig(raw: string, provider: GatewayProvider): string {
   const doc = parseDocument(raw)
   doc.setIn(['gateway', 'provider'], provider)
-  return doc.toString()
+  return serialize(doc)
 }
 
 /**
@@ -158,7 +158,7 @@ export function updateJsonrenderInConfig(raw: string, enabled: boolean): string 
       jr.set('enabled', enabled)
     }
   }
-  return doc.toString()
+  return serialize(doc)
 }
 
 /**
@@ -170,7 +170,7 @@ export function removeSkillFromConfig(raw: string, name: string): string {
   if (isMap(skillsNode)) {
     skillsNode.delete(name)
   }
-  return doc.toString()
+  return serialize(doc)
 }
 
 /**
@@ -218,7 +218,7 @@ export function addSkillToConfig(
     skillsNode.set(name, entry)
   }
 
-  return doc.toString()
+  return serialize(doc)
 }
 
 /**
@@ -247,6 +247,16 @@ export function upsertSkillInConfig(
 }
 
 // --- Helpers ---
+
+// Serialize a parsed doc back to YAML with folding OFF. The yaml lib defaults to
+// lineWidth: 80, so a save would reserialize the whole file and wrap long scalar
+// values - a chain step written as a long one-liner gets folded across lines,
+// and the scheduler/chain-runner's single-line bash parser then reads only the
+// first line and runs the step with an empty brief. lineWidth: 0 keeps every
+// value on one line.
+function serialize(doc: ReturnType<typeof parseDocument>): string {
+  return doc.toString({ lineWidth: 0 })
+}
 
 function getMapValue(map: unknown, key: string): unknown {
   if (!isMap(map)) return undefined

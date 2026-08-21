@@ -28,7 +28,7 @@
 # the same deploy. Flags are never hand-specified, so they can't drift from code.
 #
 # Env: HOOK_DEPLOYER_PRIVATE_KEY (broadcast only), HOOKBUILD_DIR, POOL_MANAGER, RPC_URL,
-#      ALCHEMY_API_KEY?, ETHERSCAN_API_KEY? (auto-verify), HOOK_MAINNET_OK?, MAX_GAS_GWEI?
+#      ALCHEMY_API_KEY?, ETHERSCAN_API_KEY? (auto-verify), HOOK_MAINNET_OK? (repo variable), MAX_GAS_GWEI?
 set -euo pipefail
 
 MODE="${1:?usage: hook-deploy.sh <simulate|broadcast|chains> <kind> [chain]}"
@@ -194,10 +194,11 @@ if [ "$MODE" = "broadcast" ]; then
   : "${HOOK_DEPLOYER_PRIVATE_KEY:?set HOOK_DEPLOYER_PRIVATE_KEY to broadcast}"
 
   # third mainnet lock (beyond the skill's arm: + explicit chain:). An instance
-  # must opt into mainnet by setting HOOK_MAINNET_OK=1 — a stray armed message
-  # can't reach mainnet on an instance that never authorized it.
+  # must opt into mainnet by setting the HOOK_MAINNET_OK=1 repo VARIABLE (not a
+  # secret - a secret value of "1" masks every "1" in the log) - a stray armed
+  # message can't reach mainnet on an instance that never authorized it.
   if [ "$TESTNET" != "true" ] && [ "${HOOK_MAINNET_OK:-}" != "1" ]; then
-    echo "mainnet broadcast blocked: set HOOK_MAINNET_OK=1 to authorize mainnet on this instance" >&2
+    echo "mainnet broadcast blocked: set the HOOK_MAINNET_OK=1 repo variable to authorize mainnet on this instance" >&2
     exit 7
   fi
 

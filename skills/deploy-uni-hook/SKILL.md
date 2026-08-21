@@ -13,7 +13,6 @@ metadata:
     - HOOK_DEPLOYER_PRIVATE_KEY?
     - ALCHEMY_API_KEY?
     - ETHERSCAN_API_KEY?
-    - HOOK_MAINNET_OK?
   capabilities:
     - onchain_writes
     - writes_external_host
@@ -35,7 +34,7 @@ A hook binding is immutable and a bad hook can brick a pool or steal funds. So t
 
 ## Safety contract (do not skip)
 
-1. **Mainnet needs a triple lock.** Never target a `testnet: false` chain unless `${var}` has BOTH `arm:` AND an explicit `chain:<mainnet-name>` — AND the instance has `HOOK_MAINNET_OK=1` set (a third, operator-level lock enforced inside `hook-deploy.sh`, exit 7). An instance that never authorized mainnet cannot broadcast there even if an armed message asks it to. This skill must only run on an instance whose inbound path is owner-gated (`TELEGRAM_ALLOWED_USER_ID` / the multi-channel allowlist) — a mainnet deploy spends real gas, so an untrusted sender must never be able to dispatch it. On a mainnet chain, first read the deployer balance with `cast balance` and abort (`DEPLOY_HOOK_UNDERFUNDED`) if it cannot cover the simulation's `Estimated amount required`; `hook-deploy.sh` independently enforces a funding floor (exit 8), an optional `MAX_GAS_GWEI` gas-price ceiling (exit 9), and warns if the deployer holds more than `HOOK_MAX_FLOAT_ETH` (default 0.25) — a deploy key must hold gas float only, never LP or treasury capital. Log a clear `MAINNET` warning in the output.
+1. **Mainnet needs a triple lock.** Never target a `testnet: false` chain unless `${var}` has BOTH `arm:` AND an explicit `chain:<mainnet-name>` — AND the instance has `HOOK_MAINNET_OK=1` set as a **repo variable** (a third, operator-level lock enforced inside `hook-deploy.sh`, exit 7; store it as a variable, not a secret - a secret value of `1` masks every `1` in the run log, so tx hashes and links print as `***`). An instance that never authorized mainnet cannot broadcast there even if an armed message asks it to. This skill must only run on an instance whose inbound path is owner-gated (`TELEGRAM_ALLOWED_USER_ID` / the multi-channel allowlist) — a mainnet deploy spends real gas, so an untrusted sender must never be able to dispatch it. On a mainnet chain, first read the deployer balance with `cast balance` and abort (`DEPLOY_HOOK_UNDERFUNDED`) if it cannot cover the simulation's `Estimated amount required`; `hook-deploy.sh` independently enforces a funding floor (exit 8), an optional `MAX_GAS_GWEI` gas-price ceiling (exit 9), and warns if the deployer holds more than `HOOK_MAX_FLOAT_ETH` (default 0.25) — a deploy key must hold gas float only, never LP or treasury capital. Log a clear `MAINNET` warning in the output.
 2. **Simulate before every broadcast.** If the simulation reverts, do not broadcast. Report the revert and exit `DEPLOY_HOOK_SIM_FAILED`.
 3. **Dry-run is the default.** Broadcast only when `${var}` starts with `arm:`.
 4. **Key hygiene.** The deployer key is a burner. Never print it. Never put it on a shell command line — always go through `./hook-deploy.sh`, which reads it from the env inside the script.

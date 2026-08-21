@@ -270,6 +270,8 @@ Aeon needs **at least one** way to reach a model. Add it in the dashboard's **Au
 
 Set several and each run resolves the highest-priority one whose key is present, so you don't have to pick just one.
 
+> **Claude subscription tokens on GitHub runners.** A `CLAUDE_CODE_OAUTH_TOKEN` minted from a Claude subscription is meant for interactive/first-party use. On a hosted GitHub Actions runner it is frequently rejected at the Anthropic edge, so the run exits almost instantly with **zero** model usage even though the token was saved correctly. For a hosted instance, authenticate with an **API key** (`ANTHROPIC_API_KEY`) or an [LLM gateway](#llm-gateways) key instead; the subscription-token path is best kept for local `aeon` runs.
+
 ## Models
 
 The default model for all skills is set in `aeon.yml` (or from the dashboard header dropdown):

@@ -5,12 +5,20 @@
 // browser themselves, and opening it again duplicates the tab.
 import { execFile } from 'child_process'
 
-// Fire-and-forget; a failure to auto-open isn't fatal — every caller also
+// Fire-and-forget; a failure to auto-open isn't fatal - every caller also
 // surfaces the URL to the operator.
 export function openBrowser(url: string): void {
-  const cmd = process.platform === 'darwin' ? 'open'
-    : process.platform === 'win32' ? 'cmd'
-    : 'xdg-open'
-  const args = process.platform === 'win32' ? ['/c', 'start', '', url] : [url]
-  execFile(cmd, args, () => {})
+  if (process.platform === 'win32') {
+    // NOT `cmd /c start "" <url>`: cmd.exe parses an unquoted `&` in the URL as
+    // a command separator, so an OAuth authorize URL
+    // (.../authorize?client_id=...&redirect_uri=...) is chopped at the first `&`
+    // and the operator lands on a 400. PowerShell's Start-Process takes the URL
+    // as a single argument; single-quoting it (with '' escaping) stops
+    // PowerShell treating `&` as its call operator.
+    const psUrl = url.replace(/'/g, "''")
+    execFile('powershell', ['-NoProfile', '-Command', `Start-Process '${psUrl}'`], () => {})
+    return
+  }
+  const cmd = process.platform === 'darwin' ? 'open' : 'xdg-open'
+  execFile(cmd, [url], () => {})
 }

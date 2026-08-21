@@ -37,7 +37,12 @@ export async function configureAuth(
   }
 
   // No key provided → mint an OAuth token locally via the Claude CLI.
-  const output = execSync('claude setup-token', { stdio: 'pipe', timeout: 60000 }).toString()
+  // 5-minute timeout: `claude setup-token` opens a browser and blocks on the
+  // sign-in + approval. A first-time sign-in routinely takes longer than a
+  // minute, and at the old 60s cap execSync SIGKILLed the flow mid-approval, so
+  // the button "failed silently" with no token saved. Matches the device-login
+  // wait in lib/harness-auth-server.ts.
+  const output = execSync('claude setup-token', { stdio: 'pipe', timeout: 300000 }).toString()
 
   const tokenBlock = output.slice(output.indexOf('sk-ant-oat'))
   if (!tokenBlock.startsWith('sk-ant-oat')) {

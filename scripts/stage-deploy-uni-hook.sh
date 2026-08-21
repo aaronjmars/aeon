@@ -27,9 +27,15 @@ TPL="$ROOT/skills/deploy-uni-hook/templates"
 log() { echo "stage-deploy-uni-hook: $*"; }
 
 # 1) Foundry (forge/cast/anvil) -> ~/.foundry/bin, made resolvable in later steps.
+# The workflow's "Install Foundry (deploy-uni-hook)" step (foundry-rs/foundry-
+# toolchain) normally puts forge on PATH before this runs, so this fallback is a
+# no-op there. Kept for non-workflow callers. Do NOT silence stderr: the old
+# `curl … | bash >/dev/null 2>&1` hid the release-CDN rate-limit that left forge
+# missing, so a deploy run went green with no toolchain.
 if ! command -v forge >/dev/null 2>&1; then
-  curl -L https://foundry.paradigm.xyz | bash >/dev/null 2>&1 || true
-  "$HOME/.foundry/bin/foundryup" >/dev/null 2>&1 || true
+  log "forge not on PATH; falling back to the paradigm.xyz installer"
+  curl -L https://foundry.paradigm.xyz | bash || log "WARN foundry installer failed (rate-limited?)"
+  "$HOME/.foundry/bin/foundryup" || log "WARN foundryup failed"
 fi
 if [ -x "$HOME/.foundry/bin/forge" ]; then
   export PATH="$HOME/.foundry/bin:$PATH"
