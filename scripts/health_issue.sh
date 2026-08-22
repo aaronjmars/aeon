@@ -16,12 +16,26 @@ cmd="${1:-}"; shift || true
 case "$cmd" in
   ensure)
     skill="${1:?skill required}"; title="health: $skill"
-    n=$(gh issue list "${REPO_ARGS[@]}" --state open --search "\"$title\" in:title" \
-          --json number,title --jq "map(select(.title==\"$title\")) | .[0].number // empty" 2>/dev/null || true)
+    find_all() {
+      gh issue list "${REPO_ARGS[@]}" --state open --search "\"$title\" in:title" \
+        --json number,title --jq "map(select(.title==\"$title\")) | .[].number" 2>/dev/null || true
+    }
+    n=$(find_all | sort -n | head -1)
     if [ -z "$n" ]; then
       url=$(gh issue create "${REPO_ARGS[@]}" --title "$title" \
             --body "Health thread for \`$skill\` (hardening §7). The agent comments here on a regression; 👍/👎 this issue to set repair priority. Machine-managed.")
-      n=$(printf '%s' "$url" | grep -oE '[0-9]+$')
+      created_n=$(printf '%s' "$url" | grep -oE '[0-9]+$')
+      # Reconcile: the search above and this create are not atomic, so a concurrent
+      # `ensure` for the same skill can create its own issue in the gap — splitting
+      # the 👍/👎 repair-priority signal across two threads. Re-list and converge
+      # every caller on the lowest matching issue; if ours lost, close it as a
+      # duplicate so votes/comments only ever land on the canonical one.
+      n=$(find_all | sort -n | head -1)
+      if [ -z "$n" ]; then
+        n="$created_n"
+      elif [ -n "$created_n" ] && [ "$n" != "$created_n" ]; then
+        gh issue close "$created_n" "${REPO_ARGS[@]}" --reason duplicate --duplicate-of "$n" >/dev/null 2>&1 || true
+      fi
     fi
     echo "$n" ;;
   comment)
