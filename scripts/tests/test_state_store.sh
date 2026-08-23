@@ -70,7 +70,18 @@ FAKEGH
 # hand-copied) so the "before" side of this proof is the real historical bug,
 # not a guess at what it looked like.
 ORIG_S="$(mktemp)"
-git show upstream/main:scripts/state_store.sh > "$ORIG_S" 2>/dev/null
+# Resolve the pre-fix source from whatever base ref this checkout actually has:
+# a local clone has upstream/origin/main, but a shallow CI checkout (fetch-depth
+# 1) may have none. When it's reachable the before-side runs as a real proof;
+# when it isn't the before-side skips (the fixed-side assertion below is
+# self-contained and always gates the regression).
+: > "$ORIG_S"
+for _ref in upstream/main origin/main main; do
+  if git show "$_ref:scripts/state_store.sh" > "$ORIG_S" 2>/dev/null && [ -s "$ORIG_S" ]; then
+    break
+  fi
+  : > "$ORIG_S"
+done
 
 run_two_ensures() {
   local script="$1" stale_until="$2"
@@ -91,12 +102,16 @@ run_two_ensures() {
 
 # Both callers' first list lands in the stale window (both see "not found"),
 # exactly modeling two racing processes that both check before either creates.
-RESULT=$(run_two_ensures "$ORIG_S" 2)
-A_N=$(echo "$RESULT" | cut -d' ' -f1); B_N=$(echo "$RESULT" | cut -d' ' -f2)
-if [ -n "$A_N" ] && [ -n "$B_N" ] && [ "$A_N" != "$B_N" ]; then
-  pass "reproduced on the actual pre-fix code: two racing ensures fork the ledger (#$A_N vs #$B_N)"
+if [ -s "$ORIG_S" ]; then
+  RESULT=$(run_two_ensures "$ORIG_S" 2)
+  A_N=$(echo "$RESULT" | cut -d' ' -f1); B_N=$(echo "$RESULT" | cut -d' ' -f2)
+  if [ -n "$A_N" ] && [ -n "$B_N" ] && [ "$A_N" != "$B_N" ]; then
+    pass "reproduced on the actual pre-fix code: two racing ensures fork the ledger (#$A_N vs #$B_N)"
+  else
+    bad "race setup didn't reproduce the fork precondition on pre-fix code (got #$A_N / #$B_N) -- can't validate the fix meaningfully"
+  fi
 else
-  bad "race setup didn't reproduce the fork precondition on pre-fix code (got #$A_N / #$B_N) -- can't validate the fix meaningfully"
+  echo "SKIP - pre-fix source not reachable from this checkout (shallow CI); fixed-side assertion below still gates"
 fi
 
 # Identical race, through the FIXED _ensure (which re-lists after its own

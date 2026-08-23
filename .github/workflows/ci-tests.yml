@@ -85,8 +85,12 @@ jobs:
         run: bash scripts/tests/test_otel_span.sh
       - name: state reducer tests
         run: python3 scripts/tests/test_state_reduce.py
+      - name: state-store ensure-race tests
+        run: bash scripts/tests/test_state_store.sh
       - name: health triage tests
         run: python3 scripts/tests/test_health_triage.py
+      - name: health-issue ensure-race tests
+        run: bash scripts/tests/test_health_issue.sh
       - name: validate-config unit tests
         run: node --test scripts/validate-config.test.js
       - name: validate-config aeon.yml structural check

@@ -62,7 +62,18 @@ export -f gh
 FAKEGH
 
 ORIG_H="$(mktemp)"
-git show upstream/main:scripts/health_issue.sh > "$ORIG_H" 2>/dev/null
+# Resolve the pre-fix source from whatever base ref this checkout actually has:
+# a local clone has upstream/origin/main, but a shallow CI checkout (fetch-depth
+# 1) may have none. When it's reachable the before-side runs as a real proof;
+# when it isn't the before-side skips (the fixed-side assertion below is
+# self-contained and always gates the regression).
+: > "$ORIG_H"
+for _ref in upstream/main origin/main main; do
+  if git show "$_ref:scripts/health_issue.sh" > "$ORIG_H" 2>/dev/null && [ -s "$ORIG_H" ]; then
+    break
+  fi
+  : > "$ORIG_H"
+done
 
 run_two_ensures() {
   local script="$1" stale_until="$2"
@@ -76,12 +87,16 @@ run_two_ensures() {
   rm -f "$store" "$store.calls"
 }
 
-RESULT=$(run_two_ensures "$ORIG_H" 2)
-A_N=$(echo "$RESULT" | cut -d' ' -f1); B_N=$(echo "$RESULT" | cut -d' ' -f2)
-if [ -n "$A_N" ] && [ -n "$B_N" ] && [ "$A_N" != "$B_N" ]; then
-  pass "reproduced on the actual pre-fix code: two racing ensures fork the health thread (#$A_N vs #$B_N) -- votes would silently split"
+if [ -s "$ORIG_H" ]; then
+  RESULT=$(run_two_ensures "$ORIG_H" 2)
+  A_N=$(echo "$RESULT" | cut -d' ' -f1); B_N=$(echo "$RESULT" | cut -d' ' -f2)
+  if [ -n "$A_N" ] && [ -n "$B_N" ] && [ "$A_N" != "$B_N" ]; then
+    pass "reproduced on the actual pre-fix code: two racing ensures fork the health thread (#$A_N vs #$B_N) -- votes would silently split"
+  else
+    bad "race setup didn't reproduce the fork precondition on pre-fix code (got #$A_N / #$B_N) -- can't validate the fix meaningfully"
+  fi
 else
-  bad "race setup didn't reproduce the fork precondition on pre-fix code (got #$A_N / #$B_N) -- can't validate the fix meaningfully"
+  echo "SKIP - pre-fix source not reachable from this checkout (shallow CI); fixed-side assertion below still gates"
 fi
 
 RESULT2=$(run_two_ensures "$H" 2)
