@@ -44,6 +44,12 @@ echo "$RT" | grep -q "Read" && echo "$RT" | grep -q "WebFetch" \
   && echo "$RT" | grep -q "Bash(curl:\*)" && echo "$RT" | grep -q "Bash(./notify:\*)" \
   && pass "read-only tier keeps read/web/curl/notify" || bad "read-only tier keeps read/web/curl/notify"
 
+# allowed-tools: cd is granted in both tiers (a cd-prefixed multi-step Bash
+# call was silently denied in full otherwise, even when every real command
+# after the cd was itself allowlisted — see the comment in skill_mode.sh).
+echo "$WT" | grep -q "Bash(cd:\*)" && pass "write tier includes cd" || bad "write tier includes cd"
+echo "$RT" | grep -q "Bash(cd:\*)" && pass "read-only tier includes cd" || bad "read-only tier includes cd"
+
 # grok-args is DELETED and must stay deleted. It emitted grok `--allow` rules that
 # never gated anything (adapters/grok.sh runs --permission-mode bypassPermissions,
 # because a denied tool aborts grok's whole turn) plus grok's own

@@ -38,9 +38,61 @@ subst() {
 args=()
 for a in "$@"; do args+=("$(subst "$a")"); done
 
-# When auditing is off (AEON_AUDIT_LOG unset), stay a transparent exec passthrough
-# -- byte-identical to the original behaviour. When on, run curl in the foreground
-# (stdout/stderr/exit all pass through unchanged) so we can record the call after.
+# Substituted args still land in curl's OWN process argv (visible to any other
+# process on the box via `ps`/`/proc/<pid>/cmdline`) if handed to curl directly
+# -- defeating the whole point of substituting inside this script rather than in
+# the caller's command line. Route them through curl's -K/--config instead: a
+# config file (or, here, stdin) is the one form of curl invocation where secret
+# values never appear in argv at all.
+#
+# cfg_quote: -K's double-quoted strings only recognize \\, \", \t, \n, \r, \v as
+# real escapes -- backslash before anything else is dropped verbatim -- so a
+# literal backslash must become \\ before a value goes in quotes, or arbitrary
+# content is corrupted.
+cfg_quote() {
+  local v="$1"
+  v="${v//\\/\\\\}"
+  v="${v//\"/\\\"}"
+  printf '"%s"' "$v"
+}
+is_url() { case "$1" in http://*|https://*) return 0 ;; *) return 1 ;; esac; }
+
+# build_config: turn a curl-style argv array into -K config-file text. Every
+# real call site in this repo is one of: a bare target URL, a boolean flag
+# (-s/-fsS/-sS), or a flag with a value (-H/-X/-o/-w/-m/--max-time) -- including
+# `-d @file` (curl itself interprets the leading @, unchanged by going through
+# -K). No flag in this codebase takes a URL-shaped value, so a bare http(s)://
+# token is always the target url, never mistaken for another flag's argument.
+build_config() {
+  local -a a=("$@")
+  local i=0 n=${#a[@]}
+  while [ "$i" -lt "$n" ]; do
+    local tok="${a[$i]}"
+    if is_url "$tok"; then
+      printf 'url = %s\n' "$(cfg_quote "$tok")"
+      i=$((i + 1))
+    elif [[ "$tok" == -* ]]; then
+      local next=$((i + 1))
+      if [ "$next" -lt "$n" ] && [[ "${a[$next]}" != -* ]] && ! is_url "${a[$next]}"; then
+        printf '%s %s\n' "$tok" "$(cfg_quote "${a[$next]}")"
+        i=$((i + 2))
+      else
+        printf '%s\n' "$tok"
+        i=$((i + 1))
+      fi
+    else
+      echo "secretcurl: cannot classify argument '$tok' (not a flag, not a URL) -- refusing to guess" >&2
+      return 1
+    fi
+  done
+}
+
+CONFIG="$(build_config "${args[@]}")" || exit 1
+
+# When auditing is off (AEON_AUDIT_LOG unset), stay a transparent passthrough --
+# byte-identical output/exit behaviour to a plain curl call. When on, run curl in
+# the foreground (stdout/stderr/exit all pass through unchanged) so we can record
+# the call after.
 if [ -n "${AEON_AUDIT_LOG:-}" ]; then
   # Credential placeholders that were substituted (NAMES only) and the target URL,
   # both read from the ORIGINAL placeholder args so no secret value is handled here.
@@ -53,7 +105,8 @@ if [ -n "${AEON_AUDIT_LOG:-}" ]; then
   _URL=""
   for a in "$@"; do case "$a" in http://*|https://*) _URL="$a"; break ;; esac; done
   set +e
-  curl "${args[@]}"; _RC=$?
+  printf '%s' "$CONFIG" | curl -K -
+  _RC=$?
   set -e
   _HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   for _c in "scripts/audit.sh" "$_HERE/audit.sh" "$_HERE/scripts/audit.sh"; do
@@ -61,4 +114,4 @@ if [ -n "${AEON_AUDIT_LOG:-}" ]; then
   done
   exit "$_RC"
 fi
-exec curl "${args[@]}"
+printf '%s' "$CONFIG" | curl -K -

@@ -126,7 +126,9 @@ EVENTS="$RH_TMPDIR/codex-events.jsonl"
 printf '%s' "$PROMPT" | codex "${ARGS[@]}" ${MCP_ARGS[@]+"${MCP_ARGS[@]}"} - > "$EVENTS"
 rc=$?
 if [ $rc -ne 0 ]; then
-  echo "codex exited $rc: $(tail -c 300 "$EVENTS" | tr '\n' ' ')" >&2
+  # 300 chars silently discarded the actual error whenever it was longer
+  # than that; widened to match claude.sh's own harness-adapter precedent.
+  echo "codex exited $rc: $(tail -c 4000 "$EVENTS" | tr '\n' ' ')" >&2
   exit $rc
 fi
 

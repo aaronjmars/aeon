@@ -743,6 +743,14 @@ jobs:
           HARNESS_ERR=$(mktemp)
           if ! CLAUDE_OUTPUT=$(echo "$PROMPT" | bash "$RH" "$HARNESS" \
             "${RH_MODEL_ARGS[@]}" "${RH_ARGS[@]}" 2>"$HARNESS_ERR"); then
+            # Full diagnostic to the step log unconditionally (matches
+            # aeon.yml's Run step) before the short summary — a
+            # tail-c-400-only view previously dropped the actual error
+            # whenever the harness's JSON result envelope put the
+            # diagnostic fields (is_error/api_error_status/result) before
+            # the trailing usage/modelUsage/uuid boilerplate, which is the
+            # common case.
+            tail -c 4000 "$HARNESS_ERR" >&2 || true
             echo "::error::$HARNESS harness failed: $(tail -c 400 "$HARNESS_ERR" | tr '\n' ' ')"
             exit 1
           fi

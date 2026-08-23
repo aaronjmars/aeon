@@ -105,7 +105,9 @@ PROMPT="$BASE"
 run_once "$PROMPT"
 rc=$?
 if [ $rc -ne 0 ] && [ -z "$RESULT" ]; then
-  echo "vibe exited $rc: $(tail -c 300 "$RH_TMPDIR/vibe.err" | tr '\n' ' ')" >&2
+  # 300 chars silently discarded the actual error whenever it was longer
+  # than that; widened to match claude.sh's own harness-adapter precedent.
+  echo "vibe exited $rc: $(tail -c 4000 "$RH_TMPDIR/vibe.err" | tr '\n' ' ')" >&2
   exit $rc
 fi
 if [ "${BADSHAPE:-0}" = "1" ]; then

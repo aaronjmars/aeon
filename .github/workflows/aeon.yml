@@ -102,7 +102,28 @@ env:
   FLEET_TOKEN:    ${{ secrets.FLEET_TOKEN }}
 
 concurrency:
-  group: aeon-${{ inputs.skill || github.event.action || github.run_id }}
+  # Keyed by skill name alone, `var` was ignored entirely: dispatching the
+  # same skill at two different explicit targets (e.g. vuln-scanner against
+  # two different owner/repo values, or digest against two different topics)
+  # collided into the same group. With cancel-in-progress:false, GitHub only
+  # keeps ONE run queued behind the currently-active one at a time -- so a
+  # burst of dispatches to the same skill with different targets silently
+  # cancelled every run except the first and whichever landed last. The ones
+  # in between never executed at all, with no error surfaced anywhere.
+  # Live-observed: 10 vuln-scanner dispatches, 8 silently cancelled, only 2
+  # ever ran. Appending inputs.var to the group key when it's set fixes that
+  # without changing behavior for the common case (var empty/unset):
+  # same-skill scheduled/manual runs with no target still serialize exactly
+  # as before, preserving the original guard against a genuine duplicate run.
+  #
+  # Known remaining gap, not fixed by this change: a skill invoked
+  # repeatedly with an EMPTY var that auto-selects a different target
+  # internally on each run (e.g. vuln-scanner's "auto-select a trending
+  # repo" mode) still collides, since the workflow trigger layer has no
+  # visibility into what the skill will pick once it's running -- that
+  # would need a client-side distinguishing value (e.g. a per-dispatch
+  # nonce), a separate, narrower change.
+  group: aeon-${{ inputs.skill || github.event.action || github.run_id }}${{ inputs.var && format('-{0}', inputs.var) || '' }}
   cancel-in-progress: false
 
 jobs:
@@ -901,6 +922,16 @@ jobs:
               ); then
                 USED_GATEWAY="$cand"; CLAUDE_OK=1; break
               fi
+              # Full diagnostic goes to the step log unconditionally (matches the
+              # non-claude harness path below, which already does this at its
+              # `tail -c 4000 ... >&2` line) — the ::warning:: summary line stays
+              # short for a quick scan, but a truncated summary was previously the
+              # ONLY trace of a per-attempt failure, silently discarding the real
+              # cause whenever it exceeded ~160 chars (Claude Code's JSON result
+              # envelope puts is_error/api_error_status/result near the front and
+              # usage/modelUsage/uuid boilerplate at the end, so a tail-only view
+              # keeps the boilerplate and drops the actual error).
+              tail -c 4000 /tmp/harness-stderr.txt >&2 || true
               echo "::warning::provider '$cand' failed — $(tail -c 160 /tmp/harness-stderr.txt 2>/dev/null | tr '\n' ' ')"
             done
             if [ "$CLAUDE_OK" != "1" ]; then

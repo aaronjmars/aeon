@@ -162,7 +162,7 @@ Per-skill execution state (`memory/cron-state.json` — status, success rate, qu
 ## LLM Gateways
 
 <p align="center">
-  <img src="../docs/assets/providers.jpg" alt="Eight AI providers supported: Claude subscription, Anthropic API, OpenRouter, Bankr, UsePod, Venice, Surplus, Grok" width="640" />
+  <img src="../docs/assets/providers.jpg" alt="7 providers supported: Claude subscription, Anthropic API, OpenRouter, Bankr, UsePod, Venice, Surplus" width="640" />
 </p>
 
 Aeon can power Claude Code **eight** ways. Two are **direct** to Anthropic; the other six route through a **gateway**. Add a credential in the dashboard's Authenticate modal and it's saved as the secret below. (Separately, the [Grok Build harness](harnesses.md) runs the `grok` CLI instead of Claude Code — that's a different axis from the gateways here.)

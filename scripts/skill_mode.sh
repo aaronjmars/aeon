@@ -36,6 +36,20 @@ BASE_TOOLS="Read,Glob,Grep,WebFetch,WebSearch"
 BASE_TOOLS="$BASE_TOOLS,Bash(curl:*),Bash(jq:*)"
 BASE_TOOLS="$BASE_TOOLS,Bash(./notify:*),Bash(./notify-jsonrender:*),Bash(./secretcurl:*)"
 BASE_TOOLS="$BASE_TOOLS,Bash(mkdir:*),Bash(ls:*),Bash(cat:*),Bash(chmod:*)"
+# `cd` — several skills' own docs (skills/feature/SKILL.md, skills/changelog/
+# SKILL.md) explicitly instruct agents to run `cd <dir>` as its OWN standalone
+# Bash call, then each subsequent command as a separate call — the documented
+# workaround for the sandbox's unconditional denial of `&&`/`||`/`;`/`|`
+# command-chaining. With no grant here, that officially-recommended pattern
+# itself fails: a standalone `cd` call has no more permission than a
+# multi-line call that happens to start with one. A multi-line/compound Bash
+# call is denied unless every sub-command in it is allowlisted, so `cd <dir>\n<real work>`
+# denies the whole call, real work included, even when every command after
+# the cd is itself allowlisted — live-observed on defi-overview/
+# narrative-tracker (permission_denials on a cd-prefixed multi-line call).
+# cd only changes the invoking shell's own cwd — no file/network effect of
+# its own, the same risk class as ls/cat/mkdir already granted above.
+BASE_TOOLS="$BASE_TOOLS,Bash(cd:*)"
 BASE_TOOLS="$BASE_TOOLS,Bash(date:*),Bash(echo:*),Bash(node:*),Bash(npm:*),Bash(npx:*)"
 BASE_TOOLS="$BASE_TOOLS,Bash(head:*),Bash(tail:*),Bash(wc:*),Bash(sort:*),Bash(grep:*)"
 # The run-audit wrapper. Five skills (skill-health, heartbeat, cost-report,
