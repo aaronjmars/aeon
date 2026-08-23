@@ -102,7 +102,12 @@ run_two_ensures() {
 
 # Both callers' first list lands in the stale window (both see "not found"),
 # exactly modeling two racing processes that both check before either creates.
-if [ -s "$ORIG_S" ]; then
+# Only a source that actually DIFFERS from the live (fixed) script can prove the
+# "before" fork. On a pull_request the resolved base ref is the real pre-fix
+# code; on a push-to-main run origin/main already points at the merged fix (so
+# the candidate == the fixed script), and a shallow checkout has no candidate at
+# all -- both skip rather than assert a fork the fixed code no longer produces.
+if [ -s "$ORIG_S" ] && ! cmp -s "$ORIG_S" "$S"; then
   RESULT=$(run_two_ensures "$ORIG_S" 2)
   A_N=$(echo "$RESULT" | cut -d' ' -f1); B_N=$(echo "$RESULT" | cut -d' ' -f2)
   if [ -n "$A_N" ] && [ -n "$B_N" ] && [ "$A_N" != "$B_N" ]; then
@@ -111,7 +116,7 @@ if [ -s "$ORIG_S" ]; then
     bad "race setup didn't reproduce the fork precondition on pre-fix code (got #$A_N / #$B_N) -- can't validate the fix meaningfully"
   fi
 else
-  echo "SKIP - pre-fix source not reachable from this checkout (shallow CI); fixed-side assertion below still gates"
+  echo "SKIP - no distinct pre-fix source (shallow CI, or a push-on-main run whose base ref already has the fix); fixed-side assertion below still gates"
 fi
 
 # Identical race, through the FIXED _ensure (which re-lists after its own

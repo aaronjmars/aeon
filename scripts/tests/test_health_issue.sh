@@ -87,7 +87,12 @@ run_two_ensures() {
   rm -f "$store" "$store.calls"
 }
 
-if [ -s "$ORIG_H" ]; then
+# Only a source that actually DIFFERS from the live (fixed) script can prove the
+# "before" fork. On a pull_request the resolved base ref is the real pre-fix
+# code; on a push-to-main run origin/main already points at the merged fix (so
+# the candidate == the fixed script), and a shallow checkout has no candidate at
+# all -- both skip rather than assert a fork the fixed code no longer produces.
+if [ -s "$ORIG_H" ] && ! cmp -s "$ORIG_H" "$H"; then
   RESULT=$(run_two_ensures "$ORIG_H" 2)
   A_N=$(echo "$RESULT" | cut -d' ' -f1); B_N=$(echo "$RESULT" | cut -d' ' -f2)
   if [ -n "$A_N" ] && [ -n "$B_N" ] && [ "$A_N" != "$B_N" ]; then
@@ -96,7 +101,7 @@ if [ -s "$ORIG_H" ]; then
     bad "race setup didn't reproduce the fork precondition on pre-fix code (got #$A_N / #$B_N) -- can't validate the fix meaningfully"
   fi
 else
-  echo "SKIP - pre-fix source not reachable from this checkout (shallow CI); fixed-side assertion below still gates"
+  echo "SKIP - no distinct pre-fix source (shallow CI, or a push-on-main run whose base ref already has the fix); fixed-side assertion below still gates"
 fi
 
 RESULT2=$(run_two_ensures "$H" 2)
