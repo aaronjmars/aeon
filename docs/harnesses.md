@@ -1,6 +1,6 @@
 ---
 title: Harnesses — advanced behavior
-description: Deep reference for Aeon's harness axis (Claude Code, Grok Build, and the four run-harness harnesses) — token accounting, capability-mode mapping, MCP and grok's folder-trust gate, per-skill grok knobs, and per-surface harness selection.
+description: Deep reference for Aeon's harness axis (the seven agent CLIs behind one run-harness contract) — token accounting, capability-mode mapping, MCP and grok's folder-trust gate, per-skill grok knobs, and per-surface harness selection.
 ---
 
 # Harnesses — advanced behavior
@@ -23,13 +23,13 @@ the same Claude-Code-shaped `{result, usage, session_id}` contract that
 `scripts/run-grok.sh` provides, so everything downstream (scoring, token
 accounting, memory, notifications) is unchanged.
 
-**fx is the odd one out on auth** — see the table below, but the short version
-is it has no OpenRouter fallback at all, unlike the other four. Skip it unless
-you have a Vercel AI Gateway key or are already inside Vercel's own CI.
+**fx** differs on auth — see the table below: it has no OpenRouter fallback, so
+it runs on a Vercel AI Gateway key (or `VERCEL_OIDC_TOKEN` inside Vercel's own
+CI) rather than the shared `OPENROUTER_API_KEY`.
 
 Each one runs on its own provider login (see **Native auth** below); a single
-shared **`OPENROUTER_API_KEY`** is the zero-setup alternative that makes all four
-work at once. Their model picker offers OpenRouter ids rather than the
+shared **`OPENROUTER_API_KEY`** is the zero-setup alternative for codex, pi,
+vibe, and kimi at once. Their model picker offers OpenRouter ids rather than the
 `claude-*`/`grok-*` ids, and the model you pick is what actually runs. Each of
 these harnesses carries its own curated list (`CODEX_MODELS` /
 `VIBE_MODELS` / `PI_MODELS` / `KIMI_MODELS`): **codex**

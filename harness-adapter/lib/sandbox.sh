@@ -9,7 +9,7 @@
 # usable (harnesses need to write their own state under $HOME and $TMPDIR, and
 # the network stays open — read-only is about the repo, not egress).
 # This mirrors aeon's semantic: "a read-only skill physically cannot mutate the
-# repo" — and makes it mean the same thing on all six harnesses.
+# repo" — and makes it mean the same thing on all seven harnesses.
 
 sandbox_prefix() {
   # sandbox_prefix TMPDIR [EXPANDED_MCP] -> prints prefix argv tokens (one per

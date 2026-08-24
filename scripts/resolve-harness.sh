@@ -5,7 +5,7 @@
 # an agent resolves identically. It is the companion of scripts/install-harness.sh
 # (which stages the CLI these outputs describe) and of harness-adapter/run-harness
 # (which consumes MODEL_ARG). Splitting the decision from the workflow is what lets
-# messages.yml support all six harnesses instead of only claude/grok — a gap that
+# messages.yml support all seven harnesses instead of only claude/grok — a gap that
 # existed purely because this ~100 lines lived inside one workflow step.
 #
 # Usage:
@@ -57,7 +57,7 @@ else
 fi
 
 # Allowlist. Upstream had a claude/grok binary, so ANY other value was silently
-# rewritten to claude. These six are the ones measured end to end on a real runner.
+# rewritten to claude. These seven are the ones wired end to end on a real runner.
 # Deliberately NOT here, each for a measured reason:
 #   opencode — its .result carried the agent's narration instead of the
 #              deliverable (fixed in the adapter, but it still loops to the

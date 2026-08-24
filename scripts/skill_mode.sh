@@ -120,7 +120,7 @@ write_tools() { echo "$BASE_TOOLS,$WRITE_TOOLS"; }
 #   * grok's own `--sandbox read-only` is silently ignored on grok 0.2.101 (writes
 #     still land) and nest-conflicts with the wrapper sandbox.
 #
-# So read-only on grok — as on all six harnesses — is enforced by the dispatcher's
+# So read-only on grok — as on all seven harnesses — is enforced by the dispatcher's
 # OS sandbox (harness-adapter/lib/sandbox.sh: bwrap / sandbox-exec write-locks the
 # workspace) plus the workflow's post-run revert. Nothing about that is expressible
 # in this file, which is why the mapping is gone instead of rewritten.

@@ -6,7 +6,7 @@
 #   • OTEL_EXPORTER_OTLP_ENDPOINT is set (the same env the shim exports)
 #   • the harness is NOT claude — Claude Code emits its own OTEL spans natively,
 #     so tracing it here would double-count; this fills the gap for the other
-#     five harnesses (grok/codex/pi/vibe/kimi), which emit nothing on their own
+#     six harnesses (grok/codex/pi/vibe/kimi/fx), which emit nothing on their own
 #   • `otel-cli` is on PATH (the shell OTLP emitter; staged by
 #     scripts/install-otel-cli.sh in CI) and `jq` is available to read usage
 #
