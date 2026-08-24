@@ -1378,19 +1378,34 @@ jobs:
             AEON_OTEL_COMPONENT=scorer source "${GITHUB_WORKSPACE}/scripts/langfuse-otel.sh"
           fi
 
-          # Read skill output for analysis. Sample head + tail so the judge sees the
-          # conclusion of long outputs, not just the intro - a flat 3KB head-truncate
-          # graded only the opening and biased the score against skills that build to
-          # their payoff (articles, digests, research compendia routinely exceed a few
-          # KB). `iconv -c` drops any partial UTF-8 char left at a byte cut.
+          # Grade the artifact the skill actually SENT, not its closing summary.
+          # For a notify-first skill the deliverable is the ./notify card, captured
+          # to output/.chains/<skill>.md (from .pending-<skill>.md) by the "Capture
+          # skill output" step above. The harness's final .result message is often
+          # just a terse "sent the card, 13 PRs, 769 runs" recap - which strips every
+          # figure of its labeled source and reliably draws an unverifiable_claim cap
+          # (kpi-daily, github-trending). Prefer the captured card; fall back to
+          # .result. Non-notify skills are unaffected: their chain file is a copy of
+          # /tmp/skill-result.txt (see the capture step's elif), so SRC is identical.
+          SRC=/tmp/skill-result.txt
+          CHAIN="output/.chains/${SKILL}.md"
+          if [ -f "$CHAIN" ] && [ -s "$CHAIN" ] && [ "$(head -n1 "$CHAIN")" != "_No output captured._" ]; then
+            SRC="$CHAIN"
+          fi
+
+          # Sample head + tail so the judge sees the conclusion of long outputs, not
+          # just the intro - a flat 3KB head-truncate graded only the opening and
+          # biased the score against skills that build to their payoff (articles,
+          # digests, research compendia routinely exceed a few KB). `iconv -c` drops
+          # any partial UTF-8 char left at a byte cut.
           OUTPUT=""
-          if [ -f /tmp/skill-result.txt ] && [ -s /tmp/skill-result.txt ]; then
-            BYTES=$(wc -c < /tmp/skill-result.txt)
+          if [ -f "$SRC" ] && [ -s "$SRC" ]; then
+            BYTES=$(wc -c < "$SRC")
             if [ "$BYTES" -le 14000 ]; then
-              OUTPUT=$(iconv -f UTF-8 -t UTF-8 -c < /tmp/skill-result.txt)
+              OUTPUT=$(iconv -f UTF-8 -t UTF-8 -c < "$SRC")
             else
-              OHEAD=$(head -c 10000 /tmp/skill-result.txt | iconv -f UTF-8 -t UTF-8 -c)
-              OTAIL=$(tail -c 4000 /tmp/skill-result.txt | iconv -f UTF-8 -t UTF-8 -c)
+              OHEAD=$(head -c 10000 "$SRC" | iconv -f UTF-8 -t UTF-8 -c)
+              OTAIL=$(tail -c 4000 "$SRC" | iconv -f UTF-8 -t UTF-8 -c)
               OUTPUT=$(printf '%s\n\n[... middle truncated ...]\n\n%s' "$OHEAD" "$OTAIL")
             fi
           fi
