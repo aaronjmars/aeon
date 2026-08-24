@@ -20,6 +20,7 @@ These are the projects we know of that run Aeon, extend it, or integrate with th
 | <img src="https://pbs.twimg.com/profile_images/2056143519824166912/W2VGsyMX_400x400.jpg" width="36" height="36" alt="aeonbook logo"> | aeonbook | [@aeonbook_](https://x.com/aeonbook_) |
 | <img src="https://pbs.twimg.com/profile_images/2070127551788527616/gL60uVZj_400x400.jpg" width="36" height="36" alt="AeThree logo"> | AeThree | [@aethree_xyz](https://x.com/aethree_xyz) · [aethree.xyz](https://www.aethree.xyz) |
 | <img src="https://pbs.twimg.com/profile_images/2002059513524789249/mzJQc1tX_400x400.png" width="36" height="36" alt="AgentLink logo"> | AgentLink | [@agentlinkhq](https://x.com/agentlinkhq) · [agentlink.id](https://agentlink.id) |
+| <img src="assets/agentos.png" width="36" height="36" alt="AgentOS logo"> | AgentOS<br><sub>Local-First Agentic Trading AI Agent, Token-Efficient by Design</sub> | [@useAgentOS](https://x.com/useAgentOS) |
 | <img src="https://pbs.twimg.com/profile_images/2021447689398030336/eY9wm4_X_400x400.png" width="36" height="36" alt="AI2Human logo"> | AI2Human | [@ai2humannetwork](https://x.com/ai2humannetwork) · [ai2human.io](https://ai2human.io) |
 | <img src="https://pbs.twimg.com/profile_images/2030575047644188673/vaJqbpck_400x400.jpg" width="36" height="36" alt="Amper logo"> | Amper | [@helloamper](https://x.com/helloamper) |
 | <img src="https://pbs.twimg.com/profile_images/2055896281751633920/NeawiT3G_400x400.png" width="36" height="36" alt="AntFleet logo"> | AntFleet | [@AntFleetDev](https://x.com/AntFleetDev) |
