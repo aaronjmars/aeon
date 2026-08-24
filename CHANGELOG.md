@@ -11,6 +11,24 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Added
 
+- **`fx` (Vercel) added as a 7th run-harness.** Vercel's native Zig coding-agent
+  CLI joins claude/grok/codex/pi/vibe/kimi behind the same `run-harness` contract,
+  verified against a locally-built binary (missing-credential path, `mcpServers` to
+  `mcp.json` translation, second-call usage reporting via `fx session`). It is the
+  one harness with no OpenRouter fallback: it needs a Vercel AI Gateway key
+  (`AI_GATEWAY_API_KEY`) or `VERCEL_OIDC_TOKEN`. See `docs/harnesses.md`. (#941)
+- **New `skill-article` skill (Basics).** Turns any skill in the instance into a
+  publish-ready launch article: proof-stat headline, one contrarian thesis,
+  mechanics, war stories mined from real `memory/logs/` run history, a mental-model
+  reframe, and the full `SKILL.md` embedded verbatim. Optional `--banner` renders a
+  16:9 title card through the Higgsfield MCP. Catalog is now 76 skills. (#945)
+- **Dashboard auto-allowlists MCP secret names into the run workflows.** A connected
+  key-based MCP server's secret is now injected into the generated workflow env, so
+  headless runs can actually see it instead of silently missing the credential.
+  (#931)
+- **Opt-in egress-audit hardening (`iron-proxy`).** A new composite action captures
+  and reports a run's outbound network calls behind an audit proxy, off by default.
+  (#947)
 - **Codex plugin parity + a repo-root `llms.txt`.** The `/aeon` operator skill now
   installs on Codex too (`plugin/.codex-plugin/plugin.json` +
   `.agents/plugins/marketplace.json`: `codex plugin marketplace add aeonfun/aeon`
@@ -230,6 +248,11 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Changed
 
+- **`memory-flush` mechanical bookkeeping moved out of the LLM.** The prep work is
+  now a deterministic, watermark-tracked script (`memory_prep.py` +
+  `memory-flush-state.json`) so the model only does the judgment part. (#938)
+- **README notes the operator console installs as a Codex plugin too.** (#927)
+- **Ecosystem: added AgentOS** to `docs/ECOSYSTEM.md`. (#946)
 - **GitHub token model corrected to a single classic PAT.** `GH_GLOBAL` is now
   documented as one classic PAT with `repo` + `workflow` scopes (was fine-grained
   Contents/PRs/Issues); `GH_READ_PAT` / `GH_SECRETS_PAT` are reframed as legacy and
@@ -327,6 +350,23 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Fixed
 
+- **`fx` now shows up in the dashboard harness picker.** (#943)
+- **Dashboard locks `aeon.yml` read-modify-write.** Concurrent config edits no
+  longer race and clobber each other. (#944)
+- **secretcurl no longer leaks its substituted secret into curl's own argv**, where
+  another process could read it via `ps` or `/proc`. (#935)
+- **Telegram webhook dedupes redelivered updates by `update_id`** before dispatch,
+  so a slow response no longer re-dispatches the same update. (#937)
+- **Racing `state_store` / `health_issue` "ensure" calls converge** instead of
+  creating duplicate GitHub issues for the same title. (#936)
+- **Skill-runner concurrency group scoped by target too**, so dispatching the same
+  skill at two different vars no longer collides. (#934)
+- **`Bash(cd:*)` granted again in skill-mode**, restoring the documented
+  one-cd-per-call workaround for the sandbox's compound-command denial. (#933)
+- **Failed-dispatch diagnostics no longer truncated to the front of the output**, so
+  the actual error fields survive logging. (#932)
+- **Windows Connect/OAuth fix batch:** OAuth truncation, a setup-token timeout,
+  config line-folding, Foundry install, and mainnet-flag masking. (#930)
 - **Reactive `success_rate` conditions now actually fire.** The scheduler's inline
   evaluator only handled `consecutive_failures` and `last_status`; a trigger written
   as `when: "success_rate < 0.5"` matched no branch and was silently dropped.
@@ -652,6 +692,10 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Maintenance
 
+- CI/test/asset noise: HOL AI Plugin Scanner workflow added then dropped same-day
+  (#928, #929); unused `docs/assets` images removed and provider/free-aeon docs
+  images refreshed (#939, #940); state-store/health-issue test hardening (#942);
+  prior in-repo docs-sync of PRs #890-#925 (#926).
 - Dead-code sweep from a `ponytail-audit` pass: verified cuts across the CLI,
   dashboard, mcp-server tracing, and scripts, net -444 lines, no behavior change.
   (#886)
