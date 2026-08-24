@@ -596,7 +596,7 @@ jobs:
           # dashboard).
           # Consumed by the MCP/requires loops below, then unset before Claude runs.
           ALL_SECRETS: >-
-            {"ADMANAGE_API_KEY":${{ toJSON(secrets.ADMANAGE_API_KEY) }},"AI_GATEWAY_API_KEY":${{ toJSON(secrets.AI_GATEWAY_API_KEY) }},"ALCHEMY_API_KEY":${{ toJSON(secrets.ALCHEMY_API_KEY) }},"ANTHROPIC_API_KEY":${{ toJSON(secrets.ANTHROPIC_API_KEY) }},"ANTHROPIC_OAUTH_TOKEN":${{ toJSON(secrets.ANTHROPIC_OAUTH_TOKEN) }},"BANKR_API_KEY":${{ toJSON(secrets.BANKR_API_KEY) }},"BANKR_LLM_KEY":${{ toJSON(secrets.BANKR_LLM_KEY) }},"BASESCAN_API_KEY":${{ toJSON(secrets.BASESCAN_API_KEY) }},"BASE_RPC_URL":${{ toJSON(secrets.BASE_RPC_URL) }},"CLAUDE_CODE_OAUTH_TOKEN":${{ toJSON(secrets.CLAUDE_CODE_OAUTH_TOKEN) }},"CODEX_AUTH":${{ toJSON(secrets.CODEX_AUTH) }},"COINGECKO_API_KEY":${{ toJSON(secrets.COINGECKO_API_KEY) }},"DISCORD_WEBHOOK_URL":${{ toJSON(secrets.DISCORD_WEBHOOK_URL) }},"ETHERSCAN_API_KEY":${{ toJSON(secrets.ETHERSCAN_API_KEY) }},"FLEET_ENDPOINT":${{ toJSON(secrets.FLEET_ENDPOINT) }},"FLEET_TOKEN":${{ toJSON(secrets.FLEET_TOKEN) }},"GH_GLOBAL":${{ toJSON(secrets.GH_GLOBAL) }},"GH_READ_PAT":${{ toJSON(secrets.GH_READ_PAT) }},"GH_SECRETS_PAT":${{ toJSON(secrets.GH_SECRETS_PAT) }},"GITHUB_TOKEN":${{ toJSON(secrets.GITHUB_TOKEN) }},"GROK_CREDENTIALS":${{ toJSON(secrets.GROK_CREDENTIALS) }},"HOOK_DEPLOYER_PRIVATE_KEY":${{ toJSON(secrets.HOOK_DEPLOYER_PRIVATE_KEY) }},"KIMI_AUTH":${{ toJSON(secrets.KIMI_AUTH) }},"LANGFUSE_PUBLIC_KEY":${{ toJSON(secrets.LANGFUSE_PUBLIC_KEY) }},"LANGFUSE_SECRET_KEY":${{ toJSON(secrets.LANGFUSE_SECRET_KEY) }},"MISTRAL_API_KEY":${{ toJSON(secrets.MISTRAL_API_KEY) }},"MOONSHOT_API_KEY":${{ toJSON(secrets.MOONSHOT_API_KEY) }},"NOTIFY_EMAIL_TO":${{ toJSON(secrets.NOTIFY_EMAIL_TO) }},"OPENAI_API_KEY":${{ toJSON(secrets.OPENAI_API_KEY) }},"OPENROUTER_API_KEY":${{ toJSON(secrets.OPENROUTER_API_KEY) }},"PAGESPEED_API_KEY":${{ toJSON(secrets.PAGESPEED_API_KEY) }},"REPLICATE_API_TOKEN":${{ toJSON(secrets.REPLICATE_API_TOKEN) }},"RESEND_API_KEY":${{ toJSON(secrets.RESEND_API_KEY) }},"RESEND_FROM":${{ toJSON(secrets.RESEND_FROM) }},"RESEND_REPLY_TO":${{ toJSON(secrets.RESEND_REPLY_TO) }},"SLACK_WEBHOOK_URL":${{ toJSON(secrets.SLACK_WEBHOOK_URL) }},"SURPLUS_API_KEY":${{ toJSON(secrets.SURPLUS_API_KEY) }},"TELEGRAM_BOT_TOKEN":${{ toJSON(secrets.TELEGRAM_BOT_TOKEN) }},"TELEGRAM_CHAT_ID":${{ toJSON(secrets.TELEGRAM_CHAT_ID) }},"USEPOD_TOKEN":${{ toJSON(secrets.USEPOD_TOKEN) }},"VENICE_API_KEY":${{ toJSON(secrets.VENICE_API_KEY) }},"VERCEL_OIDC_TOKEN":${{ toJSON(secrets.VERCEL_OIDC_TOKEN) }},"VERCEL_TOKEN":${{ toJSON(secrets.VERCEL_TOKEN) }},"XAI_API_KEY":${{ toJSON(secrets.XAI_API_KEY) }},"YDC_API_KEY":${{ toJSON(secrets.YDC_API_KEY) }}}
+            {"ADMANAGE_API_KEY":${{ toJSON(secrets.ADMANAGE_API_KEY) }},"AI_GATEWAY_API_KEY":${{ toJSON(secrets.AI_GATEWAY_API_KEY) }},"ALCHEMY_API_KEY":${{ toJSON(secrets.ALCHEMY_API_KEY) }},"ANTHROPIC_API_KEY":${{ toJSON(secrets.ANTHROPIC_API_KEY) }},"ANTHROPIC_OAUTH_TOKEN":${{ toJSON(secrets.ANTHROPIC_OAUTH_TOKEN) }},"BANKR_API_KEY":${{ toJSON(secrets.BANKR_API_KEY) }},"BANKR_LLM_KEY":${{ toJSON(secrets.BANKR_LLM_KEY) }},"BASESCAN_API_KEY":${{ toJSON(secrets.BASESCAN_API_KEY) }},"BASE_RPC_URL":${{ toJSON(secrets.BASE_RPC_URL) }},"CLAUDE_CODE_OAUTH_TOKEN":${{ toJSON(secrets.CLAUDE_CODE_OAUTH_TOKEN) }},"CODEX_AUTH":${{ toJSON(secrets.CODEX_AUTH) }},"COINGECKO_API_KEY":${{ toJSON(secrets.COINGECKO_API_KEY) }},"ETHERSCAN_API_KEY":${{ toJSON(secrets.ETHERSCAN_API_KEY) }},"FLEET_ENDPOINT":${{ toJSON(secrets.FLEET_ENDPOINT) }},"FLEET_TOKEN":${{ toJSON(secrets.FLEET_TOKEN) }},"GH_GLOBAL":${{ toJSON(secrets.GH_GLOBAL) }},"GH_READ_PAT":${{ toJSON(secrets.GH_READ_PAT) }},"GH_SECRETS_PAT":${{ toJSON(secrets.GH_SECRETS_PAT) }},"GITHUB_TOKEN":${{ toJSON(secrets.GITHUB_TOKEN) }},"GROK_CREDENTIALS":${{ toJSON(secrets.GROK_CREDENTIALS) }},"HOOK_DEPLOYER_PRIVATE_KEY":${{ toJSON(secrets.HOOK_DEPLOYER_PRIVATE_KEY) }},"KIMI_AUTH":${{ toJSON(secrets.KIMI_AUTH) }},"LANGFUSE_PUBLIC_KEY":${{ toJSON(secrets.LANGFUSE_PUBLIC_KEY) }},"LANGFUSE_SECRET_KEY":${{ toJSON(secrets.LANGFUSE_SECRET_KEY) }},"MISTRAL_API_KEY":${{ toJSON(secrets.MISTRAL_API_KEY) }},"MOONSHOT_API_KEY":${{ toJSON(secrets.MOONSHOT_API_KEY) }},"OPENAI_API_KEY":${{ toJSON(secrets.OPENAI_API_KEY) }},"OPENROUTER_API_KEY":${{ toJSON(secrets.OPENROUTER_API_KEY) }},"PAGESPEED_API_KEY":${{ toJSON(secrets.PAGESPEED_API_KEY) }},"REPLICATE_API_TOKEN":${{ toJSON(secrets.REPLICATE_API_TOKEN) }},"RESEND_API_KEY":${{ toJSON(secrets.RESEND_API_KEY) }},"RESEND_FROM":${{ toJSON(secrets.RESEND_FROM) }},"RESEND_REPLY_TO":${{ toJSON(secrets.RESEND_REPLY_TO) }},"SURPLUS_API_KEY":${{ toJSON(secrets.SURPLUS_API_KEY) }},"USEPOD_TOKEN":${{ toJSON(secrets.USEPOD_TOKEN) }},"VENICE_API_KEY":${{ toJSON(secrets.VENICE_API_KEY) }},"VERCEL_OIDC_TOKEN":${{ toJSON(secrets.VERCEL_OIDC_TOKEN) }},"VERCEL_TOKEN":${{ toJSON(secrets.VERCEL_TOKEN) }},"XAI_API_KEY":${{ toJSON(secrets.XAI_API_KEY) }},"YDC_API_KEY":${{ toJSON(secrets.YDC_API_KEY) }}}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           ANTHROPIC_BASE_URL: ${{ vars.ANTHROPIC_BASE_URL }}
@@ -641,21 +641,12 @@ jobs:
           OTEL_SERVICE_NAME: ${{ vars.OTEL_SERVICE_NAME }}
           GITHUB_TOKEN: ${{ secrets.GH_GLOBAL || secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.GH_GLOBAL || secrets.GITHUB_TOKEN }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          # Discord + Slack deliver via WEBHOOK only (see scripts/notify.sh); the
-          # BOT_TOKEN / CHANNEL_ID pairs had no in-run consumer, so they are not bound.
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          # Buzz channel (Block's Nostr-relay workspace). ./notify signs + publishes
-          # via the buzz CLI staged by "Stage Buzz CLI"; the channel no-ops without
-          # BUZZ_PRIVATE_KEY. BUZZ_RELAY_URL is a var (defaults to localhost in the CLI).
-          BUZZ_PRIVATE_KEY: ${{ secrets.BUZZ_PRIVATE_KEY }}
-          BUZZ_CHANNEL_ID: ${{ secrets.BUZZ_CHANNEL_ID }}
-          BUZZ_RELAY_URL: ${{ vars.BUZZ_RELAY_URL }}
-          NOTIFY_EMAIL_TO: ${{ secrets.NOTIFY_EMAIL_TO }}
-          NOTIFY_EMAIL_FROM: ${{ vars.NOTIFY_EMAIL_FROM || 'aeon@notifications.aeon.bot' }}
-          NOTIFY_EMAIL_SUBJECT_PREFIX: ${{ vars.NOTIFY_EMAIL_SUBJECT_PREFIX || '[Aeon]' }}
+          # #912 Phase 2: the notify channel tokens (TELEGRAM_*/DISCORD_WEBHOOK_URL/
+          # SLACK_WEBHOOK_URL/BUZZ_*/NOTIFY_EMAIL_TO) are NO LONGER bound in the skill
+          # run env. ./notify is a queue-writer; the post-run "Send pending
+          # notifications" step owns these and delivers via scripts/notify-deliver.sh,
+          # so a skill can ask for a message but cannot read the credential that sends
+          # it. GITHUB_TOKEN/GH_GLOBAL stay in-run (deferred, broad gh surface).
           GROK_CREDENTIALS: ${{ secrets.GROK_CREDENTIALS }}
           # Send caps + audit CC for the IN-RUN email senders (send-email + vuln-scanner
           # Arm C). RESEND_API_KEY / RESEND_FROM / RESEND_REPLY_TO are per-skill secrets
@@ -1633,88 +1624,55 @@ jobs:
           if [ "$found" -eq 0 ]; then echo "No claude-code-router logs found (gateway was not a sidecar provider, or it never started)."; fi
 
       - name: Send pending notifications
-        if: steps.work.outputs.mode != '' && steps.run.outcome == 'success'
+        # !cancelled() (NOT a bare `mode != ''`, which GitHub implies success() onto
+        # and would skip on a failed skill): a FAILED skill still delivers what it
+        # queued (#912 R1). Cancellation is excluded so a killed job doesn't half-send.
+        if: ${{ !cancelled() && steps.work.outputs.mode != '' }}
         env:
+          # #912 Phase 2: THIS step owns the channel tokens. ./notify (the queue-writer)
+          # no longer reads them in the skill run env; notify-deliver.sh consumes them
+          # here, post-run, where a per-step env is a real process boundary.
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          BUZZ_PRIVATE_KEY: ${{ secrets.BUZZ_PRIVATE_KEY }}
+          BUZZ_CHANNEL_ID: ${{ secrets.BUZZ_CHANNEL_ID }}
+          BUZZ_RELAY_URL: ${{ vars.BUZZ_RELAY_URL }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           NOTIFY_EMAIL_TO: ${{ secrets.NOTIFY_EMAIL_TO }}
           NOTIFY_EMAIL_FROM: ${{ vars.NOTIFY_EMAIL_FROM || 'aeon@notifications.aeon.bot' }}
           NOTIFY_EMAIL_SUBJECT_PREFIX: ${{ vars.NOTIFY_EMAIL_SUBJECT_PREFIX || '[Aeon]' }}
+          # Trusted post-run credential (reply_markup is precomputed by notify.sh; this
+          # is here for a future re-probe path). NOT a skill-facing token.
+          GITHUB_TOKEN: ${{ secrets.GH_GLOBAL || secrets.GITHUB_TOKEN }}
           SKILL_NAME: ${{ steps.skill.outputs.name }}
         run: |
-          # Re-deliver any queued messages that failed to send during the run.
+          # Deliver the structured payloads ./notify queued during the run. Rich render
+          # (Telegram HTML + reply_markup, Discord embeds, Slack Block Kit, Buzz) + a
+          # per-send audit record, all in scripts/notify-deliver.sh - the ONLY place a
+          # channel token is read. No -e: one payload/channel failing must not drop the
+          # rest (#912 R6).
+          set -uo pipefail
           Q="${AEON_PENDING_DIR:-${RUNNER_TEMP:-/tmp}/aeon-pending}/notify-queue"
-          # Skip messages whose hash was already sent by ./notify inline,
-          # and skip short test/trace probes that shouldn't reach channels.
-          if [ ! -d "$Q" ] || [ -z "$(ls -A "$Q"/*.md 2>/dev/null)" ]; then
+          shopt -s nullglob
+          payloads=("$Q"/*.json)
+          if [ ${#payloads[@]} -eq 0 ]; then
             echo "No pending notifications"
             exit 0
           fi
-          HASH_FILE="${AEON_PENDING_DIR:-${RUNNER_TEMP:-/tmp}/aeon-pending}/notify-sent-hashes"
-          touch "$HASH_FILE"
-          for pending in "$Q"/*.md; do
-            [ -f "$pending" ] || continue
-            MSG=$(cat "$pending")
-
-            # Suppress trivial probes
-            MSG_LEN=${#MSG}
-            if [ "$MSG_LEN" -lt 120 ]; then
-              MSG_LOWER=$(printf '%s' "$MSG" | tr '[:upper:]' '[:lower:]')
-              case "$MSG_LOWER" in
-                *test*|*trace*|*ping*|*debug*|hello|hi)
-                  echo "Skipping pending trace/test message: $MSG"
-                  continue
-                  ;;
-              esac
-            fi
-
-            # Dedup against messages already sent by ./notify inline
-            HASH=$(printf '%s' "$MSG" | sha256sum | awk '{print $1}')
-            if grep -qxF "$HASH" "$HASH_FILE" 2>/dev/null; then
-              echo "Skipping pending duplicate (${HASH:0:8}): $(basename "$pending")"
-              continue
-            fi
-            printf '%s\n' "$HASH" >> "$HASH_FILE"
-
-            echo "Delivering pending notification: $(basename "$pending")"
-            # Telegram
-            if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
-              TG_MSG="$MSG"
-              [ ${#TG_MSG} -gt 4000 ] && TG_MSG="${TG_MSG:0:3990}...(truncated)"
-              curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-                -H "Content-Type: application/json" \
-                -d "$(jq -n --arg chat "$TELEGRAM_CHAT_ID" --arg text "$TG_MSG" '{chat_id: $chat, text: $text}')" > /dev/null 2>&1 || true
-            fi
-            # Discord
-            if [ -n "${DISCORD_WEBHOOK_URL:-}" ]; then
-              curl -sf -X POST "$DISCORD_WEBHOOK_URL" \
-                -H "Content-Type: application/json" \
-                -d "$(jq -n --arg text "$MSG" '{content: $text}')" > /dev/null 2>&1 || true
-            fi
-            # Slack
-            if [ -n "${SLACK_WEBHOOK_URL:-}" ]; then
-              curl -sf -X POST "$SLACK_WEBHOOK_URL" \
-                -H "Content-Type: application/json" \
-                -d "$(jq -n --arg text "$MSG" '{text: $text}')" > /dev/null 2>&1 || true
-            fi
-            # Email (Resend) — same key as the vuln-disclosure sender
-            if [ -n "${RESEND_API_KEY:-}" ] && [ -n "${NOTIFY_EMAIL_TO:-}" ]; then
-              EMAIL_FROM="${NOTIFY_EMAIL_FROM:-aeon@notifications.aeon.bot}"
-              EMAIL_SUBJECT="${NOTIFY_EMAIL_SUBJECT_PREFIX:-[Aeon]} ${SKILL_NAME:-notification}"
-              EMAIL_HTML=$(printf '%s' "$MSG" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g')
-              EMAIL_HTML="<html><body><pre style=\"font-family:monospace;white-space:pre-wrap;\">${EMAIL_HTML}</pre></body></html>"
-              curl -sf -X POST "https://api.resend.com/emails" \
-                -H "Authorization: Bearer ${RESEND_API_KEY}" \
-                -H "Content-Type: application/json" \
-                -d "$(jq -n --arg from "$EMAIL_FROM" --arg to "$NOTIFY_EMAIL_TO" --arg subject "$EMAIL_SUBJECT" \
-                      --arg html "$EMAIL_HTML" --arg text "$MSG" \
-                      '{from:$from, to:[$to], subject:$subject, html:$html, text:$text}')" > /dev/null 2>&1 || true
-            fi
+          # Audit each send to a file we print for verification (audit.sh no-ops if unset).
+          export AEON_AUDIT_LOG="${AEON_AUDIT_LOG:-${AEON_PENDING_DIR:-${RUNNER_TEMP:-/tmp}/aeon-pending}/audit.jsonl}"
+          ok=0
+          for p in "${payloads[@]}"; do
+            echo "Delivering: $(basename "$p")"
+            if bash scripts/notify-deliver.sh "$p"; then ok=$((ok+1)); else echo "notify-deliver failed for $(basename "$p")"; fi
           done
-          rm -rf "$Q"
+          echo "Delivered $ok/${#payloads[@]} pending payload(s) via notify-deliver.sh"
+          if [ -f "$AEON_AUDIT_LOG" ]; then
+            echo "--- notify audit records ---"; cat "$AEON_AUDIT_LOG"
+          fi
+          rm -f "$Q"/*.json
 
       - name: Read-only capability guard
         if: steps.work.outputs.mode != '' && env.SKILL_MODE == 'read-only'
