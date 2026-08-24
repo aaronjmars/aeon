@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="../docs/assets/hero-animated.svg" alt="AEON — the most autonomous agent framework. 60+ skills across 6 harnesses (Claude Code, Grok, Codex, Pi, Vibe, Kimi), running unattended on GitHub Actions: it ships features to your repos, privately discloses real vulnerabilities, deploys live apps, runs deep research, and writes new skills for itself. Keywords: autonomous AI agent, agent framework, GitHub Actions automation, self-improving agent, multi-agent orchestration, LLM skills, cron agent." width="100%" />
+  <img src="../docs/assets/hero-animated.svg" alt="AEON — the most autonomous agent framework. 60+ skills across 7 harnesses (Claude Code, Grok, Codex, Pi, Vibe, Kimi, fx), running unattended on GitHub Actions: it ships features to your repos, privately discloses real vulnerabilities, deploys live apps, runs deep research, and writes new skills for itself. Keywords: autonomous AI agent, agent framework, GitHub Actions automation, self-improving agent, multi-agent orchestration, LLM skills, cron agent." width="100%" />
 </p>
 
 <p align="center">
@@ -46,7 +46,7 @@ git clone https://github.com/<you>/aeon   # skip if you used `gh repo fork --clo
 cd aeon && ./aeon
 ```
 
-Open [localhost:5555](http://localhost:5555) and follow the dashboard: **Authenticate** (any of six [harnesses](../docs/harnesses.md)) → **add a channel** → **pick skills** → **Run**. That's it - Aeon runs unattended. Everything is also an `./aeon` command ([CLI](../apps/cli/README.md)) or a `/aeon` chat command ([setup skill](../docs/aeon-setup.md), installable as a [Claude Code or Codex plugin](../docs/aeon-setup.md#install)).
+Open [localhost:5555](http://localhost:5555) and follow the dashboard: **Authenticate** (any of seven [harnesses](../docs/harnesses.md)) → **add a channel** → **pick skills** → **Run**. That's it - Aeon runs unattended. Everything is also an `./aeon` command ([CLI](../apps/cli/README.md)) or a `/aeon` chat command ([setup skill](../docs/aeon-setup.md), installable as a [Claude Code or Codex plugin](../docs/aeon-setup.md#install)).
 
 <details>
 <summary><strong>No admin rights / can't install <code>gh</code>?</strong></summary>
@@ -87,13 +87,13 @@ The prompt *is* the skill. You schedule it, hand it a `var`, chain it into other
 
 <p align="center"><a href="../docs/community-skill-packs.md#listed-packs"><b>Community skill packs →</b></a></p>
 
-## Support six harnesses: Claude, Grok, Codex, Pi, Vibe, Kimi
+## Support seven harnesses: Claude, Grok, Codex, Pi, Vibe, Kimi, fx
 
 <p align="center">
-  <img src="../docs/assets/harnesses-aeon.jpg" alt="Six engines, one socket - a SKILL.md flows through run-harness into any of six agent CLIs: Claude, Grok, Codex, Pi, Vibe, and Kimi. Every harness honors the same contract: result, usage, session." width="100%" />
+  <img src="../docs/assets/harnesses-aeon.jpg" alt="Seven engines, one socket - a SKILL.md flows through run-harness into any of seven agent CLIs: Claude, Grok, Codex, Pi, Vibe, Kimi, and fx. Every harness honors the same contract: result, usage, session." width="100%" />
 </p>
 
-The same `SKILL.md` runs on any of six agent CLIs - **Claude**, **Grok**, **Codex**, **Pi**, **Vibe**, **Kimi** - behind one `run-harness` contract (same result, usage, and session shape). Swap the harness; nothing else changes. How the contract works: [`docs/harnesses.md`](../docs/harnesses.md).
+The same `SKILL.md` runs on any of seven agent CLIs - **Claude**, **Grok**, **Codex**, **Pi**, **Vibe**, **Kimi**, **fx** - behind one `run-harness` contract (same result, usage, and session shape). Swap the harness; nothing else changes. How the contract works: [`docs/harnesses.md`](../docs/harnesses.md).
 
 ## Why "the most autonomous"
 
@@ -185,7 +185,7 @@ The deep reference lives in [`docs/`](../docs) - jump in:
 
 <p align="center">
   <a href="../docs/CONFIGURATION.md"><img src="../docs/assets/doc-config.svg" alt="Configuration - chaining, triggers, scheduler, capability modes, gateways, Fleet Watcher" height="30" align="absmiddle"></a>&nbsp;
-  <a href="../docs/harnesses.md"><img src="../docs/assets/doc-harnesses.svg" alt="Harnesses - run skills on any of six agent CLIs behind one contract" height="30" align="absmiddle"></a>&nbsp;
+  <a href="../docs/harnesses.md"><img src="../docs/assets/doc-harnesses.svg" alt="Harnesses - run skills on any of seven agent CLIs behind one contract" height="30" align="absmiddle"></a>&nbsp;
   <a href="../docs/skill-packs.md"><img src="../docs/assets/doc-packs.svg" alt="Skill Packs - how packs work and how to build your own" height="30" align="absmiddle"></a>&nbsp;
   <a href="../docs/CORE.md"><img src="../docs/assets/doc-core.svg" alt="Core - the self-healing health and repair loop" height="30" align="absmiddle"></a>
 </p>
