@@ -1,6 +1,6 @@
 name: ci-harnesses-json
 
-# harness-adapter/harnesses.json is the capability manifest for the six adapters -
+# harness-adapter/harnesses.json is the capability manifest for the seven adapters -
 # the local analog of a UHP GET /v1/harnesses discovery response. It is generated
 # from each adapters/<h>.sh rh-meta block by
 # harness-adapter/bin/generate-harnesses-json. This workflow fails any PR that

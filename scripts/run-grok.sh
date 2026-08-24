@@ -39,7 +39,7 @@
 # The run-shaping knobs (GROK_MAX_TURNS / GROK_EFFORT / GROK_BEST_OF_N /
 # GROK_CHECK / GROK_COMPAT_RULES) moved with the run path: aeon.yml maps a
 # skill's frontmatter to them and harness-adapter/adapters/grok.sh reads them.
-# Structured output is `run-harness --json-schema`, uniform across all six
+# Structured output is `run-harness --json-schema`, uniform across all seven
 # harnesses; a grok-only env var here would recreate the divergence the adapter
 # exists to remove.
 #

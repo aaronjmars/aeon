@@ -283,7 +283,7 @@ jobs:
       # grok by name — so those two had no sandbox available even when asked for
       # one, and run-harness would have degraded to "read-only is advisory" with
       # only a stderr notice. Now every harness gets it, so --mode read-only means
-      # the same thing on all six.
+      # the same thing on all seven.
       - name: Install bubblewrap (read-only sandbox)
         if: steps.work.outputs.mode != ''
         # Bound this step. apt can block on the runner's unattended-upgrades dpkg
@@ -911,13 +911,13 @@ jobs:
           # (harness-adapter/run-harness), which speaks one Claude-Code-shaped
           # contract — prompt on stdin, a normalized {result,usage{...},session_id}
           # envelope on stdout, diagnostics on stderr — so everything downstream
-          # (.result/.usage jq, scoring, token accounting) is identical for all six.
+          # (.result/.usage jq, scoring, token accounting) is identical for all seven.
           # There is no longer a native `claude -p` or `run-grok.sh` run path; the
           # two features those paths carried are preserved AROUND the adapter call:
           #   * claude  — wrapped in the multi-provider gateway cascade below, so it
           #               keeps 8-provider failover + Langfuse tracing.
           #   * grok    — GROK_* run-knobs from frontmatter (adapters/grok.sh maps them).
-          # ALL six now run read-only under the wrapper OS sandbox (bwrap). claude and
+          # ALL seven now run read-only under the wrapper OS sandbox (bwrap). claude and
           # grok used to pass --no-sandbox because ./notify needed to write its queue
           # inside the workspace; that queue moved to $AEON_PENDING_DIR, so the reason
           # is gone. It mattered most on grok, whose adapter runs

@@ -1,9 +1,9 @@
 # harness-adapter
 
-**One Claude Code-shaped contract, six coding-agent harnesses.**
+**One Claude Code-shaped contract, seven coding-agent harnesses.**
 
 This directory is exactly what the workflow runs: the `run-harness` dispatcher and
-the six adapters aeon can dispatch to — **claude, grok, codex, pi, vibe, kimi**.
+the seven adapters aeon can dispatch to — **claude, grok, codex, pi, vibe, kimi, fx**.
 It is self-contained, so fixes land here directly. Three further harnesses
 (`opencode`, `copilot`, `agy`) were evaluated and deliberately left out; the
 per-harness reasons are recorded in the allowlist comment in
@@ -53,6 +53,11 @@ All six round-trip the contract on real CLIs (claude ≥2.1, grok 0.2.101,
 codex-cli 0.144.6, pi 0.80.9, vibe 2.20.0, kimi 0.28.0). aeon reaches claude and
 grok through its own native paths (the AI gateway / `run-grok.sh`); codex, pi, vibe
 and kimi run only through this adapter.
+
+**fx** is the seventh adapter (`adapters/fx.sh`) - verified mechanically
+end-to-end (envelope, MCP-config translation, model/step env, and the
+success/failure paths against a real fx 0.0.5 binary), but not yet
+live-dispatched on GitHub Actions, so it is absent from the tested matrix above.
 
 ¹ grok reports usage **only** on `--output-format streaming-json`, whose terminal
 `{"type":"end"}` event carries usage, `total_cost_usd` and `sessionId`; the adapter
@@ -114,8 +119,8 @@ bind-mounts) kimi still reads the literal `${VAR}`s.
 
 **Read-only enforcement is hoisted into the dispatcher.** Only codex has a native
 kernel sandbox that actually holds; every other harness — claude, grok, pi, vibe,
-kimi — runs read-only under `sandbox-exec` (macOS) or `bwrap` (Linux) with the
-workspace mounted read-only, so `--mode read-only` means the same thing on all six:
+kimi, fx — runs read-only under `sandbox-exec` (macOS) or `bwrap` (Linux) with the
+workspace mounted read-only, so `--mode read-only` means the same thing on all seven:
 *the repo physically cannot be mutated*, regardless of the model or its permission
 config. (vibe and kimi lean on this entirely — their `-p` modes have no
 permission-layer gate of their own.)
@@ -171,7 +176,7 @@ step and the native-auth secrets (`CODEX_AUTH`, `KIMI_AUTH`, `MISTRAL_API_KEY`,
 ## Capability manifest
 
 [`harnesses.json`](harnesses.json) is the machine-readable capability manifest for
-the six adapters - the local analog of a UHP [`GET /v1/harnesses`](https://unifiedharnessprotocol.org)
+the seven adapters - the local analog of a UHP [`GET /v1/harnesses`](https://unifiedharnessprotocol.org)
 discovery response. One queryable file answers *does this harness report token
 cost? enforce read-only natively or via the wrapper sandbox? support MCP, and
 how? what auth does it take?* - instead of that knowledge living only in the
@@ -196,7 +201,7 @@ staleness-fails this gate.
 
 ```
 run-harness            dispatcher: args → RH_* env → sandbox/timeout → adapter → validate
-adapters/<h>.sh        one per harness: invoke, translate, normalize (claude grok codex pi vibe kimi)
+adapters/<h>.sh        one per harness: invoke, translate, normalize (claude grok codex pi vibe kimi fx)
 harnesses.json         generated capability manifest (UHP GET /v1/harnesses analog)
 bin/generate-harnesses-json  aggregate adapters' rh-meta blocks → harnesses.json
 lib/envelope.sh        emit/validate the contract envelope

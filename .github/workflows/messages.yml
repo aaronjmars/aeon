@@ -443,8 +443,8 @@ jobs:
         run: bash scripts/resolve-harness.sh >> "$GITHUB_OUTPUT"
 
       # Stage the resolved harness's CLI + provider auth. This step is why
-      # messages.yml now supports all six: it previously had none, so a repo on
-      # codex/pi/vibe/kimi had its messages answered on claude with a warning.
+      # messages.yml now supports all seven: it previously had none, so a repo on
+      # codex/pi/vibe/kimi/fx had its messages answered on claude with a warning.
       # The `env:` block is duplicated from aeon.yml by necessity (`secrets.*`
       # resolves per workflow); the recipes it feeds are shared.
       - name: Install harness CLI
@@ -584,8 +584,8 @@ jobs:
 
           # HARNESS / AUTH_MODE / MODEL_ARG come from the "Resolve harness" step
           # (scripts/resolve-harness.sh), and the CLI was staged by "Install harness
-          # CLI" — so all six answer messages now. This used to be an inline
-          # claude-or-grok resolution here that downgraded the other four to claude
+          # CLI" — so all seven answer messages now. This used to be an inline
+          # claude-or-grok resolution here that downgraded the other five to claude
           # with a ::warning::, because nothing on this workflow could install them.
           # On grok a claude-* model id is meaningless — fall back to grok's default.
           if [ "$HARNESS" = "grok" ]; then

@@ -1,7 +1,7 @@
 # Wiring the harness swap into an aeon instance
 
 A deployment runbook for putting `run-harness` into [aeonfun/aeon](https://github.com/aeonfun/aeon)
-so a skill can run on **codex, pi, vibe, kimi, or fx** instead of only claude/grok.
+so a skill can run on **codex, pi, vibe, or kimi** instead of only claude/grok.
 
 Every change below was applied to a full aeon fork and verified on a real GitHub
 runner (6-harness × 3-scenario matrix, Tier 4). This document is how to reproduce
