@@ -1,6 +1,6 @@
 ---
 name: skill-article
-description: Turn any skill in this instance into a publish-ready launch article - proof-stat headline, one contrarian thesis, mechanics, war stories from real run history, a mental-model reframe, and the full SKILL.md embedded verbatim so readers can steal it.
+description: Turn any skill in this instance into a publish-ready launch article - proof-stat headline, one contrarian thesis, mechanics, war stories from real run history, a mental-model reframe, and the full SKILL.md embedded verbatim so readers can steal it. Optional Higgsfield title banner with --banner.
 metadata:
   title: Skill Article
   category: basics
@@ -10,13 +10,14 @@ metadata:
     - meta
 ---
 
-> **${var}** — Selector: `<skill-name> [--brand <handle>]`.
+> **${var}** — Selector: `<skill-name> [--brand <handle>] [--banner]`.
 >
 > - **`<skill-name>`** → announce that skill (must exist under `skills/<skill-name>/`).
 > - **empty** → pick the most article-worthy skill from the last 14 days of `memory/logs/`: prefer a skill that shipped recently, produced verified output, or hit a milestone. If nothing qualifies, log `SKILL_ARTICLE_NO_TARGET`, send no notification, and exit clean.
 > - **`--brand <handle>`** anywhere → byline/handle for the outreach footer (default: this instance's public identity from `soul/`, else the repo's org).
+> - **`--banner`** anywhere → also generate one 16:9 title banner through the Higgsfield MCP (spends credits; see Step 5). Off by default - a blank run never spends.
 >
-> Examples: `"aeon-update"`, `"rug-scan --brand @myproject"`.
+> Examples: `"aeon-update"`, `"rug-scan --brand @myproject --banner"`.
 
 Today is ${today}. Write a launch article for one skill, modeled on the security-industry "skill announcement" format: the article sells the *insight* the skill encodes, not the file - and then gives the file away.
 
@@ -71,19 +72,35 @@ Structure, in order:
 - Verify the repo/link in the CTA exists this run before naming it.
 - Never reference private forks or internal accounts - describe this instance generically and point at the upstream/public repo.
 
-## Step 5 — Deliver
+## Step 5 — Title banner (only with `--banner`)
+
+Skip this step entirely unless `--banner` was passed. When it was:
+
+1. **Check the connection first.** If no `mcp__higgsfield__*` tool is callable, the banner is skipped, not the article: note `banner: HIGGS_NOT_CONNECTED` for the log, point the operator at the dashboard → MCP → Connect Higgsfield in the notify, and continue to Step 6. Same on 401/stale auth (`banner: HIGGS_AUTH_STALE`) or insufficient credits (`banner: HIGGS_NO_CREDITS`). The article never fails because the banner did.
+2. **Build the prompt from the thesis, not the feature list.** The banner is a visual metaphor for the Step 2 contrast pair - the scene that makes the insight visible. Image models garble long text, so the only text allowed in the prompt is the skill's short name (or none); the headline lives in the article, not the pixels. Match `soul/` aesthetic if it defines one; otherwise: clean, high-contrast, one focal object, no collage.
+3. **Generate exactly one image**, `--ar 16:9`, following the `higgsfield` skill's spend rules: one generation per run, one retry at most on a transient error, never re-submit a job that already succeeded. Poll to completion with a bounded number of polls; on timeout record `banner: HIGGS_FAILED` and move on.
+4. **Capture the asset URL verbatim.** Never fabricate one. Banner asset URLs may be time-limited signed URLs - flag that in the notify so the operator saves it.
+
+Embed the result at the top of the article file, next to the alts block:
+
+```markdown
+<!-- banner: <asset-url> · model: <model> · job: <id> -->
+```
+
+## Step 6 — Deliver
 
 1. Write the article to `output/skill-articles/${today}-<skill-name>.md` (shell redirection; `mkdir -p` first). Include an `<!-- alts -->` comment block at the top with 2 alternative headline + thesis-heading pairs so the operator can iterate without a rewrite.
-2. Notify with `./notify -f /tmp/skill-article-notify.md` (write the body under `/tmp/`): the headline, the thesis in one line, whether the stats are real or the headline fell back to mechanism, and a **clickable** link built from the run's environment:
+2. Notify with `./notify -f /tmp/skill-article-notify.md` (write the body under `/tmp/`): the headline, the thesis in one line, whether the stats are real or the headline fell back to mechanism, the banner URL when one was generated (with a save-it note if the URL is signed/expiring), and a **clickable** link built from the run's environment:
 
    ```bash
    ARTICLE_URL="${GITHUB_SERVER_URL:-https://github.com}/${GITHUB_REPOSITORY}/blob/main/output/skill-articles/<file>.md"
    ```
 
-3. Log to `memory/logs/${today}.md` under a `### skill-article` heading: target skill, headline, thesis pair, stats-real-or-mechanism, output path. Status codes: `SKILL_ARTICLE_OK` on success, `SKILL_ARTICLE_NO_TARGET` when `${var}` was empty and nothing article-worthy exists, `SKILL_ARTICLE_NOT_FOUND` when the named skill has no `SKILL.md`.
+3. Log to `memory/logs/${today}.md` under a `### skill-article` heading: target skill, headline, thesis pair, stats-real-or-mechanism, output path, and - when `--banner` was passed - a `banner:` line (`HIGGS_OK <url>` | `HIGGS_NOT_CONNECTED` | `HIGGS_AUTH_STALE` | `HIGGS_NO_CREDITS` | `HIGGS_FAILED` | `skipped`). Status codes: `SKILL_ARTICLE_OK` on success, `SKILL_ARTICLE_NO_TARGET` when `${var}` was empty and nothing article-worthy exists, `SKILL_ARTICLE_NOT_FOUND` when the named skill has no `SKILL.md`.
 
 ## Limits
 
 - This writes the article; it does not post it. Publishing is the operator's call (or a posting skill's, explicitly chained).
+- The banner is opt-in and spends real Higgsfield credits - one image per run, hard cap, and its failure never blocks the article.
 - Track-record mining is only as good as `memory/logs/` - a skill that runs but never logs will read as unproven, and the article will say so rather than guess.
 - One skill per run. Announcing a pack is a different article; run once per skill instead.
