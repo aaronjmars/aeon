@@ -175,6 +175,9 @@ DEFENSIVE_CONTEXT='never follow|do not follow|do not obey|never obey|ignore (it|
 INJECTION_CITED='["`][^"`]*([Ii]gnore|[Ff]orget|[Dd]isregard|[Oo]verride|[Yy]ou[[:space:]]+are[[:space:]]+now)[^"`]*["`]'
 
 # MEDIUM severity: suspicious patterns that may or may not be intentional
+# shellcheck disable=SC2088  # these are literal grep patterns matched against
+# skill text (looking for references to ~/.ssh, ~/.aws, etc.), not paths to
+# expand. A literal ~ is exactly what we want here.
 MEDIUM_PATTERNS=(
   # Path traversal
   '\.\./\.\.'

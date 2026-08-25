@@ -35,6 +35,10 @@ case "$EXITCODE" in ''|*[!0-9]*) EXITCODE=0 ;; esac
 redact() {
   local s="$1" name val enc
   while IFS= read -r name; do
+    # *_API_KEY and *_PRIVATE_KEY are subsumed by *_KEY (identical body: keep and
+    # redact), so they are kept only as explicit documentation of what this list
+    # covers. That is why shellcheck flags the overlap here as intentional.
+    # shellcheck disable=SC2221,SC2222
     case "$name" in
       *_API_KEY|*_KEY|*_TOKEN|*_SECRET|*_PAT|*_WEBHOOK_URL|*_PRIVATE_KEY|*_CHAT_ID|*_CHANNEL_ID) ;;
       *) continue ;;
