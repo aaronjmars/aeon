@@ -9,7 +9,8 @@
     "aeon": "./aeon"
   },
   "scripts": {
-    "typecheck": "../dashboard/node_modules/.bin/tsc --noEmit -p tsconfig.json"
+    "typecheck": "../dashboard/node_modules/.bin/tsc --noEmit -p tsconfig.json",
+    "lint": "../dashboard/node_modules/.bin/eslint src"
   },
   "dependencies": {
     "tsx": "^4.23.1",

@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # tools-grammar.sh — parse Claude Code's --allowedTools grammar and translate it
 # into each harness's native permission shape.
 #

@@ -1,0 +1,52 @@
+name: ci-shellcheck
+
+# The shell surface is the load-bearing half of every Aeon run: the root `aeon`
+# launcher, scripts/**, bin/**, the seven harness adapters + their sourced libs
+# under harness-adapter/**, and a couple of skill helpers. None of it was linted,
+# even though the read-only sandbox and the harness dispatch it implements are
+# security-relevant. This gates it with shellcheck.
+#
+# Ratchet floor: scripts/lint-shell.sh FAILS on error-severity findings only, so
+# it is green on the current tree; warning-and-above print as a non-blocking
+# advisory backlog in the job log. Tighten the floor there, not here.
+#
+# shellcheck ships preinstalled on ubuntu-latest, so this needs no install step
+# and no third-party action, matching ci-apps.yml's native-tooling approach. It
+# runs green on fork PRs (read-only, no secrets, no network).
+#
+# Run locally: `bash scripts/lint-shell.sh`.
+
+on:
+  pull_request:
+    paths:
+      - 'aeon'
+      - 'scripts/**'
+      - 'bin/**'
+      - 'harness-adapter/**'
+      - 'skills/**/*.sh'
+      - '.github/workflows/ci-shellcheck.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'aeon'
+      - 'scripts/**'
+      - 'bin/**'
+      - 'harness-adapter/**'
+      - 'skills/**/*.sh'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-shellcheck-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shellcheck:
+    name: shellcheck (error-severity gate)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: shellcheck the tracked shell surface
+        run: bash scripts/lint-shell.sh

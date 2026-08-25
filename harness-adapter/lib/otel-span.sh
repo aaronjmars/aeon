@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # otel-span.sh — emit one OpenTelemetry span per non-claude harness run.
 #
 # SOURCED by run-harness (never executed). Opt-in + no-op, mirroring aeon's

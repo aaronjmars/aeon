@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # schema-retry.sh — structured output for harnesses without a --json-schema flag
 # (opencode, pi). Prompt-with-schema + pragmatic validation + one retry — the
 # same pattern aeon's post-run scorer uses.

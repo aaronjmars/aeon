@@ -63,6 +63,11 @@ jobs:
         run: npm ci
       - name: Typecheck (strict)
         run: npm run typecheck
+      # eslint-config-next flat config (Next 16 removed `next lint`). Fails only
+      # on error-severity rules; the new react-hooks v6 rules are warnings so the
+      # gate is green on the existing tree (see apps/dashboard/eslint.config.mjs).
+      - name: Lint (eslint)
+        run: npm run lint
       - name: Unit tests
         run: npm test
       # Kept separate from the typecheck on purpose — see the TS7 note above.
@@ -94,6 +99,11 @@ jobs:
         working-directory: apps/cli
       - name: Typecheck (strict, includes the shared dashboard lib)
         run: npm run typecheck
+        working-directory: apps/cli
+      # Borrows the dashboard's eslint + TypeScript rules (installed above), the
+      # same single-source-of-truth idiom as the typecheck.
+      - name: Lint (eslint, borrows the dashboard install)
+        run: npm run lint
         working-directory: apps/cli
 
   mcp-server:
@@ -135,6 +145,10 @@ jobs:
       # No lockfile committed for this app either — see mcp-server above.
       - name: Install deps
         run: npm install --no-audit --no-fund
+      # Plain-JS Worker: @eslint/js recommended with Worker runtime globals
+      # declared (see apps/webhook/eslint.config.mjs).
+      - name: Lint (eslint)
+        run: npm run lint
       # --dry-run validates wrangler.toml and bundles the Worker without any
       # Cloudflare credentials, so a broken config or a bad import fails here
       # instead of at deploy time.

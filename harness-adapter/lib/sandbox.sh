@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # sandbox.sh — wrapper-level OS sandbox for uniform read-only enforcement.
 #
 # No harness enforces read-only usefully on its own. codex's native sandbox works

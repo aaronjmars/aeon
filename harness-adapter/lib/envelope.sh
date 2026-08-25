@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # envelope.sh — emit/validate the Claude Code-compatible JSON envelope.
 #
 # The contract every adapter must satisfy on stdout:

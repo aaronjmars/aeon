@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # capabilities.sh — shared parser for install-skill-pack's capability allow-list.
 # Sourced by check-capabilities-parity.sh and validate-pack.sh so the
 # ALLOWED_CAPABILITIES=(...) array in bin/install-skill-pack stays the single

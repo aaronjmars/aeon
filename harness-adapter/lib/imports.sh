@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # imports.sh — expand Claude Code's `@file` imports in CLAUDE.md.
 #
 # Only Claude Code expands @imports; every other harness loads instruction files

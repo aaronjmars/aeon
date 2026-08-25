@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # mcp-translate.sh — translate a Claude-style project .mcp.json for harnesses
 # that don't read it natively.
 #
