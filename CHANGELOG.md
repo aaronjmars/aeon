@@ -11,6 +11,15 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Added
 
+- **`./notify` moves behind a post-run delivery dispatcher (#912 Phase 2).** A
+  skill call now writes one structured JSON payload to the notify queue instead of
+  ever touching the wire; a new post-run `scripts/notify-deliver.sh` is the only
+  place a channel token is consumed, rendering per channel (Telegram HTML +
+  reply_markup, Discord embeds, Slack Block Kit, Buzz) and writing a per-send audit
+  line. The Telegram / Discord / Slack / Buzz / email channel tokens are removed
+  from every skill's run env and the `ALL_SECRETS` allowlist; `RESEND_*` (per-skill
+  `requires:` for send-email / vuln-scanner) and `GITHUB_TOKEN` / `GH_GLOBAL` stay
+  in-run. (#955)
 - **`fx` (Vercel) added as a 7th run-harness.** Vercel's native Zig coding-agent
   CLI joins claude/grok/codex/pi/vibe/kimi behind the same `run-harness` contract,
   verified against a locally-built binary (missing-credential path, `mcpServers` to
@@ -248,6 +257,10 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Changed
 
+- **Harness inventory counts normalized to seven.** With fx as the 7th adapter,
+  `docs/harnesses.md`, `harness-adapter/README.md`, and the workflow comments now
+  say seven (not six / five / four) and present the harnesses evenly, and the
+  harness banner art is replaced with the seven-engine version. (#952, #950)
 - **`memory-flush` mechanical bookkeeping moved out of the LLM.** The prep work is
   now a deterministic, watermark-tracked script (`memory_prep.py` +
   `memory-flush-state.json`) so the model only does the judgment part. (#938)
@@ -350,6 +363,22 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Fixed
 
+- **Post-run scorer grades the sent notify card, not the harness `.result`
+  recap.** For a notify-first skill the scorer now reads the captured chain
+  artifact (`output/.chains/<skill>.md`) - the card that was actually sent - and
+  falls back to `/tmp/skill-result.txt`, so real, verifiably-sent figures stop
+  being capped as `unverifiable_claim`. Non-notify skills are unaffected (their
+  chain file is a byte copy of the same `.result`). (#949)
+- **Local MCP server dispatches the `fx` harness.** `skill-executor.ts` omitted
+  `fx` from its `HARNESSES` tuple, so `resolveHarness()` silently rewrote any fx
+  skill (or `AEON_HARNESS=fx`) to `claude`; adding `fx` makes the local MCP server
+  honor it like the hosted workflows already do. (#953)
+- **Dashboard captures Kimi's auth config correctly.** It now grabs the full
+  `credentials/` directory plus `config.toml` when building `KIMI_AUTH`, instead of
+  a single fixed credential filename - a non-mainland `kimi.ai` login writes a
+  hash-suffixed credential file and stores its model selection in
+  `~/.kimi-code/config.toml`, so the old capture left the CLI authenticated but
+  stuck at `No model configured`. (#956)
 - **`fx` now shows up in the dashboard harness picker.** (#943)
 - **Dashboard locks `aeon.yml` read-modify-write.** Concurrent config edits no
   longer race and clobber each other. (#944)
@@ -661,6 +690,12 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Security
 
+- **Dead channel credentials dropped from the in-run skill env (#912 item 2).**
+  Six infrastructure creds with no in-run consumer - `DISCORD_BOT_TOKEN` /
+  `DISCORD_CHANNEL_ID`, `SLACK_BOT_TOKEN` / `SLACK_CHANNEL_ID`, and
+  `BEAMR_GATEWAY_URL` / `BEAMR_PAYER_KEY` (+ the `BEAMR_NETWORK` / `BEAMR_MAX_PAY_USDC`
+  vars) - are removed from every skill's run env and the `ALL_SECRETS` allowlist;
+  the `*_WEBHOOK_URL` variants notify actually delivers through are kept. (#951)
 - **Bumped `nanoid` to 3.3.18** (GHSA-2v37-7h3g-55p8) in the `remotion` skill's
   bundled project lockfile - transitive, lockfile-only. (#879)
 - **`ALL_SECRETS` built from an explicit allowlist, not `toJSON(secrets)`.**
