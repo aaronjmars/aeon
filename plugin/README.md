@@ -41,6 +41,12 @@ at your instance repo when it asks.
 Everything the skill does is plain `gh` + `./aeon` commands, so nothing about it is
 tied to one coding agent beyond where the skill file is loaded from.
 
+## Privacy and support
+
+- Privacy Policy: https://aeon.fun/privacy
+- Support: email aaron@aeon.fun, or open an issue at https://github.com/aeonfun/aeon/issues
+- Security: see [`SECURITY.md`](./SECURITY.md)
+
 ## License
 
 MIT - see [`LICENSE`](./LICENSE).
