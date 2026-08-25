@@ -1,6 +1,6 @@
 # Aeon
 
-> Aeon is an autonomous agent framework. It runs your own skills on a schedule in GitHub Actions, keeps state in git-committed memory, and dispatches every run through one harness adapter that works across six coding-agent CLIs (Claude Code, Codex, Grok, Kimi, Pi, Vibe). Skills are Markdown with a spec-form frontmatter; a least-privilege `requires:` -> dashboard vault contract wires secrets. Fork the repo, turn skills on, and it runs itself.
+> Aeon is an autonomous agent framework. It runs your own skills on a schedule in GitHub Actions, keeps state in git-committed memory, and dispatches every run through one harness adapter that works across seven coding-agent CLIs (Claude Code, Codex, Grok, Kimi, Pi, Vibe, fx). Skills are Markdown with a spec-form frontmatter; a least-privilege `requires:` -> dashboard vault contract wires secrets. Fork the repo, turn skills on, and it runs itself.
 
 Repo: https://github.com/aeonfun/aeon
 Site: https://aeon.fun
@@ -28,7 +28,7 @@ Site: https://aeon.fun
 
 ## Harnesses and integrations
 
-- [docs/harnesses.md](https://raw.githubusercontent.com/aeonfun/aeon/main/docs/harnesses.md): Advanced harness behavior across the six supported coding-agent CLIs.
+- [docs/harnesses.md](https://raw.githubusercontent.com/aeonfun/aeon/main/docs/harnesses.md): Advanced harness behavior across the seven supported coding-agent CLIs.
 - [harness-adapter/README.md](https://raw.githubusercontent.com/aeonfun/aeon/main/harness-adapter/README.md): The single dispatch path that translates one tool grammar to every harness.
 - [docs/mcp-oauth.md](https://raw.githubusercontent.com/aeonfun/aeon/main/docs/mcp-oauth.md): Durable dashboard OAuth for OAuth-gated MCP servers.
 - [docs/telegram-commands.md](https://raw.githubusercontent.com/aeonfun/aeon/main/docs/telegram-commands.md): The inbound Telegram command surface.

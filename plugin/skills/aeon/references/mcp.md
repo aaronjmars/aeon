@@ -119,7 +119,7 @@ If a provider rotates the refresh token on each use, the old one dies immediatel
 
 Writing a secret needs a secrets-write credential, and **the default `GITHUB_TOKEN` cannot do it.** Add a fine-grained PAT with **Secrets: read/write** as **`GH_SECRETS_PAT`** (or repo-wide `GH_GLOBAL`).
 
-**All four catalog providers rotate — treat the PAT as required, not optional.**
+**Every catalog provider rotates - treat the PAT as required, not optional.**
 
 After adding the PAT, **re-connect the affected server once**. A refresh token already consumed by an earlier run can't be revived by the PAT alone.
 
