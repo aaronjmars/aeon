@@ -116,16 +116,16 @@ From the instance repo root, on the operator's own machine:
 
 ```bash
 # default: last 120 days, markdown digest
-node ${CLAUDE_PLUGIN_ROOT}/skills/aeon/scripts/mine-history.mjs
+node "${PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/skills/aeon/scripts/mine-history.mjs"
 
 # a tighter recent window, more rows
-node ${CLAUDE_PLUGIN_ROOT}/skills/aeon/scripts/mine-history.mjs --days 45 --top 20
+node "${PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/skills/aeon/scripts/mine-history.mjs" --days 45 --top 20
 
 # scope to one repo/topic (matches the session's cwd)
-node ${CLAUDE_PLUGIN_ROOT}/skills/aeon/scripts/mine-history.mjs --project my-repo
+node "${PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/skills/aeon/scripts/mine-history.mjs" --project my-repo
 
 # machine-readable, to post-process
-node ${CLAUDE_PLUGIN_ROOT}/skills/aeon/scripts/mine-history.mjs --json | jq '.titles'
+node "${PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/skills/aeon/scripts/mine-history.mjs" --json | jq '.titles'
 ```
 
 Needs only Node (>=16) and a local `~/.claude/projects` or `~/.codex/sessions` - it exits with a clear

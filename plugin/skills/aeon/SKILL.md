@@ -378,7 +378,7 @@ By default Aeon has no personality. `soul/SOUL.md` (identity, worldview, opinion
 1. **Scan.** Run the miner from the instance repo root:
 
    ```bash
-   node ${CLAUDE_PLUGIN_ROOT}/skills/aeon/scripts/mine-history.mjs --days 45 --top 15
+   node "${PLUGIN_ROOT:-$CLAUDE_PLUGIN_ROOT}/skills/aeon/scripts/mine-history.mjs" --days 45 --top 15
    ```
 
    It parses every top-level session in the window (skips subagent sidechains), normalises shell commands to `binary subcommand`, groups session titles, and prints a digest ranked by **distinct sessions × distinct days** — recurrence and cadence, not raw volume. Flags: `--days N` (window, default 120), `--project SUBSTR` (only sessions whose cwd matches — scope to one repo/topic), `--top N`, `--min-sessions N`, `--json`. It has no dependencies and reverts to a clean error if there's no history. Deeper reading of the tables and the candidate rubric: `references/history-mining.md`.
