@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-// mine-history.mjs — scan local Claude Code conversation history and surface
+// mine-history.mjs — scan local coding-agent conversation history and surface
 // recurring work worth turning into a scheduled Aeon skill.
 //
-// OPERATOR-SIDE ONLY. Reads ~/.claude/projects/*/*.jsonl (local Claude Code
-// transcripts). Does nothing on GitHub Actions (no history there) — the aeon
+// OPERATOR-SIDE ONLY. Reads local transcripts under ~/.claude/projects (Claude
+// Code) and ~/.codex/sessions (Codex). Does nothing on GitHub Actions (no
+// history there) — the aeon
 // `aeon` skill invokes it during skill authoring (Mode 8), never at run time.
 //
 // It does the mechanical part — parse transcripts, normalise commands, count
@@ -40,9 +41,15 @@ const PROJECT = opt('--project', '');
 const MIN_SESSIONS = parseInt(opt('--min-sessions', '2'), 10);
 const JSON_OUT = flag('--json');
 
-const ROOT = path.join(os.homedir(), '.claude', 'projects');
-if (!fs.existsSync(ROOT)) {
-  console.error(`No Claude history at ${ROOT} — nothing to mine (this is normal off a local machine).`);
+// Coding-agent transcript roots. Claude Code writes
+// ~/.claude/projects/<encoded-cwd>/<session>.jsonl; Codex writes
+// ~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl. Scan whichever exist.
+const ROOTS = [
+  path.join(os.homedir(), '.claude', 'projects'),
+  path.join(os.homedir(), '.codex', 'sessions'),
+].filter((d) => fs.existsSync(d));
+if (!ROOTS.length) {
+  console.error('No coding-agent history found under ~/.claude/projects or ~/.codex/sessions — nothing to mine (this is normal off a local machine).');
   process.exit(2);
 }
 const CUTOFF_MS = Date.now() - DAYS * 86400_000;
@@ -182,6 +189,30 @@ async function scanFile(fp) {
         }
       }
     }
+    // Codex rollout schema (best-effort; refine with real samples). Records are
+    // often wrapped in a `payload`; Claude lines never match these shapes
+    // (`message`/`function_call` + role), so this can't double-count.
+    const px = (d.payload && typeof d.payload === 'object') ? d.payload : d;
+    if (px !== d) {
+      if (px.cwd && !cwd) cwd = px.cwd;
+      if (px.timestamp) { const ts = px.timestamp; if (!minTs || ts < minTs) minTs = ts; if (ts > maxTs) maxTs = ts; }
+    }
+    if (px.type === 'message' && Array.isArray(px.content)) {
+      if (px.role === 'user') {
+        const txt = px.content
+          .map((b) => (b && (b.type === 'input_text' || b.type === 'text')) ? (b.text || '') : '')
+          .join(' ').trim();
+        if (txt.length > 3 && !txt.startsWith('/') && !txt.includes('<system-reminder>')) prompts.push(txt);
+      }
+    } else if (px.type === 'function_call' && /shell/.test(px.name || '')) {
+      let cmd = '';
+      try {
+        const a = JSON.parse(px.arguments || '{}');
+        const cc = a.command;
+        cmd = Array.isArray(cc) ? (cc[cc.length - 1] || cc.join(' ')) : (typeof cc === 'string' ? cc : '');
+      } catch { /* opaque arguments — skip */ }
+      if (cmd) localCmds.push(...normCmd(cmd));
+    }
   }
   if (PROJECT && !cwd.includes(PROJECT)) return false;
   sessionsScanned++;
@@ -227,18 +258,21 @@ async function scanFile(fp) {
 // windowed by mtime for speed.
 function listFiles() {
   const files = [];
-  for (const dir of fs.readdirSync(ROOT)) {
-    const dp = path.join(ROOT, dir);
-    let st; try { st = fs.statSync(dp); } catch { continue; }
-    if (!st.isDirectory()) continue;
-    for (const f of fs.readdirSync(dp)) {
-      if (!f.endsWith('.jsonl')) continue;
-      const fp = path.join(dp, f);
+  // Claude nests one level (projects/<cwd>/*.jsonl); Codex nests by date
+  // (sessions/YYYY/MM/DD/*.jsonl), so walk each root recursively.
+  const walk = (dir) => {
+    let entries;
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    for (const ent of entries) {
+      const fp = path.join(dir, ent.name);
+      if (ent.isDirectory()) { walk(fp); continue; }
+      if (!ent.name.endsWith('.jsonl')) continue;
       let fst; try { fst = fs.statSync(fp); } catch { continue; }
       if (fst.mtimeMs < CUTOFF_MS) continue;
       files.push(fp);
     }
-  }
+  };
+  for (const root of ROOTS) walk(root);
   return files;
 }
 
@@ -288,7 +322,7 @@ if (JSON_OUT) {
   }, null, 2));
 } else {
   const out = [];
-  out.push(`# Automation candidates — mined from Claude Code history`);
+  out.push(`# Automation candidates — mined from coding-agent history`);
   out.push('');
   out.push(`Scanned **${sessionsScanned}** sessions (${files.length} files, last ${DAYS} days) across **${allDays.size}** active days${PROJECT ? `, project filter \`${PROJECT}\`` : ''}.`);
   out.push('');

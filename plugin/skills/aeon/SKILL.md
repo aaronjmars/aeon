@@ -1,6 +1,6 @@
 ---
 name: aeon
-description: Set up and run an Aeon agent instance — get started from scratch, pick which skills to turn on or install more from packs, reschedule or change what runs, edit what an existing skill does, fix a skill that isn't firing, set the STRATEGY.md north star and soul/ voice, turn a Claude Code chat into a scheduled Aeon skill, and mine past Claude Code conversations for recurring work worth automating as a skill. Use when the user mentions Aeon, aeon.yml, an Aeon skill / instance / routine / pack, asks to schedule, enable, edit, or debug an agent that runs on a cron, or asks what of their repeated/manual work Aeon could take over.
+description: Set up and run an Aeon agent instance — get started from scratch, pick which skills to turn on or install more from packs, reschedule or change what runs, edit what an existing skill does, fix a skill that isn't firing, set the STRATEGY.md north star and soul/ voice, turn a coding-agent chat into a scheduled Aeon skill, and mine past coding-agent conversations for recurring work worth automating as a skill. Use when the user mentions Aeon, aeon.yml, an Aeon skill / instance / routine / pack, asks to schedule, enable, edit, or debug an agent that runs on a cron, or asks what of their repeated/manual work Aeon could take over.
 ---
 
 # Aeon
@@ -18,7 +18,7 @@ Pick the mode they're asking for:
 | **5 · Edit a skill** | Change what an existing skill does |
 | **6 · What to turn on** | Pick skills, browse packs, install more |
 | **7 · Strategy & voice** | `STRATEGY.md` and `soul/` — the north star and the tone |
-| **8 · Mine history → skill** | "What of my repeated work could Aeon do for me?" — surface it from past Claude Code chats |
+| **8 · Mine history → skill** | "What of my repeated work could Aeon do for me?" — surface it from past coding-agent chats |
 
 ## Preflight (every mode)
 
@@ -189,7 +189,7 @@ Note: GitHub only delivers ~10% of `*/5` cron ticks, so the scheduler catches up
 
 ## Mode 4 — Turn this chat into a skill
 
-They just did something in Claude Code and want it to happen on a schedule.
+They just did something in this chat and want it to happen on a schedule.
 
 1. **Write the skill file.** `skills/<name>/SKILL.md` — frontmatter, then the prompt. Derive it from what actually happened in the session:
    - the prompt body = what they asked for, plus the steps that worked
@@ -373,7 +373,7 @@ By default Aeon has no personality. `soul/SOUL.md` (identity, worldview, opinion
 
 ## Mode 8 — Mine history for skills to automate
 
-"What am I doing by hand over and over that Aeon could just do?" Mode 4 turns *this* chat into a skill; Mode 8 mines *past* chats to find which chat is worth turning into one. It reads the operator's local Claude Code transcripts (`~/.claude/projects/*/*.jsonl`), so it only works on their own machine — never inside an Aeon run.
+"What am I doing by hand over and over that Aeon could just do?" Mode 4 turns *this* chat into a skill; Mode 8 mines *past* chats to find which chat is worth turning into one. It reads the operator's local coding-agent transcripts (`~/.claude/projects` or `~/.codex/sessions`), so it only works on their own machine — never inside an Aeon run.
 
 1. **Scan.** Run the miner from the instance repo root:
 

@@ -1,6 +1,6 @@
 # History mining — deep reference (Mode 8)
 
-`scripts/mine-history.mjs` reads the operator's local Claude Code transcripts and
+`scripts/mine-history.mjs` reads the operator's local coding-agent transcripts and
 surfaces recurring work that could become a scheduled Aeon skill. This file is the
 detail behind Mode 8: what the tool reads, how it ranks, and how to turn a digest
 row into a real skill without proposing junk.
@@ -8,7 +8,8 @@ row into a real skill without proposing junk.
 ## What it reads
 
 Claude Code writes one JSONL transcript per session under
-`~/.claude/projects/<encoded-cwd>/<session-uuid>.jsonl`. Each line is a record;
+`~/.claude/projects/<encoded-cwd>/<session-uuid>.jsonl`; Codex writes one under
+`~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`. Each line is a record;
 the ones the miner uses:
 
 | record `type` | field | used for |
@@ -104,7 +105,7 @@ Always convert to UTC and confirm the next 3 fire times in their timezone
 ## Privacy
 
 Transcripts are the operator's own and can contain anything they've ever pasted
-into Claude Code. The miner only emits **aggregates** — command patterns, grouped
+into the coding agent. The miner only emits **aggregates** — command patterns, grouped
 titles, counts. Keep it that way: never surface a raw prompt body, and never write
 transcript contents into a committed file or a notification. The counts and titles
 carry all the signal needed to decide what to automate.
@@ -127,10 +128,10 @@ node ${CLAUDE_PLUGIN_ROOT}/skills/aeon/scripts/mine-history.mjs --project my-rep
 node ${CLAUDE_PLUGIN_ROOT}/skills/aeon/scripts/mine-history.mjs --json | jq '.titles'
 ```
 
-Needs only Node (>=16) and a local `~/.claude/projects` — it exits with a clear
+Needs only Node (>=16) and a local `~/.claude/projects` or `~/.codex/sessions` - it exits with a clear
 message anywhere that directory is absent (e.g. a CI checkout), and never writes
 anything. If a busy background app dominates the tables (a tool that itself drives
-Claude Code will pile up near-identical sessions), scope past it with `--project`.
+a coding agent will pile up near-identical sessions), scope past it with `--project`.
 
 ### Flags
 
@@ -145,7 +146,7 @@ Claude Code will pile up near-identical sessions), scope past it with `--project
 ### Sample output (synthetic)
 
 ```
-# Automation candidates — mined from Claude Code history
+# Automation candidates - mined from coding-agent history
 
 Scanned 240 sessions (240 files, last 45 days) across 38 active days.
 
