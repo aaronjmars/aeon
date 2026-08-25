@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "name": "aeon",
+  "displayName": "Aeon",
+  "version": "0.1.0",
+  "description": "Operator console for an Aeon agent instance: enable, schedule, and edit skills, wire secrets and channels, debug runs, and mine past coding-agent chats into scheduled skills.",
+  "author": "Aeon Inc",
+  "icon": "icon.png",
+  "category": "Productivity",
+  "exampleQueries": [
+    "Set up a new Aeon instance and turn on my first skill",
+    "Reschedule the daily digest skill to run at 9am",
+    "This skill will not fire, help me debug the run",
+    "Turn my last coding-agent chat into a scheduled skill"
+  ],
+  "apps": [],
+  "mcpServers": [],
+  "skills": ["skills/aeon/SKILL.md"]
+}
