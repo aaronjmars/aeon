@@ -1,0 +1,15 @@
+{
+  "name": "aeon-root",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Root task aggregator. NOT an npm workspace: each package under apps/ stays standalone with its own lockfile and its own (deliberately divergent) toolchain pins - dashboard on typescript@6, mcp-server on typescript@7, and the CLI borrowing the dashboard's node_modules on purpose. There is no `workspaces` key here so nothing hoists or dedupes; these scripts just fan a command across the apps so lint/typecheck/build/test run from the repo root. Run `npm run bootstrap` once to install every app in the order the CLI's borrow requires.",
+  "scripts": {
+    "bootstrap": "npm --prefix apps/dashboard ci && npm --prefix apps/cli ci && npm --prefix apps/mcp-server install --no-audit --no-fund && npm --prefix apps/webhook install --no-audit --no-fund",
+    "lint": "npm --prefix apps/dashboard run lint && npm --prefix apps/cli run lint && npm --prefix apps/webhook run lint",
+    "lint:shell": "bash scripts/lint-shell.sh",
+    "typecheck": "npm --prefix apps/dashboard run typecheck && npm --prefix apps/cli run typecheck && npm --prefix apps/mcp-server run typecheck",
+    "build": "npm --prefix apps/dashboard run build && npm --prefix apps/mcp-server run build",
+    "test": "npm --prefix apps/dashboard test && npm --prefix apps/webhook test"
+  }
+}
