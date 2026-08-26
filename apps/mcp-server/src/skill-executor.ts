@@ -10,7 +10,7 @@
 
 import { readFileSync, existsSync } from "fs";
 import { join } from "path";
-import { spawnSync } from "child_process";
+import { spawn, spawnSync } from "child_process";
 
 export interface Skill {
   slug: string;
@@ -127,19 +127,134 @@ function resolveMode(repoRoot: string, slug: string): { mode: string; allowedToo
   return { mode, allowedTools };
 }
 
+// Single-flight queue. spawnSync used to serialize runs by freezing the event
+// loop; moving to async spawn removes that accidental lock, so runs must be
+// serialized explicitly. Every run shares `cwd: repoRoot`, so two concurrent
+// write-mode skills would race the same working tree: `.git/index.lock`
+// collisions on commit, plus interleaved writes to memory/, output/ and
+// cron-state.json. This keeps one skill running at a time; a second tools/call
+// waits its turn instead of corrupting the tree.
+let runQueue: Promise<unknown> = Promise.resolve();
+function enqueue<T>(task: () => Promise<T>): Promise<T> {
+  const result = runQueue.then(task, task);
+  // Keep the chain alive regardless of this run's outcome so one failure does
+  // not wedge every later run.
+  runQueue = result.then(
+    () => undefined,
+    () => undefined
+  );
+  return result;
+}
+
+interface HarnessResult {
+  status: number | null;
+  stdout: string;
+  stderr: string;
+  error?: NodeJS.ErrnoException;
+}
+
 /**
- * Run a skill synchronously and return its text output. Dispatches through
+ * Async replacement for spawnSync with the same result shape
+ * (status/stdout/stderr/error) so the parsing below is unchanged, but it awaits
+ * `close` instead of blocking the Node event loop for the whole 10-minute run.
+ * Enforces the same timeout and combined output cap, surfacing each as `error`
+ * the way spawnSync did (ETIMEDOUT / ENOBUFS).
+ */
+function spawnHarness(
+  args: string[],
+  opts: {
+    input: string;
+    cwd: string;
+    env: NodeJS.ProcessEnv;
+    timeout: number;
+    maxBuffer: number;
+  }
+): Promise<HarnessResult> {
+  return new Promise((resolve) => {
+    const child = spawn("bash", args, { cwd: opts.cwd, env: opts.env });
+    let stdout = "";
+    let stderr = "";
+    let settled = false;
+    let killReason: "timeout" | "buffer" | null = null;
+
+    const timer = setTimeout(() => {
+      killReason = "timeout";
+      child.kill("SIGKILL");
+    }, opts.timeout);
+
+    const capture = (chunk: Buffer, sink: "out" | "err") => {
+      if (sink === "out") stdout += chunk.toString("utf-8");
+      else stderr += chunk.toString("utf-8");
+      if (stdout.length + stderr.length > opts.maxBuffer) {
+        killReason = "buffer";
+        child.kill("SIGKILL");
+      }
+    };
+    child.stdout.on("data", (c: Buffer) => capture(c, "out"));
+    child.stderr.on("data", (c: Buffer) => capture(c, "err"));
+
+    const finish = (r: HarnessResult) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(r);
+    };
+
+    child.on("error", (err) =>
+      finish({ status: null, stdout, stderr, error: err as NodeJS.ErrnoException })
+    );
+    child.on("close", (code) => {
+      let error: NodeJS.ErrnoException | undefined;
+      if (killReason === "timeout") {
+        error = Object.assign(
+          new Error(`run-harness timed out after ${opts.timeout} ms`),
+          { code: "ETIMEDOUT" }
+        );
+      } else if (killReason === "buffer") {
+        error = Object.assign(
+          new Error(`run-harness output exceeded ${opts.maxBuffer} bytes`),
+          { code: "ENOBUFS" }
+        );
+      }
+      finish({ status: code, stdout, stderr, error });
+    });
+
+    // Feed the prompt on stdin, matching spawnSync's `input`. Ignore EPIPE if the
+    // child exits before the write finishes.
+    child.stdin.on("error", () => {});
+    child.stdin.write(opts.input);
+    child.stdin.end();
+  });
+}
+
+/**
+ * Run a skill and return its text output. Serialized through `enqueue` (one skill
+ * at a time, since they share the repo working tree) and dispatched through
  * harness-adapter's `run-harness`, which emits one `{ result, usage }` envelope
  * for every harness, so parsing is shared. Failure modes (missing skill, missing
  * CLI, non-zero exit, empty output) are returned as human-readable strings rather
  * than thrown, so callers can surface them without special-casing.
+ *
+ * Async so a running skill no longer freezes the whole stdio MCP server: the old
+ * spawnSync parked the Node event loop for up to 10 minutes per call, blocking
+ * every other request (tools/list, pings, a second tool call). This awaits the
+ * child instead.
  */
 export function runSkill(
   repoRoot: string,
   slug: string,
   varValue: string,
   logPrefix = "[aeon]"
-): string {
+): Promise<string> {
+  return enqueue(() => runSkillInner(repoRoot, slug, varValue, logPrefix));
+}
+
+async function runSkillInner(
+  repoRoot: string,
+  slug: string,
+  varValue: string,
+  logPrefix: string
+): Promise<string> {
   const skillFile = join(repoRoot, "skills", slug, "SKILL.md");
   if (!existsSync(skillFile)) {
     return [
@@ -185,17 +300,16 @@ export function runSkill(
     args.push("--mcp-config", join(repoRoot, ".mcp.json"));
   }
 
-  const result = spawnSync("bash", args, {
+  const result = await spawnHarness(args, {
     input: prompt,
     cwd: repoRoot,
     env: process.env,
-    timeout: 600_000, // 10 minutes — same as the GitHub Actions timeout
+    timeout: 600_000, // 10 minutes - same as the GitHub Actions timeout
     maxBuffer: 10 * 1024 * 1024, // 10 MB
-    encoding: "utf-8",
   });
 
   if (result.error) {
-    const enoent = (result.error as NodeJS.ErrnoException).code === "ENOENT";
+    const enoent = result.error.code === "ENOENT";
     const msg = enoent
       ? `'bash' or harness-adapter/run-harness not found — run from inside an Aeon repo clone.`
       : `Failed to spawn run-harness: ${result.error.message}`;

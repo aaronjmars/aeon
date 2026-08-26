@@ -116,7 +116,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools }));
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const toolName = request.params.name;
-  return tracer.startActiveSpan(`mcp.call_tool ${toolName}`, (span) => {
+  return tracer.startActiveSpan(`mcp.call_tool ${toolName}`, async (span) => {
     const slug = toolNameToSlug(toolName);
     const skill = skills.find((s) => s.slug === slug);
     span.setAttribute("aeon.mcp.tool", toolName);
@@ -140,7 +140,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     try {
       const varArg = request.params.arguments?.var;
       const varValue = typeof varArg === "string" ? varArg : "";
-      const output = runSkill(REPO_ROOT, slug, varValue, LOG_PREFIX);
+      const output = await runSkill(REPO_ROOT, slug, varValue, LOG_PREFIX);
       span.setAttribute("aeon.output_bytes", output.length);
       return {
         content: [{ type: "text" as const, text: output }],
