@@ -4,6 +4,11 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
 
+if [ ! -f memory/skill-health/github-trending.json ]; then
+  echo "skill-health-routing: skipped real-data smoke test (no live health history in this checkout)"
+  exit 0
+fi
+
 OUT=$(node scripts/skill-health-routing.mjs github-trending)
 grep -q '^skill: github-trending$' <<<"$OUT"
 grep -q '^minimum harness samples: 5 ' <<<"$OUT"
