@@ -93,6 +93,8 @@ jobs:
         run: python3 scripts/tests/test_health_triage.py
       - name: health-issue ensure-race tests
         run: bash scripts/tests/test_health_issue.sh
+      - name: skill-health harness routing tests
+        run: bash scripts/tests/test_skill_health_routing.sh
       - name: memory-flush prep tests
         run: python3 scripts/tests/test_memory_prep.py
       - name: validate-config unit tests

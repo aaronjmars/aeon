@@ -94,6 +94,9 @@ function knownHarnessForModel(model, modelHints) {
   // These aliases are emitted by Resolve harness / the adapter path. Do not
   // broaden this list without a matching workflow invariant and a test.
   if (model === 'codex-default' || /(^|\/)gpt-[^/]*-codex/.test(model)) return 'codex';
+  if (model === 'cursor-default') return 'cursor';
+  if (model === 'hermes-default') return 'hermes';
+  if (model === 'fx-default') return 'fx';
   if (/^grok-/.test(model)) return 'grok';
   if (/^glm-/.test(model)) return 'glm';
   if (/^moonshotai\//.test(model)) return 'kimi';

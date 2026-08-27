@@ -1536,9 +1536,14 @@ jobs:
             HISTORY='[]'
           fi
 
-          # Append to history (keep last 30 entries)
+          # Append to history (keep last 30 entries). HARNESS is the harness
+          # that ran the skill; scoring is routed through that same harness.
+          # The new fields are additive, so existing {date,score} entries stay
+          # valid and model is omitted when the harness used its own default.
           HISTORY=$(echo "$HISTORY" | jq -c --arg d "$TODAY" --argjson s "$SCORE" \
-            '. + [{"date": $d, "score": $s}] | .[-30:]')
+            --arg ts "$NOW_ISO" --arg h "$HARNESS" --arg m "${RH_MODEL_ARG:-}" \
+            '. + [{"date": $d, "score": $s, "ts": $ts, "harness": $h}
+                  + (if ($m | length) > 0 then {"model": $m} else {} end)] | .[-30:]')
 
           AVG=$(echo "$HISTORY" | jq '([.[].score] | add / length * 100 | round) / 100')
 
