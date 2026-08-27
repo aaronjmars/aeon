@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated": "2026-08-04",
+  "updated": "2026-08-27",
   "description": "Machine-readable registry of community skill packs installable via bin/install-skill-pack. Mirrors the human-readable table in README.md.",
   "packs": [
     {
@@ -247,6 +247,19 @@
       "capabilities": [
         "read_only",
         "external_api"
+      ]
+    },
+    {
+      "repo": "amritmirch/aeon-skill-pack-farcaster",
+      "name": "Farcaster Pack",
+      "description": "Publish to Farcaster from Aeon via Neynar. Drafting and publishing are separate branches; the default never posts. Publishing is fail-closed behind a kill-switch, daily cap, dedup ledger, 1024-byte protocol check, and a secret tripwire.",
+      "author": "amritmirch",
+      "license": "MIT",
+      "homepage": "https://github.com/amritmirch/aeon-skill-pack-farcaster",
+      "category": "social",
+      "trust_level": "community",
+      "skills": [
+        "cast"
       ]
     }
   ]
