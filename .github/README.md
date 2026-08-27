@@ -106,7 +106,7 @@ Full comparison vs Claude Code, Hermes, and OpenClaw: [`SHOWCASE.md`](../docs/SH
 ## Proof of work
 
 <p align="center">
-  <img src="../docs/assets/proof-aeon.jpg" alt="Proof of work, live at aeon.fun: 2M GitHub stars secured across 69 open-source repos, 68 products and agents built on Aeon, and 12 community skill packs." width="100%" />
+  <img src="../docs/assets/proof-aeon.jpg" alt="Proof of work, live at aeon.fun: 2M GitHub stars secured across 69 open-source repos, 68 products and agents built on Aeon, and 13 community skill packs." width="100%" />
 </p>
 
 Live at **[aeon.fun](https://www.aeon.fun)**: **2M GitHub stars secured** - real vulnerabilities found, patched, and responsibly disclosed across 69 open-source repos (**Alibaba**, **Tencent**, **Vercel**, and more), many rated High or Critical. **68 products built on top of Aeon.**

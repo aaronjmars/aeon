@@ -230,6 +230,24 @@
       "skills": [
         "skim-read"
       ]
+    },
+    {
+      "repo": "thesmithdao/cultos-aeon-skills",
+      "name": "CultOS Aeon Skills",
+      "description": "Read-only exact-commit pull-request reviews for CultOS ACP jobs, with bounded verdicts and findings.",
+      "author": "thesmithdao",
+      "license": "MIT",
+      "homepage": "https://cultos.dev",
+      "category": "dev",
+      "trust_level": "community",
+      "skills": [
+        "cultos-acp-review"
+      ],
+      "secrets_required": [],
+      "capabilities": [
+        "read_only",
+        "external_api"
+      ]
     }
   ]
 }
