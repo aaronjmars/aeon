@@ -42,6 +42,7 @@ These are the projects we know of that run Aeon, extend it, or integrate with th
 | <img src="https://pbs.twimg.com/profile_images/2075170344957083648/AR-5asAz_400x400.jpg" width="36" height="36" alt="CTRL logo"> | CTRL | [@CTRL_automation](https://x.com/CTRL_automation) |
 | <img src="https://pbs.twimg.com/profile_images/2070145040882544640/P8NilHgr_400x400.jpg" width="36" height="36" alt="DarkSol logo"> | DarkSol | [@Darks0l_](https://x.com/Darks0l_) |
 | <img src="https://pbs.twimg.com/profile_images/2057284361066569728/K5ZhxKXY_400x400.png" width="36" height="36" alt="Echo Oracle logo"> | Echo Oracle | [@BuiltByEcho](https://x.com/BuiltByEcho) · [builtbyecho.xyz](https://www.builtbyecho.xyz/) |
+| <img src="https://pbs.twimg.com/profile_images/2076035829168787456/nvPci2jF_400x400.jpg" width="36" height="36" alt="eyebrow logo"> | eyebrow | [@eyebrowCC](https://x.com/eyebrowCC) · [eyebrow.cc](https://eyebrow.cc) |
 | <img src="https://pbs.twimg.com/profile_images/2058778503957590016/3Uo13Pxy_400x400.jpg" width="36" height="36" alt="Finance District logo"> | Finance District | [@FD_XYZ](https://x.com/FD_XYZ) · [fd.xyz](https://fd.xyz) |
 | <img src="https://pbs.twimg.com/profile_images/2078808241430306817/oCW2y8Q-_400x400.jpg" width="36" height="36" alt="GitBlock logo"> | GitBlock | [@gitblock_](https://x.com/gitblock_) |
 | <img src="https://pbs.twimg.com/profile_images/2069099785936891904/fbvZqtoT_400x400.jpg" width="36" height="36" alt="GitKernal logo"> | GitKernal | [@gitkernal](https://x.com/gitkernal) |
