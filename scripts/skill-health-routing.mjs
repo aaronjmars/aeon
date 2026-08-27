@@ -17,6 +17,8 @@ const MIN_SAMPLES = 5;
 const ROOT = process.cwd();
 const HEALTH_DIR = join(ROOT, 'memory', 'skill-health');
 const TOKEN_FILE = join(ROOT, 'memory', 'token-usage.csv');
+// Harness allowlist mirrors scripts/resolve-harness.sh; keep in sync.
+const HARNESSES = new Set(['claude', 'grok', 'codex', 'pi', 'vibe', 'kimi', 'fx', 'cursor', 'hermes', 'glm']);
 
 function usage() {
   console.error(`usage: node scripts/skill-health-routing.mjs <skill-name>`);
@@ -91,12 +93,15 @@ function knownHarnessForModel(model, modelHints) {
   if (exact?.size === 1) return [...exact][0];
   if (exact?.size > 1) return null;
 
-  // These aliases are emitted by Resolve harness / the adapter path. Do not
-  // broaden this list without a matching workflow invariant and a test.
-  if (model === 'codex-default' || /(^|\/)gpt-[^/]*-codex/.test(model)) return 'codex';
-  if (model === 'cursor-default') return 'cursor';
-  if (model === 'hermes-default') return 'hermes';
-  if (model === 'fx-default') return 'fx';
+  // `<harness>-default` is emitted by the adapter when a harness runs on its
+  // native default model (aeon.yml: EFFECTIVE_MODEL="${RH_MODEL_ARG:-$HARNESS-default}").
+  // Validate the captured name against the resolve-harness.sh allowlist so a row is
+  // never attributed to a non-harness. Do not broaden without a matching workflow
+  // invariant and a test.
+  const nativeDefault = /^([a-z0-9]+)-default$/.exec(model);
+  if (nativeDefault && HARNESSES.has(nativeDefault[1])) return nativeDefault[1];
+
+  if (/(^|\/)gpt-[^/]*-codex/.test(model)) return 'codex';
   if (/^grok-/.test(model)) return 'grok';
   if (/^glm-/.test(model)) return 'glm';
   if (/^moonshotai\//.test(model)) return 'kimi';
