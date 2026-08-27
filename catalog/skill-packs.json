@@ -261,6 +261,19 @@
       "skills": [
         "cast"
       ]
+    },
+    {
+      "repo": "jsfranklin221/aeon-skill-pack-spoolis",
+      "name": "Spoolis Outcome Gate",
+      "description": "Gate autonomous work on whether it satisfied the agreement: one-call verification against explicit acceptance criteria returns a signed Outcome Receipt with per-unit earned value, plus a chain verdict downstream steps can branch on. Keyless sandbox, zero secrets.",
+      "author": "spoolis",
+      "license": "MIT",
+      "homepage": "https://spoolis.com",
+      "category": "dev",
+      "trust_level": "community",
+      "skills": [
+        "spoolis-outcome-gate"
+      ]
     }
   ]
 }
