@@ -94,7 +94,7 @@ mode: write       # default — full Write / Edit / git / gh / python3
 | 2. **OS sandbox** | Write-locks the workspace for the whole run — the repo is mounted read-only, network stays open | `run-harness --mode read-only` → [`harness-adapter/lib/sandbox.sh`](../harness-adapter/lib/sandbox.sh) |
 | 3. Post-run guard | Reverts and cleans anything that still landed under `CODE_PATHS`, preserving the skill's real output (memory, `output/`) and writing its run-log on its behalf | `.github/workflows/aeon.yml` |
 
-**Layer 2 is the guarantee.** Layer 1 is a real narrowing but not a boundary: a shell redirection routes around it, and only the claude and pi adapters consume the allowlist at all. Layer 3 is after-the-fact repair. So the sentence "a read-only skill physically cannot mutate the repo" is true because of the sandbox — `bwrap --ro-bind` on Linux, `sandbox-exec` with a `deny file-write*` profile on macOS — which applies uniformly on **all seven harnesses**, claude included.
+**Layer 2 is the guarantee.** Layer 1 is a real narrowing but not a boundary: a shell redirection routes around it, and only the claude and pi adapters consume the allowlist at all. Layer 3 is after-the-fact repair. So the sentence "a read-only skill physically cannot mutate the repo" is true because of the sandbox — `bwrap --ro-bind` on Linux, `sandbox-exec` with a `deny file-write*` profile on macOS — which applies uniformly on **all ten harnesses**, claude included.
 
 ### Why the sandbox is the dispatcher's, not each harness's
 

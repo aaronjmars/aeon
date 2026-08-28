@@ -252,7 +252,7 @@ the harness is already executing as the agent's workspace.
 
 **Other harnesses.** MCP is not grok-only: `claude`, `codex`, `vibe` and `kimi`
 all call live MCP tools too (codex and kimi needed their own dispatcher fixes —
-see the [harness-adapter README](../harness-adapter/README.md#the-six-harnesses)).
+see the [harness-adapter README](../harness-adapter/README.md#the-ten-harnesses)).
 `pi` is the one harness that cannot: it rejects MCP by design, so its adapter
 warns and skips every configured server, and the dashboard's MCP panel disables
 itself when `pi` is the selected harness.
@@ -295,10 +295,10 @@ one path, an adapter-level fix reaches every surface by construction.
 claude/grok/codex, prompt-shim on pi/vibe/kimi). Callers that don't pass it get
 plain text. (A grok-only `GROK_JSON_SCHEMA` env var existed on the old script
 path until it was removed: nothing in the repo ever set it, and the scorer it was
-reserved for goes schema-less on purpose so a single parse path covers all seven
+reserved for goes schema-less on purpose so a single parse path covers all ten
 harnesses.)
 
-**Both hosted surfaces stage all seven.** `aeon.yml` (skill runs) and
+**Both hosted surfaces stage all ten.** `aeon.yml` (skill runs) and
 `messages.yml` (inbound messages) share the same two scripts, so a repo answers
 messages on the harness it runs skills on:
 
@@ -312,8 +312,7 @@ Each workflow still declares its own `env:` block, because `secrets.*` only
 resolves inside a workflow — but the logic is shared, which is the half that
 drifted before. `messages.yml` used to carry a second, weaker copy that knew only
 claude and grok, so a repo on codex/pi/vibe/kimi had its messages answered on
-claude with a `::warning::`. The local MCP server (`apps/mcp-server`) resolves all
-six but expects the CLI to already be installed on your machine.
+claude with a `::warning::`. The local MCP server (`apps/mcp-server`) resolves all ten but expects the CLI to already be installed on your machine.
 
 ## Every entry point runs on either harness
 
@@ -325,8 +324,8 @@ behaves identically everywhere. All of them dispatch through `run-harness`:
 |---------|---------------------|-------|
 | Scheduled / manual skill run (`aeon.yml`) | dispatch **Harness** input → per-skill `harness:` → global `harness:` → `claude` | full flags + MCP + scorer |
 | Skill chains (`chain-runner.yml`) | inherits — each step dispatches `aeon.yml`, which resolves per-skill/global | |
-| Inbound messages (`messages.yml`, Telegram/Discord/Slack) | global `harness:` in `aeon.yml` | conversational reply in write mode; the resolved harness's CLI is staged here (all seven), same as skill runs |
-| Local MCP server (`apps/mcp-server`) | `AEON_HARNESS` env → global `harness:` | `resolveHarness()` in `skill-executor.ts`; resolves all six, expects the CLI installed locally |
+| Inbound messages (`messages.yml`, Telegram/Discord/Slack) | global `harness:` in `aeon.yml` | conversational reply in write mode; the resolved harness's CLI is staged here (all ten), same as skill runs |
+| Local MCP server (`apps/mcp-server`) | `AEON_HARNESS` env → global `harness:` | `resolveHarness()` in `skill-executor.ts`; resolves all ten, expects the CLI installed locally |
 | Webhook (`apps/webhook`) | relay only → dispatches `messages.yml` | harness-agnostic |
 | Post-run quality scorer (`aeon.yml`) | scores through the same harness the skill ran on | |
 

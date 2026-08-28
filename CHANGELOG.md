@@ -11,6 +11,37 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Added
 
+- **Three more run-harnesses: Cursor, Hermes, and GLM.** Cursor CLI (`agent -p`,
+  `CURSOR_API_KEY`), Hermes via the Nous Portal (`hermes -z`, `HERMES_AUTH`), and
+  the GLM Coding Plan on Z.AI's Anthropic endpoint (`GLM_API_KEY` / `ZAI_API_KEY`)
+  join the `run-harness` contract, wired through the resolver, installer, both
+  workflows, the local MCP dispatch path, the capability manifest, and regression
+  tests. Aeon now dispatches to ten coding-agent CLIs. Their credentials are
+  permanent first-class rows in the dashboard Access Keys panel, with Hermes on the
+  captured-login Connect/Reconnect flow. (#967, #975)
+- **New `rightstack` skill (Dev & Code).** A read-only Web3 stack advisor
+  (recommend / workflow / compare / explain / migrate) that maps a build goal to a
+  coherent stack before implementation; disabled and manual-only, it cannot install
+  packages, edit an app, or touch a wallet or contract. Catalog is now 77 skills.
+  (#961)
+- **Read-only harness comparison (`scripts/skill-health-routing.mjs`).** Phase 2 of
+  measured harness routing: it groups harness-tagged skill-health scores (five
+  required per harness) and joins per-run token / cache usage, so an operator can
+  weigh quality against cost before changing `aeon.yml`. It never writes repo
+  state. (#969)
+- **Machine-readable vuln-scanner execution evidence.** Staged scanner binaries
+  (Semgrep, TruffleHog, OSV-Scanner, Slither, cargo-fuzz) are wrapped with an
+  invocation logger, and a post-run step prints the staged manifest plus the actual
+  invocation log, so a report can no longer claim a scan that never ran. An absent
+  optional scanner still does not fail the run. (#968)
+- **Three community skill packs listed:** CultOS exact-commit PR review (#974), the
+  Farcaster pack with a Neynar-backed `cast` publish skill (#977), and the Spoolis
+  Outcome Gate acceptance-criteria gate (#978).
+- **Operator-console plugin prepped for more marketplaces.** The `plugin/` operator
+  skill gained manifests and privacy / support metadata for OpenAI's plugin
+  directory (host-neutral wording, a Codex-runnable history-mining script), the
+  Kiro Powers registry, and MiniMax. (#959, #964, #965)
+
 - **`./notify` moves behind a post-run delivery dispatcher (#912 Phase 2).** A
   skill call now writes one structured JSON payload to the notify queue instead of
   ever touching the wire; a new post-run `scripts/notify-deliver.sh` is the only
@@ -257,6 +288,13 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Changed
 
+- **Stale harness and MCP catalog counts corrected.** `llms.txt` moved from six to
+  seven coding-agent CLIs (the harness work above then takes the count to ten), and
+  the MCP OAuth catalog in `docs/mcp-oauth.md` gained the missing Higgsfield row
+  (`mcp.higgsfield.ai/mcp`), so "every catalog provider rotates" replaces "all
+  four". (#960)
+- **Ecosystem list churn:** added Eyebrow (#976) and removed Amper (#979).
+
 - **Harness inventory counts normalized to seven.** With fx as the 7th adapter,
   `docs/harnesses.md`, `harness-adapter/README.md`, and the workflow comments now
   say seven (not six / five / four) and present the harnesses evenly, and the
@@ -362,6 +400,25 @@ from or pin to; the template keeps serving the latest `main` to new forks.
   should re-add the PAT as `GH_SECRETS_PAT`; `GH_GLOBAL` users are unaffected.
 
 ### Fixed
+
+- **Local MCP server runs skills without blocking.** `apps/mcp-server` replaced the
+  event-loop-freezing `spawnSync` with an async `spawn`, so a long `tools/call` no
+  longer stalls `tools/list`, ping, or a second call; a new in-process single-flight
+  queue serializes runs to protect the shared working tree from `.git/index.lock`
+  and interleaved `memory/` writes. Same 600s timeout and 10MB output cap. (#973)
+- **Telegram notification chunks stay under the size limit.** Markdown is now
+  rendered to HTML before the final size split, and active tags are closed and
+  reopened at chunk boundaries, so a skill with many links can no longer produce an
+  unsendable oversized payload. (#970)
+- **`bin/add-skill` records the real source commit in `skills.lock`.** The
+  provenance lookup passed a `gh api` field that forced a `POST` to the GET-only
+  commits collection, 404ed, and fell back to `commit_sha: "unknown"`; it now reads
+  the commit correctly. (#972)
+- **macOS portability:** the cron scheduler test detects GNU vs BSD `date` and uses
+  native syntax (#957), and the issue-backed cron-state / health helpers no longer
+  abort under Bash 3.2 `set -u` on an empty `REPO_ARGS` in their default
+  current-repo mode (#971). Both were local-dev-only; Linux Actions scheduling was
+  never affected.
 
 - **Post-run scorer grades the sent notify card, not the harness `.result`
   recap.** For a notify-first skill the scorer now reads the captured chain
@@ -726,6 +783,11 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 - Bumped the dashboard `postcss` override past `GHSA-r28c-9q8g-f849`. (#783)
 
 ### Maintenance
+
+- First repo lint gates: eslint (per app) and shellcheck (whole shell surface),
+  both green on the current tree, with two shellcheck false positives suppressed
+  with rationale (#962, #963); plus a 400x400 MCP logo for the Cline marketplace
+  (#966).
 
 - CI/test/asset noise: HOL AI Plugin Scanner workflow added then dropped same-day
   (#928, #929); unused `docs/assets` images removed and provider/free-aeon docs

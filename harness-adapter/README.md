@@ -128,7 +128,7 @@ bind-mounts) kimi still reads the literal `${VAR}`s.
 **Read-only enforcement is hoisted into the dispatcher.** Only codex has a native
 kernel sandbox that actually holds; every other harness — claude, grok, pi, vibe,
 kimi, fx — runs read-only under `sandbox-exec` (macOS) or `bwrap` (Linux) with the
-workspace mounted read-only, so `--mode read-only` means the same thing on all seven:
+workspace mounted read-only, so `--mode read-only` means the same thing on all ten:
 *the repo physically cannot be mutated*, regardless of the model or its permission
 config. (vibe and kimi lean on this entirely — their `-p` modes have no
 permission-layer gate of their own.)
@@ -187,7 +187,7 @@ step and the native-auth secrets (`CODEX_AUTH`, `KIMI_AUTH`, `MISTRAL_API_KEY`,
 ## Capability manifest
 
 [`harnesses.json`](harnesses.json) is the machine-readable capability manifest for
-the seven adapters - the local analog of a UHP [`GET /v1/harnesses`](https://unifiedharnessprotocol.org)
+the ten adapters - the local analog of a UHP [`GET /v1/harnesses`](https://unifiedharnessprotocol.org)
 discovery response. One queryable file answers *does this harness report token
 cost? enforce read-only natively or via the wrapper sandbox? support MCP, and
 how? what auth does it take?* - instead of that knowledge living only in the
