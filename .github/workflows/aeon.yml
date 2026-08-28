@@ -76,7 +76,7 @@ on:
         required: false
         type: string
       harness:
-        description: 'Agent harness override (claude | grok | codex | pi | vibe | kimi | cursor | hermes | glm)'
+        description: 'Agent harness override (claude | grok | codex | pi | vibe | kimi | fx | cursor | hermes | glm)'
         required: false
         type: string
       var:
