@@ -70,6 +70,8 @@ jobs:
         run: bash scripts/tests/test_generate_harnesses_json.sh
       - name: harness resolution tests
         run: bash scripts/tests/test_resolve_harness.sh
+      - name: workflow harness choice tests
+        run: bash scripts/tests/test_workflow_harness_choices.sh
       - name: harness install/config tests
         run: bash scripts/tests/test_install_harness.sh
       - name: run-harness sandbox-gate tests

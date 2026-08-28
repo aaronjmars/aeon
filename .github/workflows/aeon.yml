@@ -53,6 +53,7 @@ on:
           - pi
           - vibe
           - kimi
+          - fx
           - cursor
           - hermes
           - glm
