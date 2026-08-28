@@ -50,7 +50,7 @@ Normalize the URL to lowercase scheme and host, no trailing slash. This is your 
 
 ```bash
 mkdir -p .tmp
-curl -fsS "https://usecortx.dev/api/v1/lookup" --data-urlencode "url=${var}" > .tmp/cortx-lookup.json
+curl -fsSL --fail-with-body "https://usecortx.dev/api/v1/lookup" --data-urlencode "url=${var}" > .tmp/cortx-lookup.json
 cat .tmp/cortx-lookup.json
 ```
 
@@ -62,7 +62,7 @@ Extract `serviceId` from the response.
 
 ```bash
 SERVICE_ID=$(cat .tmp/cortx-lookup.json | jq -r '.serviceId')
-curl -fsS "https://usecortx.dev/api/v1/reliability/$SERVICE_ID" > .tmp/cortx-result.json
+curl -fsSL --fail-with-body "https://usecortx.dev/api/v1/reliability/$SERVICE_ID" > .tmp/cortx-result.json
 cat .tmp/cortx-result.json
 ```
 
