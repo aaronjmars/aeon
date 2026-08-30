@@ -147,6 +147,30 @@ The visible text is `[github-monitor::add-repo] Which repo?`. When you reply
 `owner/repo`, the router dispatches `github-monitor` with `var=add-repo:owner/repo`.
 The skill parses `var` as `intent:value`.
 
+## 6. Reply-to-previous (outbound)
+
+Default on. Each skill's Telegram send quotes that skill's last message
+(`reply_to_message_id` + `allow_sending_without_reply`), so today's digest
+sits under yesterday's instead of landing as a new sibling in the chat.
+
+- **Ledger.** `memory/telegram-threads/<skill>.json` stores `{chat_id, message_id}`.
+  Written by the post-run deliver step (`scripts/notify-deliver.sh`) and committed
+  with the rest of `memory/`.
+- **Same-run chunks.** If a payload splits past Telegram's size limit, chunk 1
+  replies to the previous run; chunks 2..N reply to chunk 1 of this send.
+- **Deleted parent.** Telegram still delivers. The next successful send becomes
+  the new parent.
+- **Chat id change.** A stored id from a different chat is ignored; the send goes
+  out unthreaded and the ledger is rewritten.
+- **DM vs group.** In a 1:1 DM this is a quote-reply, not a collapsible thread.
+  In a group, Telegram's reply view groups them.
+- **Off.** Repo variable `TELEGRAM_REPLY_TO_PREVIOUS=0` (also accepts `false` /
+  `off` / `no`).
+- **Telegram-only.** Discord, Slack, Buzz, and email are unchanged.
+
+Skills do not opt in. `./notify` is unchanged; threading happens at deliver time
+from `$SKILL_NAME`.
+
 ---
 
 ## Owner gate
@@ -183,6 +207,8 @@ owner user.
   DM the bot in a *private* chat (keeps the bot's reply rate high) and never acts on
   them. A non-owner tapping/messaging inside the owner's own group is dropped silently
   (no reply, to avoid group noise) — see [Owner gate](#owner-gate).
+- **Reply-to-previous.** See [section 6](#6-reply-to-previous-outbound). First
+  send for a skill is unthreaded; the next run of that skill quotes it.
 
 ## Testing on a scratch bot
 
@@ -190,5 +216,6 @@ Create a second bot via @BotFather, point a private test fork's `TELEGRAM_BOT_TO
 at it, then: run **Setup Telegram Commands** → `/` menu populates → `/article`
 dispatches with no Claude call → tap a button → a row lands in
 `memory/snoozes.log`/`mutes.log` → open a `?start=` deep link → reply to a
-force-reply prompt and confirm the input reaches the skill. Ship to the live fork
+force-reply prompt and confirm the input reaches the skill. Run the same skill
+twice and confirm the second notification is a reply to the first. Ship to the live fork
 once all pass.

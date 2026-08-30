@@ -15,6 +15,7 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Added
 
+- **Telegram notifications reply to the previous run of the same skill.** Default on. Ledger at `memory/telegram-threads/<skill>.json`. Kill switch: repo variable `TELEGRAM_REPLY_TO_PREVIOUS=0`. (#995)
 - **Three more run-harnesses: Cursor, Hermes, and GLM.** Cursor CLI (`agent -p`,
   `CURSOR_API_KEY`), Hermes via the Nous Portal (`hermes -z`, `HERMES_AUTH`), and
   the GLM Coding Plan on Z.AI's Anthropic endpoint (`GLM_API_KEY` / `ZAI_API_KEY`)
