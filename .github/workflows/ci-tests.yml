@@ -115,6 +115,8 @@ jobs:
         run: bash scripts/tests/test_reactive_when.sh
       - name: chain when-routing tests
         run: bash scripts/tests/test_chain_when.sh
+      - name: chain-runner dispatch correlation tests
+        run: bash scripts/tests/test_chain_runner.sh
       - name: skill-scan calibration (fires on sinks, not benign syntax)
         run: bash scripts/tests/test_skill_scan_calibration.sh
       - name: audit-log redaction tests
