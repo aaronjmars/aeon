@@ -5,7 +5,7 @@
 # an agent resolves identically. It is the companion of scripts/install-harness.sh
 # (which stages the CLI these outputs describe) and of harness-adapter/run-harness
 # (which consumes MODEL_ARG). Splitting the decision from the workflow is what lets
-# messages.yml support all ten harnesses instead of only claude/grok — a gap that
+# messages.yml support all nine harnesses instead of only claude/grok — a gap that
 # existed purely because this ~100 lines lived inside one workflow step.
 #
 # Usage:
@@ -29,7 +29,7 @@
 #
 # Outputs (stdout, one KEY=VALUE per line — append to $GITHUB_OUTPUT/$GITHUB_ENV,
 # or `eval` after review):
-#   HARNESS        claude | grok | codex | pi | vibe | kimi | fx | cursor | hermes | glm
+#   HARNESS        claude | grok | codex | pi | vibe | kimi | fx | cursor | hermes
 #   AUTH_MODE      native-oauth | native-key | openrouter
 #   HARNESS_MODEL  the model label for logs/records ("(native:…)" on native auth)
 #   MODEL_ARG      what to pass as `run-harness --model`, or empty for "the
@@ -66,7 +66,7 @@ fi
 #   agy      — its print mode runs tools outside $PWD, so it reports success
 #              having written nothing to the workspace.
 case "$HARNESS" in
-  claude|grok|codex|pi|vibe|kimi|fx|cursor|hermes|glm) ;;
+  claude|grok|codex|pi|vibe|kimi|fx|cursor|hermes) ;;
   *) echo "::warning::unknown harness '$HARNESS' — falling back to claude" >&2
      HARNESS="claude" ;;
 esac
@@ -86,7 +86,6 @@ case "$HARNESS" in
   kimi)  if [ -n "${KIMI_AUTH:-}" ]; then AUTH_MODE="native-oauth"; elif [ -n "${MOONSHOT_API_KEY:-}" ]; then AUTH_MODE="native-key"; fi ;;
   hermes) if [ -n "${HERMES_AUTH:-}" ]; then AUTH_MODE="native-oauth"; fi ;;
   cursor) if [ -n "${CURSOR_API_KEY:-}" ]; then AUTH_MODE="native-key"; fi ;;
-  glm) if [ -n "${GLM_API_KEY:-}" ] || [ -n "${ZAI_API_KEY:-}" ]; then AUTH_MODE="native-key"; fi ;;
   vibe)  if [ -n "${MISTRAL_API_KEY:-}" ]; then AUTH_MODE="native-key"; fi ;;
   pi)    if [ -n "${ANTHROPIC_API_KEY:-}" ] || [ -n "${ANTHROPIC_OAUTH_TOKEN:-}" ] || [ -n "${OPENAI_API_KEY:-}" ]; then AUTH_MODE="native-key"; fi ;;
   # fx has no OpenRouter path at all (confirmed: no mention anywhere in its
@@ -143,7 +142,6 @@ case "$HARNESS" in
   # Passing a hardcoded model can switch the CLI to a different provider and
   # bypass the Nous Portal subscription, so let Hermes use its configured default.
   hermes) DEFAULT_HM="default" ;;
-  glm) DEFAULT_HM="glm-5.2" ;;
   cursor) DEFAULT_HM="gpt-5.1" ;;
   *)     DEFAULT_HM="openai/gpt-5-mini" ;;              # generic fallback: only claude/grok hit it (and don't consume it)
 esac
@@ -163,11 +161,11 @@ if [ "$AUTH_MODE" = "openrouter" ]; then
     # --model breaks them — their staged config decides.
   esac
 else
-  # Codex/Kimi/Vibe native accounts choose their own account default. Cursor,
-  # Hermes Portal, and GLM explicitly document model overrides, so preserve the
+  # Codex/Kimi/Vibe native accounts choose their own account default. Cursor and
+  # Hermes Portal explicitly document model overrides, so preserve the
   # dashboard/dispatch model for those harnesses even when their auth is native.
   case "$HARNESS" in
-    cursor|hermes|glm) MODEL_ARG="$HM" ;;
+    cursor|hermes) MODEL_ARG="$HM" ;;
     *) HM="(native:$AUTH_MODE)" ;;
   esac
 fi

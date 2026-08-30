@@ -28,7 +28,7 @@ export function GrokAuthModal({ loading, onClose, onGrokAuth, patSet, onGoToSecr
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 backdrop-blur-sm">
       <div className="bg-aeon-panel border border-[rgba(250,250,250,0.10)] w-full max-w-sm mx-4 p-[var(--space-lg)] shadow-2xl">
         <div className="flex items-center justify-between mb-[var(--space-sm)]">
-          <h2 className="font-display text-xl">xAI</h2>
+          <h2 className="font-display text-xl">Grok</h2>
           <button onClick={onClose} className="text-primary-35 hover:text-primary-100 text-lg">&times;</button>
         </div>
         <p className="text-xs text-primary-50 font-mono mb-[var(--space-md)]">Run skills with the grok CLI on your X account. Click below: a browser tab opens to approve on <code className="text-primary-70">accounts.x.ai</code>, and the session is stored for CI. Needs SuperGrok / X Premium+ and the <code className="text-primary-70">grok</code> CLI installed.</p>

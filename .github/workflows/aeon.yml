@@ -1,5 +1,5 @@
 name: Aeon · Skill Runner
-run-name: "skill: ${{ inputs.skill || 'feature' }}${{ inputs.var && format(' ({0})', inputs.var) || '' }}"
+run-name: "skill: ${{ inputs.skill || 'feature' }}${{ inputs.var && format(' ({0})', inputs.var) || '' }}${{ inputs.dispatch_id && format(' [dispatch: {0}]', inputs.dispatch_id) || '' }}"
 
 on:
   workflow_dispatch:
@@ -38,7 +38,6 @@ on:
           - moonshotai/kimi-k2.5
           - moonshotai/kimi-k3
           - moonshotai/kimi-k2.7-code
-          - glm-5.2
           - gpt-5.1
       harness:
         description: 'Agent harness'
@@ -56,13 +55,16 @@ on:
           - fx
           - cursor
           - hermes
-          - glm
       var:
         description: 'Variable (e.g. AI, bitcoin, owner/repo)'
         required: false
         type: string
       chain_context_file:
         description: 'Path to file with prior chain step outputs (set by chain runner)'
+        required: false
+        type: string
+      dispatch_id:
+        description: 'Correlation ID for chain dispatches'
         required: false
         type: string
   workflow_call:
@@ -76,7 +78,7 @@ on:
         required: false
         type: string
       harness:
-        description: 'Agent harness override (claude | grok | codex | pi | vibe | kimi | fx | cursor | hermes | glm)'
+        description: 'Agent harness override (claude | grok | codex | pi | vibe | kimi | fx | cursor | hermes)'
         required: false
         type: string
       var:
@@ -85,6 +87,10 @@ on:
         type: string
       chain_context_file:
         description: 'Chain context file path'
+        required: false
+        type: string
+      dispatch_id:
+        description: 'Correlation ID for chain dispatches'
         required: false
         type: string
   issues:
@@ -639,6 +645,7 @@ jobs:
           VENICE_BASE_URL: ${{ vars.VENICE_BASE_URL }}
           VENICE_CLEANCACHE: ${{ vars.VENICE_CLEANCACHE }}
           SURPLUS_MODEL: ${{ vars.SURPLUS_MODEL }}
+          GLM_MODEL: ${{ vars.GLM_MODEL }}
           CCR_LOG: ${{ vars.CCR_LOG }}
           # Optional Langfuse observability — set both keys to stream Claude Code's
           # run to Langfuse as a trace (scripts/langfuse-otel.sh; no-op when unset).
@@ -924,7 +931,7 @@ jobs:
           # There is no longer a native `claude -p` or `run-grok.sh` run path; the
           # two features those paths carried are preserved AROUND the adapter call:
           #   * claude  — wrapped in the multi-provider gateway cascade below, so it
-          #               keeps 8-provider failover + Langfuse tracing.
+          #               keeps 9-provider failover + Langfuse tracing.
           #   * grok    — GROK_* run-knobs from frontmatter (adapters/grok.sh maps them).
           # ALL seven now run read-only under the wrapper OS sandbox (bwrap). claude and
           # grok used to pass --no-sandbox because ./notify needed to write its queue
@@ -1384,6 +1391,7 @@ jobs:
           VENICE_BASE_URL: ${{ vars.VENICE_BASE_URL }}
           VENICE_CLEANCACHE: ${{ vars.VENICE_CLEANCACHE }}
           SURPLUS_MODEL: ${{ vars.SURPLUS_MODEL }}
+          GLM_MODEL: ${{ vars.GLM_MODEL }}
           CCR_LOG: ${{ vars.CCR_LOG }}
           LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
           LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
@@ -1645,6 +1653,9 @@ jobs:
           VENICE_BASE_URL: ${{ vars.VENICE_BASE_URL }}
           VENICE_CLEANCACHE: ${{ vars.VENICE_CLEANCACHE }}
           SURPLUS_MODEL: ${{ vars.SURPLUS_MODEL }}
+          GLM_MODEL: ${{ vars.GLM_MODEL }}
+          GLM_API_KEY: ${{ secrets.GLM_API_KEY }}
+          ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
           CCR_LOG: ${{ vars.CCR_LOG }}
           LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
           LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cfg=$(cat)
+state=${FAKE_CURL_STATE:?FAKE_CURL_STATE is required}
+attempt=0
+[ -f "$state" ] && attempt=$(cat "$state")
+next=$((attempt + 1))
+echo "$next" > "$state"
+out=$(printf '%s\n' "$cfg" | sed -n 's/^-o "\(.*\)"$/\1/p' | head -1)
+if [ -n "${FAKE_CURL_HTTP:-}" ]; then
+  [ -z "$out" ] || printf '%s' '{"error":"client"}' > "$out"
+  printf '%s' "$FAKE_CURL_HTTP"
+  exit 0
+fi
+if [ "$attempt" -eq 0 ]; then
+  [ -z "$out" ] || printf '%s' '{"error":"transient"}' > "$out"
+  printf '503'
+else
+  [ -z "$out" ] || printf '%s' '{"output":[{"type":"message","content":[{"type":"output_text","text":"ok"}]}]}' > "$out"
+  printf '200'
+fi

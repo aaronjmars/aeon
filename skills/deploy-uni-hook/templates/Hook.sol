@@ -13,6 +13,13 @@ pragma solidity 0.8.26;
 //     For a return-delta callback, also list it in hook.env HOOK_RETURNS_DELTA.
 //   - A dynamic-fee hook sets HOOK_POOL_FEE=dynamic in hook.env and returns
 //     `fee | LPFeeLibrary.OVERRIDE_FEE_FLAG` from beforeSwap.
+//   - Labs auto-route forbids 0x91, beforeSwapReturnsDelta, afterSwapReturnsDelta,
+//     and dynamicFees. A take() is allowlist-only. Games must succeed with empty
+//     hookData; do not revert a vanilla exact-in; do not key state off sender.
+//   - Fee take: magnitude of unspecified (exact-in AND exact-out). Widen to int256
+//     before abs. take() to an immutable recipient, never address(this), no withdraw.
+//   - Gates: no exact-match on moving state, no raw amountSpecified cap, no
+//     balanceOf(poolManager). Helpers must match execution-time state.
 //
 // All commonly-needed imports/usings are here so generated bodies compile as-is.
 

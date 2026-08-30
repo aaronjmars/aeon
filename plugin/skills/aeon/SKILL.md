@@ -89,7 +89,7 @@ Goal: one real notification in their phone, fast. Do not configure a schedule fi
 
    `--dry-run` prints the resolved `method=… → secret …` without calling `gh` or `claude` — worth running whenever the provider is in doubt.
 
-   **Don't assume they have a Claude subscription:** eight providers work, including OpenRouter, Grok, and crypto-settled gateways. See "Providers and harnesses".
+   **Don't assume they have a Claude subscription:** nine providers work, including OpenRouter, Grok, GLM, and crypto-settled gateways. See "Providers and harnesses".
 3. **Wire one channel.** Telegram is the fastest: create a bot with @BotFather, then `./aeon secrets set TELEGRAM_BOT_TOKEN --stdin` and `TELEGRAM_CHAT_ID`. Skip Discord/Slack/email for now — one channel is enough to prove it works.
 4. **Run one skill now.** Pick it with Mode 6 — ask what they want handled, propose one — then `./aeon skills run <name>`. Wait for it, then `./aeon runs logs <id>`. They should get a Telegram message.
 5. **Only then, schedule it.** `./aeon skills enable <name>` and set a time (see Mode 2).
@@ -411,10 +411,10 @@ Two independent axes. Don't confuse them: the **gateway** decides which model an
 Set a secret and it's live. `aeon.yml` ships `gateway: { provider: auto }`, which resolves at run time from whichever keys exist, in this priority order:
 
 ```
-claude → anthropic → openrouter → bankr → usepod → venice → surplus → grok
+claude → anthropic → openrouter → bankr → usepod → venice → surplus → grok → glm
 ```
 
-`direct` is **not** a hop in that chain — it's the placeholder when *none* of the eight secrets is set. It requires nothing and configures nothing, so the run proceeds on whatever `ANTHROPIC_*` env happens to exist and otherwise fails at the first model call. "Resolved to `direct`" in a log means **no key was found**, not that a fallback worked.
+`direct` is **not** a hop in that chain — it's the placeholder when *none* of the nine secrets is set. It requires nothing and configures nothing, so the run proceeds on whatever `ANTHROPIC_*` env happens to exist and otherwise fails at the first model call. "Resolved to `direct`" in a log means **no key was found**, not that a fallback worked.
 
 | Provider | Secret | Notes |
 |---|---|---|
@@ -426,6 +426,7 @@ claude → anthropic → openrouter → bankr → usepod → venice → surplus 
 | Venice | `VENICE_API_KEY` | No prefix — pass `--provider venice`. Privacy-first, bridged via a sidecar |
 | Surplus | `SURPLUS_API_KEY` | `inf_…` · settles USDC on Base — fund the wallet + `approve()` once first |
 | Grok (xAI) | `XAI_API_KEY` | `xai-…` · passthrough to `api.x.ai` |
+| GLM (Z.AI) | `GLM_API_KEY` | No prefix — pass `--provider glm`. Alias `ZAI_API_KEY`. Passthrough to `api.z.ai/api/anthropic` |
 
 It runs as a **cascade**, not a single choice: the highest-priority key goes first, and on *any* failure (no credits, rate limit, outage, dud response) the run falls over to the next provider whose key is set. It only errors if every one fails. The log prints `Routing attempt via '<provider>'` per hop.
 

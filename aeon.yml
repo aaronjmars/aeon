@@ -229,12 +229,13 @@ harness: claude
 # provider: auto (default) resolves at RUN TIME from whichever provider secret
 # is set, in priority order — no need to re-pin when you add/remove a key:
 #   claude (CLAUDE_CODE_OAUTH_TOKEN) → anthropic (ANTHROPIC_API_KEY) →
-#   openrouter → bankr → usepod → venice → surplus → grok → direct (fallback)
+#   openrouter → bankr → usepod → venice → surplus → grok → glm → direct (fallback)
 # Override the order with the repo variable GATEWAY_ORDER (space-separated).
 #
-# Or PIN one explicitly: direct | bankr | openrouter | usepod | venice | surplus | grok.
+# Or PIN one explicitly: direct | bankr | openrouter | usepod | venice | surplus | grok | glm.
 # grok routes Claude Code at xAI's Anthropic-compatible api.x.ai (XAI_API_KEY) —
 # this is the gateway path; to run the grok CLI itself, set `harness: grok` above.
+# glm routes Claude Code at Z.AI's Anthropic endpoint (GLM_API_KEY / ZAI_API_KEY).
 # For Anthropic-compatible endpoints (direct), set repo variable ANTHROPIC_BASE_URL
 # + secret ANTHROPIC_API_KEY. Example: https://api.deepseek.com/anthropic
 # Bankr docs: https://docs.bankr.bot/llm-gateway/overview

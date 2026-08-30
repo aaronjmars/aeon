@@ -9,6 +9,10 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ## [Unreleased]
 
+### Changed
+
+- **GLM Coding Plan is a Claude AI Gateway hop, not a harness.** `GLM_API_KEY` (alias `ZAI_API_KEY`) now routes `claude -p` at `api.z.ai/api/anthropic` through `scripts/llm-gateway.sh`, last in the auto cascade (override with `gateway.provider: glm` or `GLM_MODEL`). `harness: glm` is a dead name and falls back to `claude`. The `glm` adapter is gone.
+
 ### Added
 
 - **Three more run-harnesses: Cursor, Hermes, and GLM.** Cursor CLI (`agent -p`,

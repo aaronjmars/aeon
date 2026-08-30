@@ -1,6 +1,6 @@
 ---
 title: Harnesses — advanced behavior
-description: Deep reference for Aeon's harness axis (the ten agent CLIs behind one run-harness contract) — token accounting, capability-mode mapping, MCP, and per-surface harness selection.
+description: Deep reference for Aeon's harness axis (the nine agent CLIs behind one run-harness contract) - token accounting, capability-mode mapping, MCP, and per-surface harness selection.
 ---
 
 # Harnesses — advanced behavior
@@ -11,9 +11,9 @@ first-class harnesses (`claude` default, `grok`), how to select one, and
 one-click X-account login. This page collects the deeper behavior for anyone
 running the `grok` harness in anger.
 
-## Additional harnesses via run-harness (`codex`, `pi`, `vibe`, `kimi`, `fx`, `cursor`, `hermes`, `glm`)
+## Additional harnesses via run-harness (`codex`, `pi`, `vibe`, `kimi`, `fx`, `cursor`, `hermes`)
 
-Eight more harnesses are selectable in the dashboard's harness dropdown and the
+Seven more harnesses are selectable in the dashboard's harness dropdown and the
 `harness:` config: **codex** (OpenAI Codex CLI), **pi** (Pi Coding Agent),
 **vibe** (Mistral Vibe), **kimi** (Moonshot Kimi), and **fx** (Vercel's fx —
 [fx.sh](https://fx.sh), a minimal native Zig coding agent). Unlike `claude`/`grok`
@@ -61,7 +61,6 @@ login locally, store the session as a repo secret, restore it on the runner):
 | `fx`    | Vercel AI Gateway key (or `VERCEL_OIDC_TOKEN`) | set `AI_GATEWAY_API_KEY` as a repo secret. **No `aeon auth` flow and no OpenRouter fallback** — see below. |
 | `cursor` | Cursor API key | set `CURSOR_API_KEY` as a repo secret; headless entry point is `agent -p --trust` because every CI run starts with a fresh home. `--force` remains write-mode only. |
 | `hermes` | Nous Portal OAuth | `aeon auth --harness hermes` → `HERMES_AUTH`; the adapter restores `~/.hermes/auth.json`. |
-| `glm` | GLM Coding Plan API key | set `GLM_API_KEY` (or `ZAI_API_KEY`); the adapter uses Z.AI's Anthropic endpoint through Claude Code. |
 
 Which one runs is decided at dispatch by **which secret is set**, native first,
 OpenRouter last (`authSecretsForHarness` / the `HARNESS_AUTH` registry in
@@ -295,10 +294,10 @@ one path, an adapter-level fix reaches every surface by construction.
 claude/grok/codex, prompt-shim on pi/vibe/kimi). Callers that don't pass it get
 plain text. (A grok-only `GROK_JSON_SCHEMA` env var existed on the old script
 path until it was removed: nothing in the repo ever set it, and the scorer it was
-reserved for goes schema-less on purpose so a single parse path covers all ten
+reserved for goes schema-less on purpose so a single parse path covers all nine
 harnesses.)
 
-**Both hosted surfaces stage all ten.** `aeon.yml` (skill runs) and
+**Both hosted surfaces stage all nine.** `aeon.yml` (skill runs) and
 `messages.yml` (inbound messages) share the same two scripts, so a repo answers
 messages on the harness it runs skills on:
 
@@ -312,7 +311,7 @@ Each workflow still declares its own `env:` block, because `secrets.*` only
 resolves inside a workflow — but the logic is shared, which is the half that
 drifted before. `messages.yml` used to carry a second, weaker copy that knew only
 claude and grok, so a repo on codex/pi/vibe/kimi had its messages answered on
-claude with a `::warning::`. The local MCP server (`apps/mcp-server`) resolves all ten but expects the CLI to already be installed on your machine.
+claude with a `::warning::`. The local MCP server (`apps/mcp-server`) resolves all nine but expects the CLI to already be installed on your machine.
 
 ## Every entry point runs on either harness
 
@@ -324,8 +323,8 @@ behaves identically everywhere. All of them dispatch through `run-harness`:
 |---------|---------------------|-------|
 | Scheduled / manual skill run (`aeon.yml`) | dispatch **Harness** input → per-skill `harness:` → global `harness:` → `claude` | full flags + MCP + scorer |
 | Skill chains (`chain-runner.yml`) | inherits — each step dispatches `aeon.yml`, which resolves per-skill/global | |
-| Inbound messages (`messages.yml`, Telegram/Discord/Slack) | global `harness:` in `aeon.yml` | conversational reply in write mode; the resolved harness's CLI is staged here (all ten), same as skill runs |
-| Local MCP server (`apps/mcp-server`) | `AEON_HARNESS` env → global `harness:` | `resolveHarness()` in `skill-executor.ts`; resolves all ten, expects the CLI installed locally |
+| Inbound messages (`messages.yml`, Telegram/Discord/Slack) | global `harness:` in `aeon.yml` | conversational reply in write mode; the resolved harness's CLI is staged here (all nine), same as skill runs |
+| Local MCP server (`apps/mcp-server`) | `AEON_HARNESS` env → global `harness:` | `resolveHarness()` in `skill-executor.ts`; resolves all nine, expects the CLI installed locally |
 | Webhook (`apps/webhook`) | relay only → dispatches `messages.yml` | harness-agnostic |
 | Post-run quality scorer (`aeon.yml`) | scores through the same harness the skill ran on | |
 

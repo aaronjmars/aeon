@@ -14,10 +14,9 @@ const TITLES: Record<string, string> = {
   codex: 'Codex',
   kimi: 'Kimi',
   pi: 'Pi',
-  vibe: 'Vibe',
-  cursor: 'Cursor CLI',
+  vibe: 'Mistral',
+  cursor: 'Cursor',
   hermes: 'Hermes',
-  glm: 'GLM Coding Plan',
 }
 const OAUTH_BLURB: Record<string, string> = {
   codex: 'Run codex on your ChatGPT plan. A browser tab opens to approve on OpenAI; the session is captured for CI. Needs the codex CLI installed.',

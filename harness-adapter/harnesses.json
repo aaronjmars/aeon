@@ -9,8 +9,8 @@
       "124": "timeout"
     }
   },
-  "generated": "2026-08-28T16:08:08Z",
-  "count": 10,
+  "generated": "2026-08-30T18:51:46Z",
+  "count": 9,
   "harnesses": [
     {
       "id": "claude",
@@ -116,33 +116,6 @@
         "native_key": [
           "AI_GATEWAY_API_KEY",
           "VERCEL_OIDC_TOKEN"
-        ],
-        "openrouter": false
-      },
-      "native_control_path": "run-harness"
-    },
-    {
-      "id": "glm",
-      "label": "GLM Coding Plan (Z.AI)",
-      "cli": {
-        "install": "npm i -g @anthropic-ai/claude-code",
-        "bin": "claude",
-        "min_version": "2.1"
-      },
-      "invoke": "claude -p - --output-format json (Z.AI Anthropic endpoint)",
-      "round_trip": true,
-      "token_usage": "full",
-      "cost": false,
-      "read_only": "sandbox",
-      "structured_output": "native",
-      "mcp": "native",
-      "max_turns": "native",
-      "claude_md": "native+imports",
-      "auth": {
-        "native_oauth": [],
-        "native_key": [
-          "GLM_API_KEY",
-          "ZAI_API_KEY"
         ],
         "openrouter": false
       },

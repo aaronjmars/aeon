@@ -87,7 +87,6 @@ export const HERMES_MODELS = [
   { id: 'openai/gpt-5.4', label: 'GPT-5.4' },
   { id: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
 ]
-export const GLM_MODELS = [{ id: 'glm-5.2', label: 'GLM 5.2' }]
 
 // Harnesses (agent CLIs). `claude` = Claude Code (default, AI Gateway), labelled
 // "Anthropic"; `grok` = Grok Build (own X-account/API-key auth, own models),
@@ -100,16 +99,15 @@ export const GLM_MODELS = [{ id: 'glm-5.2', label: 'GLM 5.2' }]
 // select options while making a typo'd or dropped harness a compile error
 // against the Harness union in ./types.
 export const HARNESSES = [
-  { id: 'claude', label: 'Anthropic' },
-  { id: 'grok', label: 'xAI' },
+  { id: 'claude', label: 'Claude' },
+  { id: 'grok', label: 'Grok' },
   { id: 'codex', label: 'Codex' },
-  { id: 'fx', label: 'fx (Vercel)' },
+  { id: 'fx', label: 'fx' },
   { id: 'pi', label: 'Pi' },
-  { id: 'vibe', label: 'Vibe' },
+  { id: 'vibe', label: 'Mistral' },
   { id: 'kimi', label: 'Kimi' },
-  { id: 'cursor', label: 'Cursor CLI' },
-  { id: 'hermes', label: 'Hermes (Nous Portal)' },
-  { id: 'glm', label: 'GLM Coding Plan' },
+  { id: 'cursor', label: 'Cursor' },
+  { id: 'hermes', label: 'Hermes' },
 ] as const satisfies readonly { id: Harness; label: string }[]
 
 // fx has no model picker: unlike codex/pi/vibe/kimi's OpenRouter path, fx's
@@ -127,7 +125,6 @@ export function modelsForHarness(harness: string) {
   if (harness === 'kimi') return KIMI_MODELS
   if (harness === 'cursor') return CURSOR_MODELS
   if (harness === 'hermes') return HERMES_MODELS
-  if (harness === 'glm') return GLM_MODELS
   return MODELS
 }
 

@@ -52,7 +52,7 @@ export function buildSkillPrompt(slug: string, varValue: string): string {
 }
 
 /** Every harness harness-adapter's run-harness can dispatch to. */
-export const HARNESSES = ["claude", "grok", "codex", "pi", "vibe", "kimi", "fx", "cursor", "hermes", "glm"] as const;
+export const HARNESSES = ["claude", "grok", "codex", "pi", "vibe", "kimi", "fx", "cursor", "hermes"] as const;
 export type Harness = (typeof HARNESSES)[number];
 const isHarness = (v: string): v is Harness =>
   (HARNESSES as readonly string[]).includes(v);

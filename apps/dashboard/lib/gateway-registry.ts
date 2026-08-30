@@ -21,6 +21,10 @@ export const GATEWAY_REGISTRY = {
   // is separate from the grok CLI *harness* (harness: grok), which runs the grok
   // binary itself — see lib/config.ts Harness + scripts/run-grok.sh.
   grok: { label: 'Grok (xAI)', secretName: 'XAI_API_KEY', prefixes: ['xai-'], domain: 'x.ai' },
+  // GLM Coding Plan as a GATEWAY: Claude Code routed at Z.AI's Anthropic
+  // endpoint. No distinctive key prefix (dropdown-only, like UsePod/Venice).
+  // Not a harness - there is no glm CLI; harness: glm is a dead name.
+  glm: { label: 'GLM (Z.AI)', secretName: 'GLM_API_KEY', prefixes: [], domain: 'z.ai' },
 } as const
 
 export type GatewaySlug = keyof typeof GATEWAY_REGISTRY

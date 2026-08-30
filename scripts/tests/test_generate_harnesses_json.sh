@@ -31,15 +31,15 @@ if "$GEN" >/dev/null 2>&1; then pass "generator exits 0"; else bad "generator fa
 # 2. output is valid JSON
 if jq empty "$GENERATED" 2>/dev/null; then pass "manifest is valid JSON"; else bad "manifest is not valid JSON"; fi
 
-# 3. the ten adapters, id-sorted and unique
+# 3. the nine adapters, id-sorted and unique
 ids="$(jq -r '.harnesses[].id' "$GENERATED" | tr '\n' ' ')"
-[ "$ids" = "claude codex cursor fx glm grok hermes kimi pi vibe " ] \
-  && pass "ten harnesses, id-sorted" || bad "unexpected harness ids: [$ids]"
+[ "$ids" = "claude codex cursor fx grok hermes kimi pi vibe " ] \
+  && pass "nine harnesses, id-sorted" || bad "unexpected harness ids: [$ids]"
 
-# 4. count field matches array length and equals 10
+# 4. count field matches array length and equals 9
 c=$(jq -r '.count' "$GENERATED"); n=$(jq -r '.harnesses | length' "$GENERATED")
-{ [ "$c" = "$n" ] && [ "$c" = "10" ]; } \
-  && pass "count=10 matches array length" || bad "count($c) != length($n) or != 10"
+{ [ "$c" = "$n" ] && [ "$c" = "9" ]; } \
+  && pass "count=9 matches array length" || bad "count($c) != length($n) or != 9"
 
 # 5. every harness carries the required capability keys
 req='["id","label","cli","invoke","round_trip","token_usage","cost","read_only","structured_output","mcp","max_turns","claude_md","auth","native_control_path"]'
