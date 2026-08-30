@@ -269,6 +269,89 @@ TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 NOTIFY_DRY_RUN=1 bash "$DELIVER" "$p" 
 n=$(jq -s 'length' "$WORK/tg-payload.jsonl" 2>/dev/null)
 [ "$n" = "1" ] && pass "deliver: idempotent re-delivery sends once ($n)" || bad "deliver: idempotent re-delivery sends once (got $n)"
 
+# 22-27. reply-to-previous (default on). Isolated ledger dir so memory/ is never touched.
+TDIR=$(mktemp -d)
+
+# 22. first send for a skill has no reply_to; ledger stores a dry-run mid
+reset
+TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 SKILL_NAME=digest \
+  bash "$NOTIFY" "First digest body long enough to clear the probe filter aaa" >/dev/null 2>&1
+p="$(payload)"
+AEON_TG_THREADS_DIR="$TDIR" TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 NOTIFY_DRY_RUN=1 \
+  bash "$DELIVER" "$p" >/dev/null 2>&1
+{ [ -f "$WORK/tg-payload.jsonl" ] \
+  && jq -e 'has("reply_to_message_id")|not' "$WORK/tg-payload.jsonl" >/dev/null 2>&1 \
+  && jq -e '.chat_id=="123" and .message_id==1' "$TDIR/digest.json" >/dev/null 2>&1; } \
+  && pass "deliver: first send has no reply_to and writes ledger" \
+  || bad "deliver: first send has no reply_to and writes ledger"
+
+# 23. second send for the same skill quotes the stored mid
+reset
+TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 SKILL_NAME=digest \
+  bash "$NOTIFY" "Second digest body long enough to clear the probe filter bbb" >/dev/null 2>&1
+p="$(payload)"
+AEON_TG_THREADS_DIR="$TDIR" TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 NOTIFY_DRY_RUN=1 \
+  bash "$DELIVER" "$p" >/dev/null 2>&1
+{ jq -e '.reply_to_message_id==1 and .allow_sending_without_reply==true' "$WORK/tg-payload.jsonl" >/dev/null 2>&1 \
+  && jq -e '.message_id==2' "$TDIR/digest.json" >/dev/null 2>&1; } \
+  && pass "deliver: second send replies to previous mid" \
+  || bad "deliver: second send replies to previous mid"
+
+# 24. a different skill does not inherit the other skill's mid
+reset
+TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 SKILL_NAME=heartbeat \
+  bash "$NOTIFY" "Heartbeat body long enough to clear the probe filter ccc" >/dev/null 2>&1
+p="$(payload)"
+AEON_TG_THREADS_DIR="$TDIR" TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 NOTIFY_DRY_RUN=1 \
+  bash "$DELIVER" "$p" >/dev/null 2>&1
+{ jq -e 'has("reply_to_message_id")|not' "$WORK/tg-payload.jsonl" >/dev/null 2>&1 \
+  && jq -e '.message_id==3' "$TDIR/heartbeat.json" >/dev/null 2>&1; } \
+  && pass "deliver: other skill does not inherit reply_to" \
+  || bad "deliver: other skill does not inherit reply_to"
+
+# 25. TELEGRAM_REPLY_TO_PREVIOUS=0 skips reply_to even with a ledger
+reset
+TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 SKILL_NAME=digest \
+  bash "$NOTIFY" "Killswitch digest body long enough to clear the probe filter ddd" >/dev/null 2>&1
+p="$(payload)"
+AEON_TG_THREADS_DIR="$TDIR" TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 TELEGRAM_REPLY_TO_PREVIOUS=0 NOTIFY_DRY_RUN=1 \
+  bash "$DELIVER" "$p" >/dev/null 2>&1
+jq -e 'has("reply_to_message_id")|not' "$WORK/tg-payload.jsonl" >/dev/null 2>&1 \
+  && pass "deliver: TELEGRAM_REPLY_TO_PREVIOUS=0 skips reply_to" \
+  || bad "deliver: TELEGRAM_REPLY_TO_PREVIOUS=0 skips reply_to"
+
+# 26. chat_id mismatch skips reply_to
+TDIR2=$(mktemp -d)
+printf '%s\n' '{"chat_id":"999","message_id":42}' > "$TDIR2/digest.json"
+reset
+TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 SKILL_NAME=digest \
+  bash "$NOTIFY" "Chat mismatch body long enough to clear the probe filter eee" >/dev/null 2>&1
+p="$(payload)"
+AEON_TG_THREADS_DIR="$TDIR2" TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 NOTIFY_DRY_RUN=1 \
+  bash "$DELIVER" "$p" >/dev/null 2>&1
+jq -e 'has("reply_to_message_id")|not' "$WORK/tg-payload.jsonl" >/dev/null 2>&1 \
+  && pass "deliver: chat_id mismatch skips reply_to" \
+  || bad "deliver: chat_id mismatch skips reply_to"
+
+# 27. multi-chunk: first chunk replies to previous run; later chunks reply to chunk 1
+TDIR3=$(mktemp -d)
+printf '%s\n' '{"chat_id":"123","message_id":7}' > "$TDIR3/digest.json"
+LONG=$(python3 -c 'print("word " * 2500)')
+reset
+TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 SKILL_NAME=digest \
+  bash "$NOTIFY" --title "Long" "$LONG" >/dev/null 2>&1
+p="$(payload)"
+AEON_TG_THREADS_DIR="$TDIR3" TELEGRAM_BOT_TOKEN=x TELEGRAM_CHAT_ID=123 NOTIFY_DRY_RUN=1 \
+  bash "$DELIVER" "$p" >/dev/null 2>&1
+n=$(jq -s 'length' "$WORK/tg-payload.jsonl" 2>/dev/null)
+r1=$(jq -s '.[0].reply_to_message_id' "$WORK/tg-payload.jsonl" 2>/dev/null)
+r2=$(jq -s '.[1].reply_to_message_id' "$WORK/tg-payload.jsonl" 2>/dev/null)
+{ [ "$n" -gt 1 ] && [ "$r1" = "7" ] && [ "$r2" = "1" ]; } \
+  && pass "deliver: multi-chunk replies to prev then to chunk 1 ($n chunks)" \
+  || bad "deliver: multi-chunk replies to prev then to chunk 1 (n=$n r1=$r1 r2=$r2)"
+
+rm -rf "$TDIR" "$TDIR2" "$TDIR3"
+
 echo "---"
 [ "$fail" = "0" ] && echo "ALL PASS" || echo "SOME FAILED"
 exit "$fail"

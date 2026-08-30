@@ -23,6 +23,10 @@
 #
 # NOTIFY_DRY_RUN=1 records the Telegram payload to notify-queue/tg-payload.jsonl and
 # the Buzz chunks to buzz-payload.txt instead of sending — no network. Used by tests.
+# Telegram reply-to-previous (default on): a skill's send quotes that skill's last
+# Telegram message via reply_to_message_id + allow_sending_without_reply. Ledger:
+# memory/telegram-threads/<skill>.json ({chat_id, message_id}). Off:
+# TELEGRAM_REPLY_TO_PREVIOUS=0. Dry-run tests set AEON_TG_THREADS_DIR.
 set -euo pipefail
 
 PAYLOAD="${1:-}"
@@ -68,7 +72,77 @@ fi
 
 DELIVERED=false
 
-# --- Telegram — fence-safe chunks (parse_mode HTML, plaintext fallback) ------
+# Per-skill Telegram reply target. Default ON. Dry-run writes a ledger only when
+# AEON_TG_THREADS_DIR is set, so existing tests do not touch memory/.
+TG_DIR=""
+if [ -n "${AEON_TG_THREADS_DIR:-}" ]; then
+  TG_DIR="$AEON_TG_THREADS_DIR"
+elif [ "${NOTIFY_DRY_RUN:-}" != "1" ]; then
+  TG_ROOT="${GITHUB_WORKSPACE:-}"
+  [ -z "$TG_ROOT" ] && TG_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+  TG_DIR="$TG_ROOT/memory/telegram-threads"
+fi
+TG_REPLY_ON=1
+case "${TELEGRAM_REPLY_TO_PREVIOUS:-1}" in 0|false|off|no) TG_REPLY_ON=0 ;; esac
+
+_tg_load_mid() {
+  TG_PREV_MID=""
+  [ -n "$TG_DIR" ] && [ -n "$SKILL_NAME" ] || return 0
+  local f="$TG_DIR/${SKILL_NAME}.json"
+  [ -f "$f" ] || return 0
+  local chat mid
+  chat=$(jq -r '.chat_id // empty' "$f" 2>/dev/null || true)
+  mid=$(jq -r '.message_id // empty' "$f" 2>/dev/null || true)
+  [ "$chat" = "$TELEGRAM_CHAT_ID" ] || return 0
+  [[ "$mid" =~ ^[0-9]+$ ]] || return 0
+  TG_PREV_MID="$mid"
+}
+_tg_save_mid() {
+  local mid="$1"
+  [ -n "$TG_DIR" ] && [ -n "$SKILL_NAME" ] && [ -n "$mid" ] || return 0
+  [[ "$SKILL_NAME" =~ ^[a-z0-9_-]+$ ]] || return 0
+  [[ "$mid" =~ ^[0-9]+$ ]] || return 0
+  mkdir -p "$TG_DIR" || return 0
+  local f="$TG_DIR/${SKILL_NAME}.json" tmp
+  tmp=$(mktemp) || return 0
+  if jq -n --arg c "$TELEGRAM_CHAT_ID" --argjson m "$mid" \
+      '{chat_id:$c, message_id:$m}' > "$tmp"
+  then
+    mv "$tmp" "$f"
+  else
+    rm -f "$tmp"
+  fi
+}
+_tg_next_dry_mid() {
+  mkdir -p "$TG_DIR" || return 0
+  local seqf="$TG_DIR/.seq" n=0
+  [ -f "$seqf" ] && n=$(cat "$seqf" 2>/dev/null || echo 0)
+  n=$((n + 1))
+  printf '%s\n' "$n" > "$seqf"
+  printf '%s\n' "$n"
+}
+_tg_payload() {
+  local text="$1" mode="$2" rm="$3" reply="$4"
+  if [ -n "$reply" ]; then
+    if [ -n "$mode" ]; then
+      jq -n --arg chat "$TELEGRAM_CHAT_ID" --arg text "$text" --argjson rm "$rm" --argjson reply "$reply" \
+        '{chat_id:$chat, text:$text, parse_mode:"HTML", reply_to_message_id:$reply, allow_sending_without_reply:true} + (if $rm then {reply_markup:$rm} else {} end)'
+    else
+      jq -n --arg chat "$TELEGRAM_CHAT_ID" --arg text "$text" --argjson rm "$rm" --argjson reply "$reply" \
+        '{chat_id:$chat, text:$text, reply_to_message_id:$reply, allow_sending_without_reply:true} + (if $rm then {reply_markup:$rm} else {} end)'
+    fi
+  else
+    if [ -n "$mode" ]; then
+      jq -n --arg chat "$TELEGRAM_CHAT_ID" --arg text "$text" --argjson rm "$rm" \
+        '{chat_id:$chat, text:$text, parse_mode:"HTML"} + (if $rm then {reply_markup:$rm} else {} end)'
+    else
+      jq -n --arg chat "$TELEGRAM_CHAT_ID" --arg text "$text" --argjson rm "$rm" \
+        '{chat_id:$chat, text:$text} + (if $rm then {reply_markup:$rm} else {} end)'
+    fi
+  fi
+}
+
+# --- Telegram - fence-safe chunks (parse_mode HTML, plaintext fallback) ------
 if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
   TG_CHUNKS_B64=$(printf '%s' "$MSG" | python3 "$FMT" telegram --title "$TITLE" --severity "$SEVERITY" || true)
   TG_CHUNKS=()
@@ -77,6 +151,10 @@ if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
     TG_CHUNKS+=("$TG_CHUNK_B64")
   done <<< "$TG_CHUNKS_B64"
   TG_LAST=$(( ${#TG_CHUNKS[@]} - 1 ))
+  TG_PREV_MID=""
+  TG_RUN_ROOT=""
+  TG_LAST_MID=""
+  [ "$TG_REPLY_ON" = "1" ] && _tg_load_mid
   for TG_I in "${!TG_CHUNKS[@]}"; do
     TG_MSG=$(printf '%s' "${TG_CHUNKS[$TG_I]}" | base64 -d)
     # reply_markup rides only on the last chunk.
@@ -85,35 +163,59 @@ if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
     else
       TG_RM="null"
     fi
-    TG_PAYLOAD=$(jq -n --arg chat "$TELEGRAM_CHAT_ID" --arg text "$TG_MSG" --argjson rm "$TG_RM" \
-      '{chat_id:$chat, text:$text, parse_mode:"HTML"} + (if $rm then {reply_markup:$rm} else {} end)')
+    TG_REPLY_TO=""
+    if [ "$TG_REPLY_ON" = "1" ]; then
+      if [ -n "$TG_RUN_ROOT" ]; then
+        TG_REPLY_TO="$TG_RUN_ROOT"
+      elif [ -n "$TG_PREV_MID" ]; then
+        TG_REPLY_TO="$TG_PREV_MID"
+      fi
+    fi
+    TG_PAYLOAD=$(_tg_payload "$TG_MSG" HTML "$TG_RM" "$TG_REPLY_TO")
 
+    TG_MID=""
     # Dry-run (tests): record the payload instead of sending. No network.
     if [ "${NOTIFY_DRY_RUN:-}" = "1" ]; then
       mkdir -p "$QUEUE_DIR"
       printf '%s\n' "$TG_PAYLOAD" >> "$QUEUE_DIR/tg-payload.jsonl"
       DELIVERED=true
-      continue
-    fi
-
-    TG_RESULT=$(curl -s -w "\n%{http_code}" -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-      -H "Content-Type: application/json" -d "$TG_PAYLOAD" 2>/dev/null) || true
-    TG_HTTP=$(echo "$TG_RESULT" | tail -1)
-    TG_OK=$(echo "$TG_RESULT" | sed '$d' | jq -r '.ok // false' 2>/dev/null || echo "false")
-    if [ "$TG_HTTP" = "200" ] && [ "$TG_OK" = "true" ]; then
-      DELIVERED=true
+      if [ -n "$TG_DIR" ] && [ -n "$SKILL_NAME" ]; then
+        TG_MID=$(_tg_next_dry_mid)
+      fi
     else
-      # Fallback without parse_mode. Strip tags + unescape so it degrades to clean
-      # plaintext, not visible <b>…</b> markup. Keep the reply_markup.
-      TG_PLAIN=$(printf '%s' "$TG_MSG" | sed -E 's/<[^>]+>//g' \
-        | sed -E 's/&lt;/</g; s/&gt;/>/g; s/&amp;/\&/g')
-      TG_FALLBACK=$(jq -n --arg chat "$TELEGRAM_CHAT_ID" --arg text "$TG_PLAIN" --argjson rm "$TG_RM" \
-        '{chat_id:$chat, text:$text} + (if $rm then {reply_markup:$rm} else {} end)')
-      curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-        -H "Content-Type: application/json" -d "$TG_FALLBACK" > /dev/null 2>&1 && DELIVERED=true || true
+      TG_RESULT=$(curl -s -w "\n%{http_code}" -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+        -H "Content-Type: application/json" -d "$TG_PAYLOAD" 2>/dev/null) || true
+      TG_HTTP=$(echo "$TG_RESULT" | tail -1)
+      TG_BODY=$(echo "$TG_RESULT" | sed '$d')
+      TG_OK=$(printf '%s' "$TG_BODY" | jq -r '.ok // false' 2>/dev/null || echo "false")
+      if [ "$TG_HTTP" = "200" ] && [ "$TG_OK" = "true" ]; then
+        DELIVERED=true
+        TG_MID=$(printf '%s' "$TG_BODY" | jq -r '.result.message_id // empty' 2>/dev/null || true)
+      else
+        # Fallback without parse_mode. Strip tags + unescape so it degrades to clean
+        # plaintext, not visible <b>...</b> markup. Keep the reply_markup.
+        TG_PLAIN=$(printf '%s' "$TG_MSG" | sed -E 's/<[^>]+>//g' \
+          | sed -E 's/&lt;/</g; s/&gt;/>/g; s/&amp;/\&/g')
+        TG_FALLBACK=$(_tg_payload "$TG_PLAIN" "" "$TG_RM" "$TG_REPLY_TO")
+        TG_RESULT=$(curl -s -w "\n%{http_code}" -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+          -H "Content-Type: application/json" -d "$TG_FALLBACK" 2>/dev/null) || true
+        TG_HTTP=$(echo "$TG_RESULT" | tail -1)
+        TG_BODY=$(echo "$TG_RESULT" | sed '$d')
+        TG_OK=$(printf '%s' "$TG_BODY" | jq -r '.ok // false' 2>/dev/null || echo "false")
+        if [ "$TG_HTTP" = "200" ] && [ "$TG_OK" = "true" ]; then
+          DELIVERED=true
+          TG_MID=$(printf '%s' "$TG_BODY" | jq -r '.result.message_id // empty' 2>/dev/null || true)
+        fi
+      fi
+      sleep 0.3
     fi
-    sleep 0.3
+    if [[ "$TG_MID" =~ ^[0-9]+$ ]]; then
+      echo "notify-deliver: telegram skill=${SKILL_NAME:-?} mid=$TG_MID reply_to=${TG_REPLY_TO:-none}" >&2
+      [ -z "$TG_RUN_ROOT" ] && TG_RUN_ROOT="$TG_MID"
+      TG_LAST_MID="$TG_MID"
+    fi
   done
+  [ -n "$TG_LAST_MID" ] && _tg_save_mid "$TG_LAST_MID"
 fi
 
 # --- Discord — rich embeds, one POST per embed ------------------------------
