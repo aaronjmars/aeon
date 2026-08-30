@@ -33,7 +33,6 @@ const DOMAINS: Record<string, string> = {
   MOONSHOT_API_KEY: 'moonshot.ai',
   CURSOR_API_KEY: 'cursor.com',
   HERMES_AUTH: 'nousresearch.com',
-  GLM_API_KEY: 'z.ai',
   MISTRAL_API_KEY: 'mistral.ai',
   ...GATEWAY_DOMAINS,
   // Channels

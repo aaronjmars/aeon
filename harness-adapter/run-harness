@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# run-harness — one Claude Code-shaped contract, ten coding-agent harnesses.
+# run-harness — one Claude Code-shaped contract, nine coding-agent harnesses.
 #
-#   usage: run-harness <claude|grok|codex|fx|pi|vibe|kimi|cursor|hermes|glm> [options] < prompt.txt
+#   usage: run-harness <claude|grok|codex|fx|pi|vibe|kimi|cursor|hermes> [options] < prompt.txt
 #
 #   options (mirroring Claude Code's headless flags):
 #     --model <id>                  model id (per-harness mapping; wrong-family ids fall to defaults)
@@ -139,7 +139,7 @@ fi
 # rely on the wrapper for read-only.
 if [ "$MODE" = "read-only" ] && [ "$SANDBOX" = "auto" ]; then
   case "$HARNESS" in
-    claude | grok | codex | fx | pi | vibe | kimi | cursor | hermes | glm)
+    claude | grok | codex | fx | pi | vibe | kimi | cursor | hermes)
       . "$HERE/lib/sandbox.sh"
       SB=()
       if PREFIX=$(sandbox_prefix "$RH_TMPDIR" "$MCP"); then

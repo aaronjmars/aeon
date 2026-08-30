@@ -18,7 +18,7 @@ const ROOT = process.cwd();
 const HEALTH_DIR = join(ROOT, 'memory', 'skill-health');
 const TOKEN_FILE = join(ROOT, 'memory', 'token-usage.csv');
 // Harness allowlist mirrors scripts/resolve-harness.sh; keep in sync.
-const HARNESSES = new Set(['claude', 'grok', 'codex', 'pi', 'vibe', 'kimi', 'fx', 'cursor', 'hermes', 'glm']);
+const HARNESSES = new Set(['claude', 'grok', 'codex', 'pi', 'vibe', 'kimi', 'fx', 'cursor', 'hermes']);
 
 function usage() {
   console.error(`usage: node scripts/skill-health-routing.mjs <skill-name>`);
@@ -103,7 +103,6 @@ function knownHarnessForModel(model, modelHints) {
 
   if (/(^|\/)gpt-[^/]*-codex/.test(model)) return 'codex';
   if (/^grok-/.test(model)) return 'grok';
-  if (/^glm-/.test(model)) return 'glm';
   if (/^moonshotai\//.test(model)) return 'kimi';
   if (/^mistralai\//.test(model)) return 'vibe';
   if (/^claude-/.test(model) || /^anthropic\//.test(model)) return 'claude';

@@ -130,10 +130,6 @@ const HARNESS_AUTH_SPECS = {
       label: 'Connect Nous Portal',
     },
   },
-  glm: {
-    authSecrets: ['GLM_API_KEY', 'ZAI_API_KEY'],
-    apiKey: { secret: 'GLM_API_KEY', placeholder: 'GLM Coding Plan key' },
-  },
 } satisfies Record<string, HarnessAuthSpec>
 
 // Every caller indexes this with a harness name that came off the wire, out of

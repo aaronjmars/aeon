@@ -94,9 +94,9 @@ The full manifest schema, field reference, trust model, and a worked example are
 ### Contributing an LLM gateway
 
 A gateway is wired through a handful of files, all following the existing
-pattern — so copy an entry of the same **tier**. There are two: **native** (the
-provider already speaks the Anthropic API — just point `ANTHROPIC_BASE_URL` at it,
-like Bankr/OpenRouter/UsePod/Grok) and **sidecar** (OpenAI-compatible — bridged
+pattern - so copy an entry of the same **tier**. There are two: **native** (the
+provider already speaks the Anthropic API - just point `ANTHROPIC_BASE_URL` at it,
+like Bankr/OpenRouter/UsePod/Grok/GLM) and **sidecar** (OpenAI-compatible - bridged
 per run by a [claude-code-router](https://github.com/musistudio/claude-code-router)
 sidecar, like Venice/Surplus).
 

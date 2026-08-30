@@ -6,14 +6,14 @@
 # call in the same shell. Place at: scripts/llm-gateway.sh
 #
 # Inputs already present in the step environment:
-#   $GATEWAY                    auto | direct | bankr | openrouter | usepod | surplus | venice | grok
+#   $GATEWAY                    auto | direct | bankr | openrouter | usepod | surplus | venice | grok | glm
 #                               (auto = resolve at run time from which secrets are set)
 #   $MODEL                      aeon's resolved model id (may be rewritten here)
 #   <PROVIDER> secret           the secret for the selected gateway (see below)
 #   vars.ANTHROPIC_BASE_URL     optional Anthropic-compatible endpoint (direct path)
 #
 # Two routing tiers:
-#   NATIVE (no proxy): bankr, openrouter, usepod, grok  -> set base URL + auth, done.
+#   NATIVE (no proxy): bankr, openrouter, usepod, grok, glm  -> set base URL + auth, done.
 #   SIDECAR (wrapper): surplus, venice            -> start claude-code-router on
 #                                                    127.0.0.1 to translate
 #                                                    Anthropic <-> OpenAI.
@@ -138,13 +138,14 @@ aeon_present() {  # is the secret for provider $1 set?
     venice)     [ -n "${VENICE_API_KEY:-}" ] ;;
     surplus)    [ -n "${SURPLUS_API_KEY:-}" ] ;;
     grok)       [ -n "${XAI_API_KEY:-}" ] ;;
+    glm)        [ -n "${GLM_API_KEY:-${ZAI_API_KEY:-}}" ] ;;
     *) false ;;
   esac
 }
 if [ -z "${GATEWAY:-}" ] || [ "${GATEWAY}" = "auto" ]; then
   # Ordered list of every provider whose secret is set (priority via GATEWAY_ORDER).
   AEON_CANDIDATES=""
-  for provider in ${GATEWAY_ORDER:-claude anthropic openrouter bankr usepod venice surplus grok}; do
+  for provider in ${GATEWAY_ORDER:-claude anthropic openrouter bankr usepod venice surplus grok glm}; do
     if aeon_present "$provider"; then AEON_CANDIDATES="${AEON_CANDIDATES:+$AEON_CANDIDATES }$provider"; fi
   done
   [ -z "$AEON_CANDIDATES" ] && AEON_CANDIDATES="direct"
@@ -237,6 +238,23 @@ X-Title: ${OPENROUTER_APP_TITLE:-Aeon}"
     export ANTHROPIC_DEFAULT_HAIKU_MODEL="$grok_model"
     MODEL="$grok_model"
     echo "::notice::Routing through xAI (Anthropic-compatible) as ${grok_model} @ ${ANTHROPIC_BASE_URL}"
+    ;;
+
+  glm)  # NATIVE — Z.AI's Anthropic-compatible API (Claude Code → api.z.ai)
+    if [ -z "${GLM_API_KEY:-${ZAI_API_KEY:-}}" ]; then
+      echo "::error::gateway.provider=glm requires GLM_API_KEY (or ZAI_API_KEY) but it is not set" >&2
+      exit 1
+    fi
+    export ANTHROPIC_API_KEY="${GLM_API_KEY:-$ZAI_API_KEY}"
+    export ANTHROPIC_BASE_URL="${ZAI_ANTHROPIC_BASE_URL:-https://api.z.ai/api/anthropic}"
+    unset CLAUDE_CODE_OAUTH_TOKEN ANTHROPIC_AUTH_TOKEN
+    export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+    glm_model="${GLM_MODEL:-glm-5.2}"
+    export ANTHROPIC_DEFAULT_OPUS_MODEL="$glm_model"
+    export ANTHROPIC_DEFAULT_SONNET_MODEL="$glm_model"
+    export ANTHROPIC_DEFAULT_HAIKU_MODEL="$glm_model"
+    MODEL="$glm_model"
+    echo "::notice::Routing through Z.AI (Anthropic-compatible) as ${glm_model} @ ${ANTHROPIC_BASE_URL}"
     ;;
 
   surplus)  # SIDECAR — OpenAI-compatible (dot-form ids); carries the full catalog

@@ -17,6 +17,7 @@ const PROVIDER_OPTIONS = [
   { value: 'usepod', label: 'UsePod' },
   { value: 'venice', label: 'Venice' },
   { value: 'surplus', label: 'Surplus Intelligence' },
+  { value: 'glm', label: 'GLM (Z.AI)' },
 ]
 
 interface AuthModalProps {

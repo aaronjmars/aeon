@@ -71,8 +71,8 @@ export const GATEWAY_PROVIDERS: GatewayProvider[] = ['auto', 'direct', ...GATEWA
 // `fx` also runs through run-harness but has NO OpenRouter fallback (Vercel AI
 // Gateway / VERCEL_OIDC_TOKEN only) — see lib/harness-auth.ts's fx entry and
 // resolve-harness.sh's fx case.
-export type Harness = 'claude' | 'grok' | 'codex' | 'fx' | 'pi' | 'vibe' | 'kimi' | 'cursor' | 'hermes' | 'glm'
-export const HARNESSES: Harness[] = ['claude', 'grok', 'codex', 'fx', 'pi', 'vibe', 'kimi', 'cursor', 'hermes', 'glm']
+export type Harness = 'claude' | 'grok' | 'codex' | 'fx' | 'pi' | 'vibe' | 'kimi' | 'cursor' | 'hermes'
+export const HARNESSES: Harness[] = ['claude', 'grok', 'codex', 'fx', 'pi', 'vibe', 'kimi', 'cursor', 'hermes']
 
 export interface UploadFile { path: string; content: string }
 

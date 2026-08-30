@@ -249,14 +249,6 @@ TOML
       echo "hermes: OpenRouter fallback via OPENROUTER_API_KEY"
     fi
     ;;
-  glm)
-    # GLM Coding Plan is an API endpoint, not a separate CLI. Claude Code is
-    # already installed by the workflow; the adapter points it at Z.AI.
-    if [ -z "${GLM_API_KEY:-${ZAI_API_KEY:-}}" ]; then
-      echo "::error::glm needs GLM_API_KEY (or ZAI_API_KEY) — a GLM Coding Plan key" >&2
-      exit 1
-    fi
-    echo "glm: Claude Code staged for Z.AI Anthropic endpoint" ;;
   *)
     echo "::error::no install recipe for harness '$H'"; exit 1 ;;
 esac

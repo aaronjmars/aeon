@@ -1,6 +1,6 @@
 # Aeon
 
-> Aeon is an autonomous agent framework. It runs your own skills on a schedule in GitHub Actions, keeps state in git-committed memory, and dispatches every run through one harness adapter that works across ten coding-agent CLIs (Claude Code, Codex, Grok, Kimi, Pi, Vibe, fx, Cursor, Hermes, GLM). Skills are Markdown with a spec-form frontmatter; a least-privilege `requires:` -> dashboard vault contract wires secrets. Fork the repo, turn skills on, and it runs itself.
+> Aeon is an autonomous agent framework. It runs your own skills on a schedule in GitHub Actions, keeps state in git-committed memory, and dispatches every run through one harness adapter that works across nine coding-agent CLIs (Claude Code, Codex, Grok, Kimi, Pi, Vibe, fx, Cursor, Hermes). GLM Coding Plan is a Claude AI Gateway provider, not a harness. Skills are Markdown with a spec-form frontmatter; a least-privilege `requires:` -> dashboard vault contract wires secrets. Fork the repo, turn skills on, and it runs itself.
 
 Repo: https://github.com/aeonfun/aeon
 Site: https://aeon.fun
