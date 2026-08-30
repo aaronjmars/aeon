@@ -130,6 +130,21 @@ decode_flags() {
   echo "${out# }"
 }
 
+# Uniswap Labs classic router: auto-route unless 0x91 prefix, return-delta, or dynamicFees.
+routing_class() {
+  local addr="$1" bits="$2"
+  local p
+  p=$(printf '%s' "$addr" | tr 'A-F' 'a-f')
+  if [ "${p:0:4}" = "0x91" ]; then echo "allowlist (0x91 prefix)"; return; fi
+  if (( bits & 8 )); then echo "allowlist (beforeSwapReturnsDelta)"; return; fi
+  if (( bits & 4 )); then echo "allowlist (afterSwapReturnsDelta)"; return; fi
+  if [ "$KIND" = "dynamic" ] || [ "${HOOK_POOL_FEE:-}" = "dynamic" ]; then
+    echo "allowlist (dynamicFees)"; return
+  fi
+  echo "auto-route"
+}
+
+
 # static scan for patterns a v4 hook almost never needs and that can steal/brick.
 # selfdestruct / delegatecall are hard fails; the rest print a warning to review.
 scan_dangerous() {
@@ -168,6 +183,10 @@ audit_freeform() {
   echo "  behavioral test_ functions: $tests"
   [ "$tests" -ge 1 ] || { echo "  FAIL: test/Hook.t.sol has no test_ functions"; fail=1; }
   echo "  derived flags: $(derive_flags)"
+  case ",${HOOK_RETURNS_DELTA:-}," in
+    *,beforeSwap,*|*,afterSwap,*) echo "  WARN: return-delta set - Labs will not auto-route (allowlist)" ;;
+  esac
+  [ "${HOOK_POOL_FEE:-}" = "dynamic" ] && echo "  WARN: dynamicFees - Labs will not auto-route (allowlist)"
   [ "$fail" -eq 0 ] && echo "  AUDIT PASS" || { echo "  AUDIT FAIL"; return 1; }
 }
 
@@ -246,6 +265,8 @@ if grep -q "ALREADY_DEPLOYED" "$LOG"; then
   echo "── already deployed ──"
   echo "  this exact hook (same code+flags+PoolManager) is already live at $ADDR"
   echo "  explorer  $EXPLORER/address/$ADDR"
+  bits=$(( 0x${ADDR: -4} & 0x3fff ))
+  echo "  routing   $(routing_class "$ADDR" "$bits")"
   rm -f "$LOG"; exit 0
 fi
 
@@ -257,6 +278,7 @@ if [ -n "$HOOK_ADDR" ]; then
   echo "  chain     $CHAIN ($CHAIN_ID)"
   echo "  hook      $HOOK_ADDR"
   printf '  flags     0x%x  %s\n' "$FLAGBITS" "$(decode_flags "$FLAGBITS")"
+  echo "  routing   $(routing_class "$HOOK_ADDR" "$FLAGBITS")"
   echo "  explorer  $EXPLORER/address/$HOOK_ADDR"
   if [ "$MODE" = "broadcast" ]; then
     RUNJSON="broadcast/DeployHook.s.sol/$CHAIN_ID/run-latest.json"

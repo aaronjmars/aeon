@@ -4,6 +4,7 @@ pragma solidity 0.8.26;
 // TEMPLATE: dynamic-fee hook.
 // Flags required in the address: AFTER_INITIALIZE, BEFORE_SWAP, AFTER_SWAP (0x10C0).
 // The pool MUST be initialized with fee = LPFeeLibrary.DYNAMIC_FEE_FLAG.
+// Labs routing: allowlist required (dynamicFees). No return-delta take.
 //
 // Default logic = volatility fee: the fee for a swap grows with the price move
 // of the previous swap. Edit `_computeFee` to change the policy (time decay,

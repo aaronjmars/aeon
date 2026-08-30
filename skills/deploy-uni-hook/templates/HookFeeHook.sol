@@ -5,6 +5,7 @@ pragma solidity 0.8.26;
 // Flags required in the address: AFTER_SWAP + AFTER_SWAP_RETURNS_DELTA (0x44).
 // Takes FEE_BPS of the swap's unspecified (usually output) currency for the hook.
 // The owner can withdraw the collected fees.
+// Labs routing: allowlist required (afterSwapReturnsDelta). Cannot auto-route.
 //
 // WARNING: a return-delta hook moves the token ledger. A wrong delta or a failed
 // take() reverts every swap and bricks the pool. Always simulate before deploy.
