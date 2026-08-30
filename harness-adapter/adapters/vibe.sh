@@ -111,8 +111,9 @@ if [ $rc -ne 0 ] && [ -z "$RESULT" ]; then
   exit $rc
 fi
 if [ "${BADSHAPE:-0}" = "1" ]; then
-  echo "warning: vibe output was not a JSON array — wrapping raw" >&2
-  wrap_raw_output < "$RH_TMPDIR/vibe-out.json"; exit 0
+  echo "error: vibe output was not a JSON array; rejecting raw output" >&2
+  wrap_raw_output < "$RH_TMPDIR/vibe-out.json"
+  exit 3
 fi
 if [ -z "$RESULT" ]; then
   echo "vibe produced no assistant message" >&2

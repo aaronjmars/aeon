@@ -58,6 +58,7 @@ if jq -e 'type == "object"' "$OUT" >/dev/null 2>&1; then
     then .result = (.structured_output | tojson)
     else . end' "$OUT"
 else
-  echo "warning: claude output was not a JSON object — wrapping raw stdout" >&2
+  echo "error: claude output was not a JSON object; rejecting raw stdout" >&2
   wrap_raw_output < "$OUT"
+  exit 3
 fi

@@ -172,7 +172,8 @@ if validate_envelope < "$OUT"; then
   # Emit a harness span (non-claude only; no-op unless OTLP telemetry is on).
   rh_emit_harness_span "$OUT" "$RH_SPAN_START" "$RH_SPAN_END"
 else
-  echo "warning: adapter output failed contract validation — wrapping raw" >&2
+  echo "error: adapter output failed contract validation; rejecting raw output" >&2
   wrap_raw_output < "$OUT"
+  exit 3
 fi
 exit 0

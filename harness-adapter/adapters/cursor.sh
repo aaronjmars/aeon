@@ -25,6 +25,10 @@ OUT="$RH_TMPDIR/cursor-out.json"; printf '%s' "$PROMPT" | agent "${ARGS[@]}" > "
 if jq -e . "$OUT" >/dev/null 2>&1; then
   RESULT=$(jq -r 'if (.result // null) != null then (.result | if type == "string" then . else tojson end) elif (.output // null) != null then (.output | if type == "string" then . else tojson end) elif (.text // null) != null then . else tostring end' "$OUT")
   TIN=$(jq -r '.usage.input_tokens // .usage.inputTokens // 0' "$OUT"); TOUT=$(jq -r '.usage.output_tokens // .usage.outputTokens // 0' "$OUT"); TCR=$(jq -r '.usage.cache_read_input_tokens // .usage.cacheReadInputTokens // 0' "$OUT"); SID=$(jq -r '.session_id // .sessionId // ""' "$OUT")
-else RESULT="$(cat "$OUT")"; TIN=0; TOUT=0; TCR=0; SID=""; echo "warning: Cursor returned non-JSON output; wrapping text" >&2; fi
+else
+  echo "error: cursor returned non-JSON output; rejecting raw output" >&2
+  wrap_raw_output < "$OUT"
+  exit 3
+fi
 if [ -n "${RH_JSON_SCHEMA:-}" ]; then RESULT="$(schema_extract_json "$RESULT")"; schema_validate "$RH_JSON_SCHEMA" "$RESULT" || { echo "structured output failed validation" >&2; exit 3; }; fi
 emit_envelope "$RESULT" "${TIN:-0}" "${TOUT:-0}" "${TCR:-0}" 0 "" "${SID:-}"

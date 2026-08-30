@@ -208,6 +208,7 @@ if [ -s "$CLEAN" ]; then
   esac
   emit_envelope "$RESULT_TEXT" "$TIN" "$TOUT" "$TCR" "$TCC" "$COST" "$SID"
 else
-  echo "warning: grok emitted no parseable JSON events — wrapping raw stdout" >&2
+  echo "error: grok emitted no parseable JSON events; rejecting raw stdout" >&2
   wrap_raw_output < "$OUT"
+  exit 3
 fi
