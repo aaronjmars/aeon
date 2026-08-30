@@ -35,7 +35,7 @@ export function AuthModal({ loading, onClose, onAuth }: AuthModalProps) {
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 backdrop-blur-sm">
       <div className="bg-aeon-panel border border-[rgba(250,250,250,0.10)] w-full max-w-sm mx-4 p-[var(--space-lg)] shadow-2xl">
         <div className="flex items-center justify-between mb-[var(--space-sm)]">
-          <h2 className="font-display text-xl">Anthropic</h2>
+          <h2 className="font-display text-xl">Claude</h2>
           <button onClick={onClose} className="text-primary-35 hover:text-primary-100 text-lg">&times;</button>
         </div>
         <p className="text-xs text-primary-50 font-mono mb-[var(--space-md)]">Connect a Claude subscription token, or pick your key&apos;s provider and paste it below. Routing is automatic - at run time Aeon uses whichever provider keys are set, in priority order.</p>

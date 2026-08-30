@@ -99,15 +99,15 @@ export const HERMES_MODELS = [
 // select options while making a typo'd or dropped harness a compile error
 // against the Harness union in ./types.
 export const HARNESSES = [
-  { id: 'claude', label: 'Anthropic' },
-  { id: 'grok', label: 'xAI' },
+  { id: 'claude', label: 'Claude' },
+  { id: 'grok', label: 'Grok' },
   { id: 'codex', label: 'Codex' },
-  { id: 'fx', label: 'fx (Vercel)' },
+  { id: 'fx', label: 'fx' },
   { id: 'pi', label: 'Pi' },
-  { id: 'vibe', label: 'Vibe' },
+  { id: 'vibe', label: 'Mistral' },
   { id: 'kimi', label: 'Kimi' },
-  { id: 'cursor', label: 'Cursor CLI' },
-  { id: 'hermes', label: 'Hermes (Nous Portal)' },
+  { id: 'cursor', label: 'Cursor' },
+  { id: 'hermes', label: 'Hermes' },
 ] as const satisfies readonly { id: Harness; label: string }[]
 
 // fx has no model picker: unlike codex/pi/vibe/kimi's OpenRouter path, fx's

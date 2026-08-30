@@ -14,8 +14,8 @@ const TITLES: Record<string, string> = {
   codex: 'Codex',
   kimi: 'Kimi',
   pi: 'Pi',
-  vibe: 'Vibe',
-  cursor: 'Cursor CLI',
+  vibe: 'Mistral',
+  cursor: 'Cursor',
   hermes: 'Hermes',
 }
 const OAUTH_BLURB: Record<string, string> = {
