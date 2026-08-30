@@ -1,5 +1,5 @@
 name: Aeon · Skill Runner
-run-name: "skill: ${{ inputs.skill || 'feature' }}${{ inputs.var && format(' ({0})', inputs.var) || '' }}"
+run-name: "skill: ${{ inputs.skill || 'feature' }}${{ inputs.var && format(' ({0})', inputs.var) || '' }}${{ inputs.dispatch_id && format(' [dispatch: {0}]', inputs.dispatch_id) || '' }}"
 
 on:
   workflow_dispatch:
@@ -65,6 +65,10 @@ on:
         description: 'Path to file with prior chain step outputs (set by chain runner)'
         required: false
         type: string
+      dispatch_id:
+        description: 'Correlation ID for chain dispatches'
+        required: false
+        type: string
   workflow_call:
     inputs:
       skill:
@@ -85,6 +89,10 @@ on:
         type: string
       chain_context_file:
         description: 'Chain context file path'
+        required: false
+        type: string
+      dispatch_id:
+        description: 'Correlation ID for chain dispatches'
         required: false
         type: string
   issues:

@@ -55,32 +55,45 @@ jobs:
           NOW_ISO=$(date -u +%FT%TZ)
           echo "Running chain: $CHAIN"
 
-          # --- Helper: dispatch a skill and return its run ID ---
+          # --- Helper: dispatch a skill and return its uniquely correlated run ID ---
           dispatch_skill() {
             local skill="$1" var="${2:-}" ctx_file="${3:-}"
             local before_ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+            # The ID is bounded and shell-safe so it can be passed as a workflow input
+            # and embedded in the run-name without changing untrusted jq source.
+            local dispatch_id="chain-$(openssl rand -hex 16)"
 
-            local args=(-f skill="$skill")
+            local args=(-f skill="$skill" -f dispatch_id="$dispatch_id")
             [ -n "$var" ] && args+=(-f var="$var")
             [ -n "$ctx_file" ] && args+=(-f chain_context_file="$ctx_file")
+
+            local expected_title="skill: $skill"
+            [ -n "$var" ] && expected_title+=" ($var)"
+            expected_title+=" [dispatch: $dispatch_id]"
 
             echo "  Dispatching: $skill"
             gh workflow run aeon.yml "${args[@]}"
 
-            # Poll for the run to appear (up to 60s)
+            # Poll for the run to appear (up to 60s). Match the exact run-name
+            # containing this dispatch ID; never fall back to a newer skill run.
             local run_id=""
             for i in $(seq 1 12); do
               sleep 5
-              run_id=$(gh run list --workflow=aeon.yml -L 10 \
-                --json databaseId,displayTitle,createdAt \
-                -q "[.[] | select(.displayTitle | test(\"skill: ${skill}( |\$)\"; \"i\")) | select(.createdAt >= \"${before_ts}\")] | .[0].databaseId" \
+              run_id=$(gh run list --workflow=aeon.yml -L 100 \
+                --json databaseId,displayTitle,createdAt |
+                jq -r --arg expected_title "$expected_title" \
+                  --arg dispatch_id "$dispatch_id" --arg before_ts "$before_ts" \
+                  '[.[] | select(.displayTitle == $expected_title and
+                    (.displayTitle | contains($dispatch_id)) and
+                    .createdAt >= $before_ts) | .databaseId] |
+                   if length == 1 then .[0] else empty end' \
                 2>/dev/null || true)
               [ -n "$run_id" ] && [ "$run_id" != "null" ] && break
               run_id=""
             done
 
             if [ -z "$run_id" ]; then
-              echo "::error::Failed to discover run ID for skill: $skill"
+              echo "::error::Failed to discover run ID for skill: $skill (dispatch: $dispatch_id)"
               return 1
             fi
             echo "  Run ID: $run_id"
