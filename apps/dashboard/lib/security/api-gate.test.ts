@@ -88,36 +88,83 @@ describe("isSameOriginWrite", () => {
   });
   it("POST with same-origin Origin passes", () => {
     assert.equal(
-      isSameOriginWrite("POST", headers({ origin: "http://localhost:5555" })),
+      isSameOriginWrite(
+        "POST",
+        headers({ host: "localhost:5555", origin: "http://localhost:5555" }),
+      ),
       true,
     );
     assert.equal(
-      isSameOriginWrite("POST", headers({ origin: "http://127.0.0.1:5555" })),
+      isSameOriginWrite(
+        "POST",
+        headers({ host: "127.0.0.1:5555", origin: "http://127.0.0.1:5555" }),
+      ),
       true,
+    );
+  });
+  it("POST with a different loopback alias fails", () => {
+    assert.equal(
+      isSameOriginWrite(
+        "POST",
+        headers({ host: "127.0.0.1:5555", origin: "http://localhost:5555" }),
+      ),
+      false,
     );
   });
   it("POST with cross-origin Origin fails", () => {
     assert.equal(
-      isSameOriginWrite("POST", headers({ origin: "http://attacker.example" })),
+      isSameOriginWrite(
+        "POST",
+        headers({ host: "localhost:5555", origin: "http://attacker.example" }),
+      ),
       false,
     );
   });
   it("POST falls back to Referer when Origin is absent", () => {
     assert.equal(
-      isSameOriginWrite("POST", headers({ referer: "http://localhost:5555/dashboard" })),
+      isSameOriginWrite(
+        "POST",
+        headers({ host: "localhost:5555", referer: "http://localhost:5555/dashboard" }),
+      ),
       true,
     );
     assert.equal(
-      isSameOriginWrite("POST", headers({ referer: "http://attacker.example/p" })),
+      isSameOriginWrite(
+        "POST",
+        headers({ host: "127.0.0.1:5555", referer: "http://localhost:5555/dashboard" }),
+      ),
+      false,
+    );
+    assert.equal(
+      isSameOriginWrite(
+        "POST",
+        headers({ host: "localhost:5555", referer: "http://attacker.example/p" }),
+      ),
       false,
     );
   });
   it("POST with neither Origin nor Referer is rejected", () => {
-    assert.equal(isSameOriginWrite("POST", headers({})), false);
+    assert.equal(isSameOriginWrite("POST", headers({ host: "localhost:5555" })), false);
+  });
+  it("POST with missing or malformed Host is rejected", () => {
+    assert.equal(
+      isSameOriginWrite("POST", headers({ origin: "http://localhost:5555" })),
+      false,
+    );
+    assert.equal(
+      isSameOriginWrite(
+        "POST",
+        headers({ host: "localhost:5555/path", origin: "http://localhost:5555" }),
+      ),
+      false,
+    );
   });
   it("POST with malformed Origin is rejected", () => {
     assert.equal(
-      isSameOriginWrite("POST", headers({ origin: "not-a-url" })),
+      isSameOriginWrite(
+        "POST",
+        headers({ host: "localhost:5555", origin: "not-a-url" }),
+      ),
       false,
     );
   });
@@ -135,6 +182,25 @@ describe("gateRequest (env-driven wrapper)", () => {
       headers: headers({ host: "localhost:5555", origin: "http://localhost:5555" }),
     });
     assert.equal(result, null);
+  });
+
+  it("accepts an exact same-origin POST from 127.0.0.1", () => {
+    const result = gateRequest({
+      method: "POST",
+      headers: headers({ host: "127.0.0.1:5555", origin: "http://127.0.0.1:5555" }),
+    });
+    assert.equal(result, null);
+  });
+
+  it("rejects a POST when loopback Host and Origin aliases differ", async () => {
+    const result = gateRequest({
+      method: "POST",
+      headers: headers({ host: "127.0.0.1:5555", origin: "http://localhost:5555" }),
+    });
+    assert.ok(result instanceof Response, "expected 403 Response");
+    assert.equal(result!.status, 403);
+    const body = await result!.json();
+    assert.equal(body.error, "Cross-origin write rejected");
   });
 
   it("rejects an attacker.example Host (DNS rebinding)", async () => {

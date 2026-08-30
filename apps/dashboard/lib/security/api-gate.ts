@@ -73,6 +73,25 @@ export function stripPort(host: string): string {
   return trimmed;
 }
 
+function normalizeRequestHost(headerHost: string | null): string | null {
+  if (!headerHost) return null;
+  const trimmed = headerHost.trim();
+  if (!trimmed || /[/?#@\\]/.test(trimmed)) return null;
+
+  const authorityPattern = trimmed.startsWith("[")
+    ? /^\[[^\]]+\](?::\d+)?$/
+    : /^[^:]+(?::\d+)?$/;
+  if (!authorityPattern.test(trimmed)) return null;
+
+  try {
+    const url = new URL(`http://${trimmed}`);
+    if (!url.host || url.username || url.password) return null;
+    return url.host.toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Parse `AEON_DASHBOARD_ALLOWED_HOSTS` into a normalized set.
  */
@@ -116,8 +135,8 @@ export function isAllowedHost(
 
 /**
  * Returns true iff the `Origin` (or `Referer`) of a state-changing
- * request resolves to a loopback host. GET/HEAD/OPTIONS skip the check
- * because they shouldn't have side effects.
+ * request resolves to the same allowed host as the request Host.
+ * GET/HEAD/OPTIONS skip the check because they shouldn't have side effects.
  *
  * `Origin` is preferred; modern browsers send it on every fetch /
  * XHR / form POST. `Referer` is a fallback for old clients that omit
@@ -134,17 +153,20 @@ export function isSameOriginWrite(
   const safe = method === "GET" || method === "HEAD" || method === "OPTIONS";
   if (safe) return true;
 
+  const requestHost = normalizeRequestHost(headers.get("host"));
+  if (!requestHost || !isAllowedHost(requestHost, opts)) return false;
+
   const originUrl = headers.get("origin") || headers.get("referer");
   if (!originUrl) return false;
 
-  let host: string;
+  let originHost: string;
   try {
-    host = new URL(originUrl).host;
+    originHost = new URL(originUrl).host.toLowerCase();
   } catch {
     return false;
   }
 
-  return isAllowedHost(host, opts);
+  return originHost === requestHost && isAllowedHost(originHost, opts);
 }
 
 /**
