@@ -77,6 +77,31 @@ Uniswap Labs auto-routes a hooked pool unless the address starts with `0x91`, or
 
 Do not generate amount-suffix / block-echo / exact-out-only / direction-gate hooks unless the brief explicitly asks for a revert-gate. Those are not Labs-routable. The miner skips `0x91...` addresses so an otherwise auto-route hook is not accidentally gated.
 
+## Fleet audit rules (from aeon.fun hook audits)
+
+These are standing defects measured on the live fleet. Freeform MUST NOT recreate them. The `skim` template is already patched.
+
+**Fee / `take()`:**
+- Charge the MAGNITUDE of the unspecified delta. Exact-out makes that delta negative. `if (unspecifiedAmount <= 0) return` silently skips the fee on every exact-output swap (shared-base F1).
+- Widen to `int256` before negating. `-type(int128).min` panics and bricks that swap.
+- `poolManager.take(..., feeRecipient, ...)` to an immutable recipient. NEVER `address(this)`. No `withdraw()`. Custody was the CrownClash/LegacyLedger HIGH.
+- An extra skim helper must not copy a `<= 0` early return (second copy of the sign guard).
+
+**Gates** (only if the brief demands a revert-gate):
+- 1a. Value that moves on its own (`block.number`): a `view` helper answered at head N is wrong at execution N+1. Target the execution block.
+- 1b. Value that moves when someone swaps (price low byte): exact match + zero tolerance is a contention DoS. Need a band, or do not gate.
+- 1c. Shared counter an attacker can park, not advanced on failure: griefing primitive.
+- 2. A contract in the `unlock` frame can satisfy the predicate; a signed tx cannot. That binds the wrong party.
+- 5. Never compare raw `amountSpecified` to a token-denominated constant. The caller picks the specified currency via exact-in vs exact-out. Use a dimensionless bound (tick move / liquidity fraction).
+- Never `balanceOf(poolManager)`: that is the v4 singleton's global inventory, not this pool. Use `StateLibrary`.
+- `sender` is the router. Do not treat it as the trader.
+
+**Tests:**
+- A fee hook must assert the take on exact-in AND exact-out.
+- A gate needs a hookless negative control (`hooks = address(0)`).
+- Do not cache `block.number` across `vm.roll` (via-ir folds it). Use `vm.getBlockNumber()`.
+
+
 
 ## Steps
 
@@ -88,7 +113,7 @@ Do not generate amount-suffix / block-echo / exact-out-only / direction-gate hoo
 
 4. **Build the hook (brief-driven).**
    - **Template mode** (`dynamic` / `noop` / `skim`): in `$HOOKBUILD_DIR/src/<Hook>.sol`, edit ONLY the region between `// --- AEON:LOGIC START ---` and `// --- AEON:LOGIC END ---`. Keep the callback signatures and flag set unchanged. If the default already fits the brief, leave it.
-   - **Freeform mode** (anything else): write the whole hook into `$HOOKBUILD_DIR/src/Hook.sol` — replace the `// --- AEON:BODY ... ---` region. Rules: keep the contract name `Hook` and `constructor(IPoolManager)`; implement whichever v4 callbacks the prompt needs, each with the EXACT `IHooks` signature, `onlyPoolManager`, and the right selector return. Do NOT hand-set flags — they are auto-derived from which callbacks you implement. If a callback returns a non-zero delta, set `HOOK_RETURNS_DELTA` in `$HOOKBUILD_DIR/hook.env`; for a fee-override hook set `HOOK_POOL_FEE=dynamic` there. Follow **Labs routing** above: empty `hookData` must succeed; a game must not revert a vanilla exact-in swap; a `take()` must declare `HOOK_RETURNS_DELTA`.
+   - **Freeform mode** (anything else): write the whole hook into `$HOOKBUILD_DIR/src/Hook.sol` — replace the `// --- AEON:BODY ... ---` region. Rules: keep the contract name `Hook` and `constructor(IPoolManager)`; implement whichever v4 callbacks the prompt needs, each with the EXACT `IHooks` signature, `onlyPoolManager`, and the right selector return. Do NOT hand-set flags — they are auto-derived from which callbacks you implement. If a callback returns a non-zero delta, set `HOOK_RETURNS_DELTA` in `$HOOKBUILD_DIR/hook.env`; for a fee-override hook set `HOOK_POOL_FEE=dynamic` there. Follow **Labs routing** and **Fleet audit rules** above: empty `hookData` must succeed; a game must not revert a vanilla exact-in swap; a `take()` must declare `HOOK_RETURNS_DELTA`, charge magnitude (exact-in and exact-out), and never custody.
      - **Also write the behavioral test.** In `$HOOKBUILD_DIR/test/Hook.t.sol`, replace the `// --- AEON:ASSERT ... ---` region with `test_*` functions that assert the hook's SPECIFIC intended behavior — not just "does not revert". For every rule in the brief write at least one positive and one negative case: a swap the hook must REJECT as `_expectSwapRevert(zeroForOne, amount, Hook.SomeError.selector)` (this helper unwraps v4's `WrappedError` for you — do NOT use bare `vm.expectRevert`, it won't match the wrapper); a swap it must ALLOW as a plain `_swap(...)`; any getter/accounting as `assertEq(hook.someGetter(...), expected)`. Do NOT edit `setUp()` or the helpers — only the `AEON:ASSERT` region. If the brief has no rejectable behavior, still assert the observable state the hook changes.
 
 5. **Simulate + audit (always).** Pass mode, kind, and chain (chain omitted = `base-sepolia`):

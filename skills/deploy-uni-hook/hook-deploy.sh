@@ -151,9 +151,15 @@ scan_dangerous() {
   local src="$1" bad=0
   grep -qE '\bselfdestruct\b'  "$src" && { echo "  FAIL: selfdestruct present (can brick the hook)"; bad=1; }
   grep -qE '\bdelegatecall\b'  "$src" && { echo "  FAIL: delegatecall present (code-injection risk)"; bad=1; }
-  grep -qE '\btx\.origin\b'    "$src" && echo "  WARN: tx.origin used (auth smell — review)"
+  grep -qE '\btx\.origin\b'    "$src" && echo "  WARN: tx.origin used (auth smell - review)"
   grep -qE '\.call\{[[:space:]]*value' "$src" && echo "  WARN: raw value-bearing call (review)"
   grep -qE '\bassembly\b'      "$src" && echo "  WARN: inline assembly (review)"
+  grep -qE 'poolManager\.take\([^;]*address\(this\)' "$src" \
+    && { echo "  FAIL: take() to address(this) custodies swapper funds"; bad=1; }
+  grep -qE 'unspecifiedAmount[[:space:]]*<=[[:space:]]*0' "$src" \
+    && echo "  WARN: unspecifiedAmount <= 0 skips the fee on exact-output"
+  grep -qE 'balanceOf\([^)]*poolManager' "$src" \
+    && echo "  WARN: balanceOf(poolManager) is singleton inventory, not this pool"
   return $bad
 }
 
