@@ -31,7 +31,7 @@ Read:
 Write:
   skills enable|disable|schedule|set|rm|run <name>
   secrets set|rm <NAME>          config set model|harness|gateway <v>
-  auth --oauth|--key <k>         sync [--status]
+  auth --oauth|--github|--key <k>  sync [--status]
   strategy set|build             soul build
   packs install <owner/repo>     mcp add|rm            telegram register
 

@@ -1,6 +1,7 @@
 import { parseArgs } from 'node:util'
 import { configureAuth } from '../../../dashboard/lib/auth.ts'
 import { normalizeAuthConfig } from '../../../dashboard/lib/auth-provider.ts'
+import { captureGithubToken } from '../../../dashboard/lib/github-auth.ts'
 import { HARNESS_AUTH } from '../../../dashboard/lib/harness-auth.ts'
 import { driveTtyLogin, captureHarnessCreds, setHarnessApiKey } from '../../../dashboard/lib/harness-auth-server.ts'
 import { emit, c, fail, isDryRun, requireGh } from '../output.ts'
@@ -11,6 +12,7 @@ Claude harness (default):
   aeon auth --oauth                 Mint a Claude OAuth token via \`claude setup-token\`
   aeon auth --key <sk-ant-…|bk_…|…>  Set an Anthropic / gateway key (provider auto-detected)
   aeon auth <token>                 Same as --key (positional)
+  aeon auth --github                Copy this machine's gh token into GH_GLOBAL
 
 Other harnesses (--harness codex|kimi|pi|vibe):
   aeon auth --harness codex         Log in with ChatGPT (browser), store as CODEX_AUTH
@@ -22,6 +24,7 @@ Other harnesses (--harness codex|kimi|pi|vibe):
 
 Options:
   --harness <h>       codex | kimi | pi | vibe (omit for the Claude harness)
+  --github            Copy \`gh auth token\` into GH_GLOBAL
   --provider <slug>   Force a gateway (bankr, openrouter, venice, …) — Claude only
   --base-url <url>    Custom HTTPS base URL (API-key auth only) — Claude only
   --dry-run           Show what would be set, without calling gh/the CLI
@@ -31,16 +34,24 @@ export async function authCommand(argv: string[]) {
   if (argv.includes('-h') || argv.includes('--help')) { console.log(USAGE); return }
   requireGh()
 
-  let values: { key?: string; provider?: string; 'base-url'?: string; oauth?: boolean; harness?: string }
+  let values: { key?: string; provider?: string; 'base-url'?: string; oauth?: boolean; harness?: string; github?: boolean }
   let positionals: string[]
   try {
     ;({ values, positionals } = parseArgs({ args: argv, options: {
       key: { type: 'string' }, provider: { type: 'string' },
       'base-url': { type: 'string' }, oauth: { type: 'boolean' },
-      harness: { type: 'string' },
+      harness: { type: 'string' }, github: { type: 'boolean' },
     }, allowPositionals: true }))
   } catch (e) { fail(e instanceof Error ? e.message : 'bad arguments') }
 
+  if (values.github) {
+    if (isDryRun()) return emit({ dryRun: true, method: 'oauth', secret: 'GH_GLOBAL' }, () =>
+      console.log(c.yellow('dry-run: ') + 'would copy `gh auth token` -> secret GH_GLOBAL'))
+    let result
+    try { result = captureGithubToken() }
+    catch (e) { fail(e instanceof Error ? e.message : 'failed to copy GitHub token') }
+    return emit(result, () => console.log(c.green('✓ ') + `GitHub: copied gh token as ${result.secret}`))
+  }
   // --- Non-Claude harnesses: native OAuth capture or a provider key ---
   if (values.harness) {
     const harness = values.harness

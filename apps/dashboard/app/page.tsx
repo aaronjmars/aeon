@@ -80,6 +80,7 @@ export default function Dashboard() {
   const [authLoading, setAuthLoading] = useState(false)
   const [grokLoading, setGrokLoading] = useState(false)
   const [harnessAuthLoading, setHarnessAuthLoading] = useState(false)
+  const [githubLoading, setGithubLoading] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
 
   const [strategy, setStrategy] = useState('')
@@ -172,6 +173,7 @@ export default function Dashboard() {
   // no arg = OAuth capture (codex→ChatGPT, kimi→device), which also switches the
   // repo to that harness; {key} = a provider key stored under its own secret.
   const setupHarnessAuth = async (targetHarness: string, payload?: { key: string }) => { setHarnessAuthLoading(true); try { const { ok, data } = await postJson<ErrorResponse & { harness?: Harness; method?: string; secret?: string; synced?: boolean }>('/api/harness-auth', { harness: targetHarness, ...(payload || {}) }); if (ok) { if (data?.method === 'oauth' && data?.harness) { setHarness(data.harness); flashSynced(`${data.harness} connected - harness set`, data) } else { if (data?.secret) markSecretSet(data.secret); flash(`${data?.secret || 'Key'} saved`) } setShowAuthModal(false); fetchData() } else { flash(typeof data?.error === 'string' ? data.error : 'Connect failed') } } finally { setHarnessAuthLoading(false) } }
+  const setupGithubAuth = async () => { setGithubLoading(true); try { const { ok, data } = await postJson<ErrorResponse>('/api/github-auth', {}); if (ok) { markSecretSet('GH_GLOBAL'); flash('GH_GLOBAL saved from gh') } else { flash(typeof data?.error === 'string' ? data.error : 'GitHub connect failed') } } finally { setGithubLoading(false) } }
   const saveSecret = async (n: string, value: string) => { setBusy(b => ({ ...b, [`sec-${n}`]: true })); try { const { ok } = await postJson('/api/secrets', { name: n, value }); if (ok) { markSecretSet(n); flash(`${n} saved`) } } finally { setBusy(b => ({ ...b, [`sec-${n}`]: false })) } }
   const deleteSecret = async (n: string) => { setBusy(b => ({ ...b, [`sec-${n}`]: true })); try { const { ok } = await del('/api/secrets', { name: n }); if (ok) { setSecrets(s => s.map(x => x.name === n ? { ...x, isSet: false } : x)); flash(`${n} removed`) } } finally { setBusy(b => ({ ...b, [`sec-${n}`]: false })) } }
   const importSkill = async (files: UploadFile[], name?: string, category?: string) => { const { ok, data } = await postJson<UploadResponse>('/api/upload', { files, name, category }); if (ok) { flash(`${displayName(data.name)} added`); fetchData() } }
@@ -249,7 +251,7 @@ export default function Dashboard() {
 
         <div ref={mainScrollRef} className="flex-1 overflow-y-auto p-[var(--space-lg)]">
           {view === 'secrets' && !selectedSkill && (
-            <SecretsPanel secrets={secrets} skills={skills} busy={busy} repo={repo} harness={harness} focusKey={secretFocus} onFocusHandled={() => setSecretFocus(null)} onSave={saveSecret} onDelete={deleteSecret} onSelectSkill={(name) => { setSelectedSkill(name); setView('hq') }} onConnectClaude={() => setupAuth()} connecting={authLoading} onConnectGrok={() => setupGrokAuth()} grokConnecting={grokLoading} onConnectHarness={(h) => setupHarnessAuth(h)} harnessConnecting={harnessAuthLoading} />
+            <SecretsPanel secrets={secrets} skills={skills} busy={busy} repo={repo} harness={harness} focusKey={secretFocus} onFocusHandled={() => setSecretFocus(null)} onSave={saveSecret} onDelete={deleteSecret} onSelectSkill={(name) => { setSelectedSkill(name); setView('hq') }} onConnectClaude={() => setupAuth()} connecting={authLoading} onConnectGrok={() => setupGrokAuth()} grokConnecting={grokLoading} onConnectHarness={(h) => setupHarnessAuth(h)} harnessConnecting={harnessAuthLoading} onConnectGithub={() => setupGithubAuth()} githubConnecting={githubLoading} />
           )}
           {view === 'strategy' && !selectedSkill && (
             strategyError
