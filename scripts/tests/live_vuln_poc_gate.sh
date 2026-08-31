@@ -9,7 +9,12 @@ POC_DIR="$(mktemp -d)"
 RESULT_DIR="$(mktemp -d)"
 trap 'rm -rf "$POC_DIR" "$RESULT_DIR"' EXIT
 TARGET="$POC_DIR/target"
-cp -R scripts/tests/fixtures/vuln-poc-foundry "$TARGET"
+mkdir -p "$TARGET/src"
+# Copy only canonical inputs. A prior local/agent build may have left untracked
+# cache/ or out/ artifacts beside the fixture; committing those into the isolated
+# repo would make the next Forge build look like a target-source mutation.
+cp scripts/tests/fixtures/vuln-poc-foundry/foundry.toml "$TARGET/foundry.toml"
+cp scripts/tests/fixtures/vuln-poc-foundry/src/Fixture.sol "$TARGET/src/Fixture.sol"
 git -C "$TARGET" init -q
 git -C "$TARGET" config user.email test@example.com
 git -C "$TARGET" config user.name test

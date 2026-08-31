@@ -1127,8 +1127,10 @@ jobs:
             fi
           done
           if [ -s /tmp/vuln-scan/executions.log ] && grep -q '^forge \[redacted\]$' /tmp/vuln-scan/executions.log \
-             && [ -s /tmp/vuln-scan/poc-executions.log ] && grep -q ' foundry-fork ' /tmp/vuln-scan/poc-executions.log; then
-            echo 'foundry-poc=observed'
+             && [ -s /tmp/vuln-scan/poc-executions.log ] && grep -q ' foundry-fork verified$' /tmp/vuln-scan/poc-executions.log; then
+            echo 'foundry-poc=verified'
+          elif [ -s /tmp/vuln-scan/poc-executions.log ] && grep -q ' foundry-fork failed$' /tmp/vuln-scan/poc-executions.log; then
+            echo 'foundry-poc=failed'
           else
             echo 'foundry-poc=not-observed-or-not-applicable'
           fi

@@ -628,7 +628,8 @@ report, or notify anyone. It proves that the real Aeon runner installed Foundry 
 that the gate can read live Base state, pin a block, execute a temp-only test, and
 emit correlated redacted evidence.
 
-1. Run the committed opt-in integration smoke:
+1. Run the committed opt-in integration smoke directly; no preliminary fixture
+   build or target inspection is needed:
 
    ```bash
    bash scripts/tests/live_vuln_poc_gate.sh
