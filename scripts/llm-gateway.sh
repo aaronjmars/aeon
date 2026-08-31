@@ -249,6 +249,15 @@ X-Title: ${OPENROUTER_APP_TITLE:-Aeon}"
     export ANTHROPIC_BASE_URL="${ZAI_ANTHROPIC_BASE_URL:-https://api.z.ai/api/anthropic}"
     unset CLAUDE_CODE_OAUTH_TOKEN ANTHROPIC_AUTH_TOKEN
     export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+    # Reasoning effort: GLM-5.3/5.3-flash are forced-thinking models; depth is
+    # the reasoning_effort dial (5.3 series: low/high/max). Claude Code only sends
+    # effort for Claude model ids it recognizes, so ALWAYS_ENABLE forces it through
+    # for glm-* ids. Verified honored on api.z.ai/api/anthropic 2026-08-31 (think
+    # chars low 2.4k < high 15.3k < max 32.7k on a fixed hard prompt). Without a
+    # param the endpoint leaves depth model-decided, so pin it: GLM_REASONING_EFFORT
+    # repo var overrides (low|high|max); default high.
+    export CLAUDE_CODE_EFFORT_LEVEL="${GLM_REASONING_EFFORT:-high}"
+    export CLAUDE_CODE_ALWAYS_ENABLE_EFFORT=1
     # Tiered mapping: the run's resolved model id picks the GLM id, so sonnet-tier
     # skills can run the fast flash model while opus-pinned skills get the full one.
     # Per-tier var wins over GLM_MODEL (same precedence as the OpenRouter arm);
