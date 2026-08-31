@@ -65,9 +65,40 @@ The diff on `eyebrowlock.json` shows exactly which skill's reach changed,
 reviewed alongside the skill change itself. A skill that adds a new egress host
 with no matching lockfile update is what the gate rejects.
 
+## Runtime hardening (optional, operator-side)
+
+The `ci-skill-integrity` gate protects the skills **in this repo**. It runs at PR
+time and says nothing about the operator's own machine after
+[`bin/add-mcp`](../bin/add-mcp) registers the Aeon MCP server
+(`apps/mcp-server/dist/index.js`) with Claude Code. Once that stdio server is
+live, every Aeon skill is a callable `aeon-*` tool, and a server binary swapped
+outside the build — or a dependency pulled at install — is beyond the reach of a
+repo-side gate.
+
+The same engine covers that surface at call time. For an Aeon server declared in
+a project `.mcp.json`, `eyebrow wrap` routes it through `eyebrow mcp-shim`, a
+local relay that:
+
+- relays JSON-RPC **byte for byte**, so the server behaves identically;
+- enforces a **per-tool policy** you set at the client boundary — a denied tool
+  returns a JSON-RPC error and never reaches the server, above and beyond Claude's
+  own approval prompt;
+- writes an **audit log** of every tool call with argument values redacted
+  (`~/.eyebrow/audit/<date>.jsonl`, queryable with `eyebrow audit`);
+- captures the **exported tool surface** so a server that grows a new tool after
+  approval shows up; and
+- confines the process with the **OS sandbox** (macOS Seatbelt, Linux bwrap; it
+  warns and runs unconfined on Windows).
+
+This is defense-in-depth for the operator, not a repo gate — it complements the
+CI check and Claude's approval flow, and it is entirely opt-in. See
+[eyebrow's `wrap` / `audit` docs](https://github.com/alexverify/eyebrow) for
+setup.
+
 ## Scope
 
 v1 fingerprints the first-party `skills/<slug>/SKILL.md` set: content hash +
 network egress. Exec and filesystem capabilities, lockfile signing, and a
 findings threshold below critical can be layered on later purely in
-`eyebrow.policy.json`, without changing this workflow.
+`eyebrow.policy.json`, without changing this workflow. Runtime confinement of the
+installed MCP server (above) is a separate, operator-side layer.

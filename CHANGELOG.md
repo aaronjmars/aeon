@@ -15,6 +15,12 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Added
 
+- **Docs: optional runtime hardening for the installed MCP server.**
+  [`docs/skill-integrity.md`](docs/skill-integrity.md) now describes `eyebrow
+  wrap`, an operator-side complement to the CI gate that routes the registered
+  Aeon MCP server through a local relay for per-tool policy, a redacted audit
+  log, tool-surface capture, and OS-sandbox confinement. Opt-in; no change to the
+  install or CI paths.
 - **Telegram notifications reply to the previous run of the same skill.** Default on. Ledger at `memory/telegram-threads/<skill>.json`. Kill switch: repo variable `TELEGRAM_REPLY_TO_PREVIOUS=0`. (#995)
 - **Three more run-harnesses: Cursor, Hermes, and GLM.** Cursor CLI (`agent -p`,
   `CURSOR_API_KEY`), Hermes via the Nous Portal (`hermes -z`, `HERMES_AUTH`), and
