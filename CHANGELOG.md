@@ -11,6 +11,11 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 
 ### Changed
 
+- **`ci-skill-integrity` pins eyebrow v0.4.2.** The drift / rug-pull gate now
+  installs `alexverify/eyebrow/action@v0.4.2` (still pinned by commit SHA). No
+  policy change: `eyebrow.policy.json` still gates on egress expansion and
+  critical findings only, and `allowContentDrift` stays true. Verified against
+  the current lock — clean, no new gate failures.
 - **GLM Coding Plan is a Claude AI Gateway hop, not a harness.** `GLM_API_KEY` (alias `ZAI_API_KEY`) now routes `claude -p` at `api.z.ai/api/anthropic` through `scripts/llm-gateway.sh`, last in the auto cascade (override with `gateway.provider: glm` or `GLM_MODEL`). `harness: glm` is a dead name and falls back to `claude`. The `glm` adapter is gone.
 
 ### Added
