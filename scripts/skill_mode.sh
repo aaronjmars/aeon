@@ -85,6 +85,9 @@ WRITE_TOOLS="$WRITE_TOOLS,Bash(semgrep:*),Bash(osv-scanner:*),Bash(trufflehog:*)
 # reaches for it when the clone already ships fuzz/fuzz_targets; the guard lives
 # in the skill, not here.
 WRITE_TOOLS="$WRITE_TOOLS,Bash(cargo:*)"
+# High/Critical code findings must pass this key-scrubbing, evidence-producing
+# runner before vuln-scanner may claim the severity or route a disclosure.
+WRITE_TOOLS="$WRITE_TOOLS,Bash(./scripts/vuln-poc-gate.sh:*)"
 # Foundry bare-names + the key-safe runner for deploy-uni-hook. Foundry is staged by
 # scripts/stage-deploy-uni-hook.sh (the sandbox denies in-run installs); the skill then
 # builds/simulates/broadcasts by bare name. `./hook-deploy.sh` hides the deployer key

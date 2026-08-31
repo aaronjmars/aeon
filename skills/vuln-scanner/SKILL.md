@@ -329,8 +329,8 @@ A scanner hit - or a candidate from the A3.6 agentic pass - is a candidate, not 
 1. **Open the file at the reported line** and read the surrounding 30–50 lines.
 2. **Write one sentence** describing what an attacker controls and what they achieve. If you can't, discard it.
 3. **Check the call path** — is the vulnerable function reachable from external input in production code (not tests, docs, examples)?
-4. **Severity**: critical (RCE, auth bypass, secret exposure), high (SQLi, stored XSS, SSRF, path traversal), medium (reflected XSS, weak crypto, missing rate limit).
-5. **Assign disclosure channel** per step A5.
+4. **Provisional severity**: critical (RCE, auth bypass, secret exposure), high (SQLi, stored XSS, SSRF, path traversal), medium (reflected XSS, weak crypto, missing rate limit). A model or scanner does not get to finalize HIGH/CRITICAL by classification alone — apply A4.5 first.
+5. **Run the PoC-verification gate for every provisional HIGH/CRITICAL code finding**, then assign the disclosure channel per step A5. The published-advisory and verified-secret exceptions are defined in A4.5.
 
 Drop the finding if:
 - It's in `test/`, `mock/`, `fixture/`, `example/`, `demo/`, `bench/`, `docs/`
@@ -340,6 +340,105 @@ Drop the finding if:
 
 If 0 findings survive triage → log "clean audit — N candidates reviewed, 0 confirmed" and exit cleanly.
 
+### A4.5. PoC-verification gate — required before HIGH/CRITICAL
+
+This gate exists because a plausible pattern plus a hand-written narrative can still
+be wrong. A code finding may be called **HIGH** or **CRITICAL**, counted as confirmed,
+or routed to disclosure only after an executable verifier reproduces the exact
+attacker-controls → attacker-achieves claim against the audited commit. “The test
+compiled,” “Foundry ran,” or “the scanner rated it high” are not sufficient.
+
+Two evidence classes do not need a new PoC:
+
+- **Published dependency CVEs** — quote the severity from the linked GHSA/OSV record;
+  this is an already-public advisory, not an original severity claim.
+- **TruffleHog `--only-verified` secrets** — the scanner has already authenticated the
+  credential. Still assess blast radius honestly; “valid” does not automatically mean
+  Critical.
+
+Every other provisional HIGH/CRITICAL code finding must use
+`./scripts/vuln-poc-gate.sh`. The gate supports:
+
+- **`foundry`** — mandatory for Solidity/on-chain findings that depend on live state.
+  It resolves a public RPC from deploy-uni-hook's reviewed `chains.tsv`, reads the real
+  chain id and current block, pins the fork to that block, stages the private test only
+  for the command, and removes it afterward.
+- **`command`** — a deterministic local regression/reproduction script for non-Solidity
+  findings. It must exit 0 only when the claimed security boundary is actually crossed.
+  Never point it at a production service or third-party live target.
+
+Both modes run target code with this skill's GitHub and Resend credentials removed.
+Raw PoC source and tool output stay under `/tmp/vuln-scan/`; the public workflow log
+gets only a redacted verifier verdict. Never print or commit the PoC for an unpatched
+finding.
+
+#### 1. Bind the claim to the audited commit
+
+Create `/tmp/vuln-scan/poc/<id>.json` (use an opaque id — no vulnerable symbol or
+file name) with the Write tool:
+
+```json
+{
+  "id": "finding-1",
+  "target_repo": "owner/repo",
+  "target_commit": "<git rev-parse HEAD>",
+  "severity": "high",
+  "attacker_controls": "<specific input or capability, at least 10 chars>",
+  "attacker_achieves": "<specific boundary crossed, at least 10 chars>"
+}
+```
+
+The runner rejects a changed commit, an underspecified claim, or any severity other
+than `high`/`critical`. Its result includes the SHA-256 of this exact claim file, so do
+not edit the finding after verification; re-run the gate if the claim changes.
+
+#### 2a. Solidity: verify against a pinned fork
+
+Write a minimal Foundry test to `/tmp/vuln-scan/poc/<id>.t.sol`. Its `test_poc_*`
+function must assert the prohibited outcome — attacker profit/ownership, bypassed
+authorization, invariant loss, or other concrete impact — not merely “the call did
+not revert.” Then run:
+
+```bash
+./scripts/vuln-poc-gate.sh foundry \
+  --finding /tmp/vuln-scan/poc/finding-1.json \
+  --repo "$PWD" \
+  --test-file /tmp/vuln-scan/poc/finding-1.t.sol \
+  --chain base \
+  --match-contract AeonPoC \
+  --match-test '^test_poc_'
+```
+
+Use the chain the affected deployment actually lives on. A passing test on a blank
+local chain does not verify a real-state claim. The runner records the observed chain
+id and fork block in `/tmp/vuln-scan/poc-results/<id>.json`.
+
+#### 2b. Other code: deterministic local verifier
+
+Write `/tmp/vuln-scan/poc/<id>.sh` so it sets up only local fixtures, exercises the
+real production entrypoint, checks the concrete prohibited outcome, and exits nonzero
+when the claim is not reproduced. Then run:
+
+```bash
+./scripts/vuln-poc-gate.sh command \
+  --finding /tmp/vuln-scan/poc/finding-1.json \
+  --repo "$PWD" \
+  --script /tmp/vuln-scan/poc/finding-1.sh
+```
+
+Do not weaken assertions until the script turns green. A failed reproduction is
+evidence against the claim, not an obstacle to work around.
+
+#### 3. Decide
+
+- Result has `verdict: "verified"`, the audited `target_commit`, and a matching
+  `finding_sha256` → the claim may retain HIGH/CRITICAL and proceed to A5.
+- Missing toolchain, unavailable fork state, failed test, commit/hash mismatch, or no
+  safe deterministic verifier → mark the candidate `needs-verification`; do **not**
+  count it as confirmed, do not send/file anything, and surface it to the operator.
+- Do not automatically relabel a failed HIGH claim as MEDIUM just to bypass the gate.
+  Assign Medium only when the independently supported impact really is Medium.
+
 ### A5. Route each finding to the correct disclosure channel
 
 This is the core of the scan arm. Pick the channel by finding type:
@@ -347,9 +446,9 @@ This is the core of the scan arm. Pick the channel by finding type:
 | Finding type | Channel | Why |
 |---|---|---|
 | **Dependency CVE** (osv-scanner hit) | **Public PR** bumping the dep | CVE is already public; a patch PR is net-positive |
-| **Code vulnerability** (Semgrep ERROR/WARNING, verified exploitable) | **PVR** (GitHub private advisory) | Unpatched code flaw — public disclosure creates a zero-day |
+| **Code vulnerability** (Semgrep/agentic, A4.5 verifier passed where HIGH/CRITICAL) | **PVR** (GitHub private advisory) | Unpatched code flaw — public disclosure creates a zero-day |
 | **Verified leaked secret** (TruffleHog verified) | **PVR** + tell maintainer to rotate | Publishing the file/line in a public PR tells attackers where to look |
-| **Smart-contract issue** (Slither high/medium) | **PVR** | On-chain exploitation is often immediate and irreversible |
+| **Smart-contract issue** (Slither candidate; Foundry fork verifier passed for HIGH/CRITICAL) | **PVR** | On-chain exploitation is often immediate and irreversible |
 | **Fuzz crash in the target's own code** | **PVR** | Same as any other code vulnerability — see A3.5 |
 | **Fuzz crash in a dependency** | **Public PR to the dependency's repo** (fix, not just a report, if it's small and matches their conventions) | DoS-only, no exploit chain to redact — see A3.5 case 2 |
 | **No PVR enabled AND no SECURITY.md** | **Private issue** to maintainer if possible, else skip and log | No safe channel = do no harm |
@@ -494,7 +593,7 @@ Append to `memory/vuln-scanned.json` (create if missing) so future runs skip thi
 
 ### A7. Write local report
 
-Save to `output/articles/vuln-scan-${today}.md` with sections for: repo metadata, scanner sources (ok/fail per tool), candidate count, confirmed findings with severity and channel, dedup note. Do **not** include exploit details for findings disclosed via PVR — redact file/line and link to the advisory ID instead.
+Save to `output/articles/vuln-scan-${today}.md` with sections for: repo metadata, scanner sources (ok/fail per tool), candidate count, confirmed findings with severity and channel, PoC gate status (`verified` with verifier/chain/block, `not-required` with reason, or `needs-verification`), and dedup note. Do **not** include exploit details for findings disclosed via PVR — redact file/line and link to the advisory ID instead.
 
 ### A8. Notify
 
@@ -504,7 +603,7 @@ Use `./notify`. One paragraph. Lead with the verdict.
 *Vuln Scanner — <repo>*
 <N> confirmed findings (<severity-summary>).
 Disclosed via: <PVR: advisory #123 | public PR #45 | skipped (no channel)>
-Scanners: semgrep=<ok|fail>, trufflehog=<ok|fail>, osv=<ok|fail>, fuzz=<ok|fail|skip>.
+Scanners: semgrep=<ok|fail>, trufflehog=<ok|fail>, osv=<ok|fail>, fuzz=<ok|fail|skip>. PoC gate: <verified|not-required|needs-verification>.
 ```
 
 If the audit was clean:
@@ -842,7 +941,8 @@ specific bullets.
 - Target: owner/repo (stars, language)
 - Candidates: N | Confirmed: M
 - Channels used: PVR (x), public PR (y), skipped (z)
-- Scanner status: semgrep=ok trufflehog=ok osv=ok fuzz=ok|fail|skip agentic=ok|skip
+- Prior-art check: N candidates checked, 0 matches | matched #123 → skipped/commented
+- Scanner status: semgrep=ok trufflehog=ok osv=ok fuzz=ok|fail|skip agentic=ok|skip poc=verified|not-required|needs-verification
 - Advisory/PR links: [...]
 ```
 
@@ -875,6 +975,15 @@ specific bullets.
 This two-part fix resolves ISS-001 (binaries installed *and* runnable). If any scanner binary is still missing at runtime, log `VULN_SCANNER_SKIPPED: <tool> not available`, record `tool=fail` in `sources.txt`, and continue with the remaining scanners rather than aborting the whole run. An all-scanners-fail run must report **error**, not **clean**.
 
 **A3.5 (fuzz)** follows the same two-part shape, but staging happens in the workflow step, not in-run: `scripts/stage-vuln-scanner.sh` installs a nightly Rust toolchain and `cargo-fuzz` before `claude -p` starts (the sandbox denies toolchain installs in-run, same reason `deploy-uni-hook` stages Foundry the same way — see `scripts/stage-deploy-uni-hook.sh`). Staging is unconditional (same tolerance as slither above — the target isn't known yet at staging time), so it always installs; only *use* is conditional on the clone actually shipping `fuzz/fuzz_targets`. Execution needs `Bash(cargo:*)` in the write tier of `scripts/skill_mode.sh` — broader than the single-purpose scanner grants, because `cargo fuzz` dispatches through the `cargo` binary itself, which also compiles the target's own code (and its build scripts). **This means the target's build scripts run with this skill's own secrets (`GH_GLOBAL`/`GH_TOKEN`, `RESEND_API_KEY`, `RESEND_FROM`, `RESEND_REPLY_TO`) live in the environment and network open — A3.5 scrubs them with `env -u` immediately before both the fuzz run and the crash-reproduction command, and nowhere else in this skill needs that scrub**, since only this step executes the target's own code. If either staging half is missing, the `command -v cargo-fuzz` guard in A3.5 skips cleanly.
+
+**A4.5 (PoC verification)** stages Foundry with the repository's pinned official
+action before the harness starts, then invokes only `./scripts/vuln-poc-gate.sh`.
+The helper resolves a public RPC from deploy-uni-hook's `chains.tsv`, pins the fork
+block, scrubs the skill's credentials before compiling/running target code, binds the
+verdict to the finding JSON hash and audited git commit, and writes raw output only to
+`/tmp/vuln-scan/poc-results/`. The workflow correlates the gate's redacted verdict with
+a redacted `forge [redacted]` execution record; it must never log the private test path
+or arguments.
 
 **Arm B (re-submit).** `gh api` uses the `GH_TOKEN` env var internally (the workflow wires `GH_GLOBAL` in). If `gh api` fails, use the `curl` fallback in step B2. No outbound auth-required calls except `gh api`.
 
@@ -914,6 +1023,9 @@ General network rules: `curl` works, with **WebFetch** as the fallback for a pla
 - **Be deferential in disclosure language** — you're offering help, not grading homework.
 - **Public PRs are only for dependency bumps** addressing already-disclosed CVEs, or a fuzz-found bug fixed directly in the dependency that owns it (A3.5 case 2) — everything else is private.
 - **All-scanners-failed ≠ clean.** Report it as an error and do not publish anything.
+- **HIGH/CRITICAL code claims are fail-closed.** No verified A4.5 result means no
+  confirmed High/Critical, no disclosure, and no public filing. Preserve the candidate
+  as `needs-verification`; never lower the label merely to route around the gate.
 - **Fuzzing only activates when the repo already ships a harness.** This skill doesn't write fuzz targets from scratch — that's real engineering work specific to the target's parsing logic, not something to improvise inside a weekly scan. If `fuzz/fuzz_targets` isn't there, `A3.5` skips, same as a missing scanner.
 
 **Disclose (Arm C):**

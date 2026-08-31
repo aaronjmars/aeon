@@ -485,6 +485,16 @@ jobs:
             echo "::warning::could not materialize cron-state from the Issue; readers use the committed file"
           fi
 
+      - name: Install Foundry (vuln-scanner PoC gate)
+        # High/Critical smart-contract findings must survive a deterministic test
+        # against a pinned live-chain fork before the skill may claim that severity.
+        # Install before stage-vuln-scanner so that script can wrap forge and leave
+        # machine-readable, redacted execution evidence.
+        if: steps.work.outputs.mode != '' && steps.skill.outputs.name == 'vuln-scanner'
+        uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09 # v1
+        with:
+          version: stable
+
       - name: Stage vuln-scanner tools
         # Purpose-built binary staging for vuln-scanner's scan arm — NOT a network
         # workaround (there is no network sandbox). Installs semgrep/trufflehog/
@@ -1116,6 +1126,18 @@ jobs:
               echo "${tool}=not-observed-or-not-applicable"
             fi
           done
+          if [ -s /tmp/vuln-scan/executions.log ] && grep -q '^forge \[redacted\]$' /tmp/vuln-scan/executions.log \
+             && [ -s /tmp/vuln-scan/poc-executions.log ] && grep -q ' foundry-fork ' /tmp/vuln-scan/poc-executions.log; then
+            echo 'foundry-poc=observed'
+          else
+            echo 'foundry-poc=not-observed-or-not-applicable'
+          fi
+          echo '--- PoC gate verdicts (redacted) ---'
+          if [ -s /tmp/vuln-scan/poc-executions.log ]; then
+            cat /tmp/vuln-scan/poc-executions.log
+          else
+            echo 'poc-gate=not-observed-or-not-applicable'
+          fi
 
       # Undo "Single-source standing instructions" so the working tree matches HEAD
       # before any capture/guard/commit step runs. always(): the file must come back

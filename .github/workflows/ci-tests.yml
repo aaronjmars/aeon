@@ -127,3 +127,5 @@ jobs:
         run: bash scripts/tests/test_secretcurl.sh
       - name: secretcurl xai retry tests
         run: bash scripts/tests/test_secretcurl_xai_retry.sh
+      - name: vuln-scanner PoC gate tests
+        run: bash scripts/tests/test_vuln_poc_gate.sh
