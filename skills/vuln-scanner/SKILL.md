@@ -25,6 +25,7 @@ metadata:
 > - `resubmit` → probe the whole watchlist and re-submit what flipped
 > - `resubmit:vercel/next.js` → probe just that repo (one-off)
 > - `disclose` (alias `email`) → arm & queue eligible disclosure emails
+> - `poc-smoke` → exercise the PoC gate against a benign real Base fork (no audit or disclosure)
 
 Today is ${today}. Read `memory/MEMORY.md` and the last 30 days of `memory/logs/` before starting.
 
@@ -48,6 +49,7 @@ TARGET="${SEL#*:}"; [ "$TARGET" = "$SEL" ] && TARGET=""   # token after ':' (emp
 case "$ACTION" in
   resubmit|watchlist|pvr)   ARM="resubmit" ;;            # → Arm B
   disclose|email)           ARM="disclose" ;;            # → Arm C
+  poc-smoke|verify-gate)    ARM="poc-smoke" ;;           # → Arm D
   ""|scan)                  ARM="scan" ;;                # → Arm A (auto-select if TARGET empty)
   */*)                      ARM="scan"; TARGET="$SEL" ;; # bare owner/repo → scan that repo
   *)                        ARM="scan" ;;                # unknown → default to scan
@@ -57,8 +59,9 @@ esac
 - `ARM=scan` → **Arm A — SCAN** (target = `$TARGET`, or auto-select if empty).
 - `ARM=resubmit` → **Arm B — RE-SUBMIT** (probe `$TARGET` if set, else the whole watchlist).
 - `ARM=disclose` → **Arm C — DISCLOSE** (queue armed email drafts).
+- `ARM=poc-smoke` → **Arm D — PoC GATE SMOKE** (benign live-fork verification only).
 
-Each arm is independently executable. All three share the same GitHub token and the same `memory/` state (`vuln-scanned.json`, `security-watchlist.md`, `pending-disclosures/`, `email-log.json`) — that shared state is exactly how the arms hand off to each other.
+Each arm is independently executable. The operational arms share the same GitHub token and the same `memory/` state (`vuln-scanned.json`, `security-watchlist.md`, `pending-disclosures/`, `email-log.json`) — that shared state is exactly how the arms hand off to each other. The smoke arm does not read or modify that state.
 
 ---
 
@@ -367,8 +370,9 @@ Every other provisional HIGH/CRITICAL code finding must use
   findings. It must exit 0 only when the claimed security boundary is actually crossed.
   Never point it at a production service or third-party live target.
 
-Both modes run target code with this skill's GitHub and Resend credentials removed.
-Raw PoC source and tool output stay under `/tmp/vuln-scan/`; the public workflow log
+Both modes run target code in a clean, allowlisted environment so GitHub,
+disclosure, and harness-provider credentials are not inherited. Raw PoC source and
+tool output stay under `/tmp/vuln-scan/`; the public workflow log
 gets only a redacted verifier verdict. Never print or commit the PoC for an unpatched
 finding.
 
@@ -613,6 +617,34 @@ Clean audit. <M> candidates reviewed, 0 confirmed. Scanners: semgrep=ok, truffle
 ```
 
 Then log per the **Log** section below with `Mode: scan`.
+
+---
+
+## Arm D — PoC GATE SMOKE
+
+This is the safe end-to-end verification path for the Week 2 infrastructure. It does
+**not** select or audit a third-party repository, create a vulnerability claim, file a
+report, or notify anyone. It proves that the real Aeon runner installed Foundry and
+that the gate can read live Base state, pin a block, execute a temp-only test, and
+emit correlated redacted evidence.
+
+1. Run the committed opt-in integration smoke:
+
+   ```bash
+   bash scripts/tests/live_vuln_poc_gate.sh
+   ```
+
+   That script creates an isolated temporary git fixture and synthetic claim, then
+   asserts that Base WETH (`0x4200000000000000000000000000000000000006`) has deployed
+   bytecode. This proves the EVM is a real Base fork, not an empty local chain; it is
+   not a security exploit or finding.
+2. Require both `VULN_POC_VERIFIED` with `verifier=foundry-fork`, `chain=base`, and a
+   numeric positive `block`, plus the final `live-vuln-poc-gate: PASS`. Report
+   `VULN_POC_SMOKE_OK` plus the block. Any other result is `VULN_POC_SMOKE_FAILED`;
+   do not reinterpret it as success.
+3. Log under `### vuln-scanner` with `Mode: poc-smoke`, the verdict, chain id 8453,
+   fork block, and whether the redacted execution evidence existed. Send no
+   notification.
 
 ---
 
@@ -933,7 +965,7 @@ specific bullets.
 
 ```
 ### vuln-scanner
-- Mode: scan | resubmit | disclose
+- Mode: scan | resubmit | disclose | poc-smoke
 ```
 
 **Mode: scan** — add:
@@ -979,7 +1011,7 @@ This two-part fix resolves ISS-001 (binaries installed *and* runnable). If any s
 **A4.5 (PoC verification)** stages Foundry with the repository's pinned official
 action before the harness starts, then invokes only `./scripts/vuln-poc-gate.sh`.
 The helper resolves a public RPC from deploy-uni-hook's `chains.tsv`, pins the fork
-block, scrubs the skill's credentials before compiling/running target code, binds the
+block, gives target code a clean environment without Aeon credentials, binds the
 verdict to the finding JSON hash and audited git commit, and writes raw output only to
 `/tmp/vuln-scan/poc-results/`. The workflow correlates the gate's redacted verdict with
 a redacted `forge [redacted]` execution record; it must never log the private test path
