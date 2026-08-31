@@ -249,7 +249,15 @@ X-Title: ${OPENROUTER_APP_TITLE:-Aeon}"
     export ANTHROPIC_BASE_URL="${ZAI_ANTHROPIC_BASE_URL:-https://api.z.ai/api/anthropic}"
     unset CLAUDE_CODE_OAUTH_TOKEN ANTHROPIC_AUTH_TOKEN
     export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
-    glm_model="${GLM_MODEL:-glm-5.2}"
+    # Tiered mapping: the run's resolved model id picks the GLM id, so sonnet-tier
+    # skills can run the fast flash model while opus-pinned skills get the full one.
+    # Per-tier var wins over GLM_MODEL (same precedence as the OpenRouter arm);
+    # GLM_MODEL still pins every tier when set alone. Fallback stays glm-5.2.
+    case "${MODEL:-}" in
+      *opus*)  glm_model="${GLM_MODEL_OPUS:-${GLM_MODEL:-glm-5.2}}" ;;
+      *haiku*) glm_model="${GLM_MODEL_HAIKU:-${GLM_MODEL:-glm-5.2}}" ;;
+      *)       glm_model="${GLM_MODEL_SONNET:-${GLM_MODEL:-glm-5.2}}" ;;
+    esac
     export ANTHROPIC_DEFAULT_OPUS_MODEL="$glm_model"
     export ANTHROPIC_DEFAULT_SONNET_MODEL="$glm_model"
     export ANTHROPIC_DEFAULT_HAIKU_MODEL="$glm_model"

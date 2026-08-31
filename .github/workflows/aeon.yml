@@ -646,6 +646,9 @@ jobs:
           VENICE_CLEANCACHE: ${{ vars.VENICE_CLEANCACHE }}
           SURPLUS_MODEL: ${{ vars.SURPLUS_MODEL }}
           GLM_MODEL: ${{ vars.GLM_MODEL }}
+          GLM_MODEL_SONNET: ${{ vars.GLM_MODEL_SONNET }}
+          GLM_MODEL_OPUS: ${{ vars.GLM_MODEL_OPUS }}
+          GLM_MODEL_HAIKU: ${{ vars.GLM_MODEL_HAIKU }}
           CCR_LOG: ${{ vars.CCR_LOG }}
           # Optional Langfuse observability — set both keys to stream Claude Code's
           # run to Langfuse as a trace (scripts/langfuse-otel.sh; no-op when unset).
@@ -1392,6 +1395,9 @@ jobs:
           VENICE_CLEANCACHE: ${{ vars.VENICE_CLEANCACHE }}
           SURPLUS_MODEL: ${{ vars.SURPLUS_MODEL }}
           GLM_MODEL: ${{ vars.GLM_MODEL }}
+          GLM_MODEL_SONNET: ${{ vars.GLM_MODEL_SONNET }}
+          GLM_MODEL_OPUS: ${{ vars.GLM_MODEL_OPUS }}
+          GLM_MODEL_HAIKU: ${{ vars.GLM_MODEL_HAIKU }}
           CCR_LOG: ${{ vars.CCR_LOG }}
           LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
           LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
@@ -1654,6 +1660,9 @@ jobs:
           VENICE_CLEANCACHE: ${{ vars.VENICE_CLEANCACHE }}
           SURPLUS_MODEL: ${{ vars.SURPLUS_MODEL }}
           GLM_MODEL: ${{ vars.GLM_MODEL }}
+          GLM_MODEL_SONNET: ${{ vars.GLM_MODEL_SONNET }}
+          GLM_MODEL_OPUS: ${{ vars.GLM_MODEL_OPUS }}
+          GLM_MODEL_HAIKU: ${{ vars.GLM_MODEL_HAIKU }}
           GLM_API_KEY: ${{ secrets.GLM_API_KEY }}
           ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
           CCR_LOG: ${{ vars.CCR_LOG }}
