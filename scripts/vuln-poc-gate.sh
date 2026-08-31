@@ -63,7 +63,7 @@ case "$ACTUAL_COMMIT" in
   "$TARGET_COMMIT"*) ;;
   *) echo "VULN_POC_ERROR id=$ID reason=target-commit-mismatch" >&2; exit 5 ;;
 esac
-if ! git -C "$REPO" diff --quiet || ! git -C "$REPO" diff --cached --quiet; then
+if ! git -C "$REPO" diff --quiet -- . || ! git -C "$REPO" diff --cached --quiet -- .; then
   echo "VULN_POC_ERROR id=$ID reason=target-worktree-dirty" >&2
   exit 5
 fi
@@ -80,9 +80,10 @@ hash_file() {
 }
 FINDING_SHA="$(hash_file "$FINDING")"
 
-# Target code, build scripts, and PoCs are untrusted. The verifier gets no Aeon
-# credentials. Foundry uses only the public RPC resolved from chains.tsv.
-SCRUB=(env -u GH_TOKEN -u GITHUB_TOKEN -u GH_GLOBAL -u RESEND_API_KEY -u RESEND_FROM -u RESEND_REPLY_TO)
+# Target code, build scripts, and PoCs are untrusted. Start them with a small,
+# explicit environment rather than trying to enumerate every present and future
+# Aeon/harness credential. Foundry uses only the public RPC passed on argv.
+ISOLATED_ENV=(env -i "PATH=$PATH" "HOME=${HOME:-/tmp}" "TMPDIR=${TMPDIR:-/tmp}" CI=1)
 
 write_result() {
   local verdict="$1" verifier="$2" chain_name="${3:-}" chain_id="${4:-}" block="${5:-}"
@@ -131,10 +132,10 @@ case "$MODE" in
     ARGS=(test --root "$REPO" --fork-url "$RPC" --fork-block-number "$BLOCK" --match-path "test/AeonPoC_${ID}.t.sol" --match-test "$MATCH_TEST" -vvv)
     [ -n "$MATCH_CONTRACT" ] && ARGS+=(--match-contract "$MATCH_CONTRACT")
     set +e
-    "${SCRUB[@]}" forge "${ARGS[@]}" >>"$LOG" 2>&1
+    "${ISOLATED_ENV[@]}" forge "${ARGS[@]}" >>"$LOG" 2>&1
     VERIFY_RC=$?
     set -e
-    if ! git -C "$REPO" diff --quiet || ! git -C "$REPO" diff --cached --quiet; then
+    if ! git -C "$REPO" diff --quiet -- . || ! git -C "$REPO" diff --cached --quiet -- .; then
       write_result failed foundry-fork "$CHAIN" "$CHAIN_ID" "$BLOCK"
       echo "VULN_POC_FAILED id=$ID verifier=foundry-fork reason=target-mutated result=$RESULT" >&2
       exit 21
@@ -152,10 +153,10 @@ case "$MODE" in
     [ -f "$SCRIPT" ] || { echo "VULN_POC_ERROR id=$ID reason=script-missing" >&2; exit 6; }
     case "$SCRIPT" in "$POC_DIR"/*) ;; *) echo "VULN_POC_ERROR id=$ID reason=script-outside-poc-dir" >&2; exit 6 ;; esac
     set +e
-    (cd "$REPO" && "${SCRUB[@]}" bash "$SCRIPT") >"$LOG" 2>&1
+    (cd "$REPO" && "${ISOLATED_ENV[@]}" bash "$SCRIPT") >"$LOG" 2>&1
     VERIFY_RC=$?
     set -e
-    if ! git -C "$REPO" diff --quiet || ! git -C "$REPO" diff --cached --quiet; then
+    if ! git -C "$REPO" diff --quiet -- . || ! git -C "$REPO" diff --cached --quiet -- .; then
       write_result failed local-command
       echo "VULN_POC_FAILED id=$ID verifier=local-command reason=target-mutated result=$RESULT" >&2
       exit 21

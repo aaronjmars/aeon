@@ -25,19 +25,21 @@ cat > "$BIN/cast" <<'EOF'
 #!/usr/bin/env bash
 case "$1" in chain-id) echo 8453 ;; block-number) echo 123456 ;; *) exit 1 ;; esac
 EOF
-cat > "$BIN/forge" <<'EOF'
+cat > "$BIN/forge" <<EOF
 #!/usr/bin/env bash
-[ -z "${GH_TOKEN:-}" ] || exit 90
-[ -z "${RESEND_API_KEY:-}" ] || exit 91
-printf '%s\n' "$*" > "${FAKE_FORGE_ARGS:?}"
-exit "${FAKE_FORGE_RC:-0}"
+[ -z "\${GH_TOKEN:-}" ] || exit 90
+[ -z "\${RESEND_API_KEY:-}" ] || exit 91
+[ -z "\${OPENAI_API_KEY:-}" ] || exit 92
+printf '%s\n' "\$*" > "$TMP/forge.args"
+exit "\$(cat "$TMP/forge.rc")"
 EOF
 chmod +x "$BIN/cast" "$BIN/forge"
+echo 0 > "$TMP/forge.rc"
 
 export PATH="$BIN:$PATH" VULN_POC_DIR="$POC" VULN_POC_RESULTS_DIR="$RESULTS"
 export VULN_POC_EXEC_LOG="$TMP/poc-executions.log"
 export VULN_POC_CHAINS_FILE="skills/deploy-uni-hook/templates/chains.tsv"
-export FAKE_FORGE_ARGS="$TMP/forge.args" GH_TOKEN=synthetic RESEND_API_KEY=synthetic
+export GH_TOKEN=synthetic RESEND_API_KEY=synthetic OPENAI_API_KEY=synthetic
 
 fail=0
 pass() { echo "ok   - $1"; }
@@ -59,7 +61,8 @@ grep -qx 'case-1 foundry-fork verified' "$VULN_POC_EXEC_LOG" \
 grep -q -- '--fork-block-number 123456' "$TMP/forge.args" && pass "fork is pinned to observed block" || bad "fork block was not pinned"
 [ ! -e "$REPO/test/AeonPoC_case-1.t.sol" ] && pass "private test is removed from target checkout" || bad "private test leaked into checkout"
 
-FAKE_FORGE_RC=1 bash scripts/vuln-poc-gate.sh foundry --finding "$POC/finding.json" --repo "$REPO" \
+echo 1 > "$TMP/forge.rc"
+bash scripts/vuln-poc-gate.sh foundry --finding "$POC/finding.json" --repo "$REPO" \
   --test-file "$POC/case.t.sol" --chain base >/tmp/vuln-poc-test.out 2>/tmp/vuln-poc-test.err
 [ "$?" -eq 20 ] && jq -e '.verdict=="failed"' "$RESULTS/case-1.json" >/dev/null \
   && pass "failed reproduction blocks verification" || bad "failed reproduction should block"
@@ -71,9 +74,10 @@ bash scripts/vuln-poc-gate.sh foundry --finding "$POC/invalid.json" --repo "$REP
 
 cat > "$POC/repro.sh" <<'EOF'
 #!/usr/bin/env bash
-[ -z "${GH_TOKEN:-}" ] && [ -z "${RESEND_API_KEY:-}" ]
+[ -z "${GH_TOKEN:-}" ] && [ -z "${RESEND_API_KEY:-}" ] && [ -z "${OPENAI_API_KEY:-}" ]
 EOF
-FAKE_FORGE_RC=0 bash scripts/vuln-poc-gate.sh command --finding "$POC/finding.json" --repo "$REPO" \
+echo 0 > "$TMP/forge.rc"
+bash scripts/vuln-poc-gate.sh command --finding "$POC/finding.json" --repo "$REPO" \
   --script "$POC/repro.sh" >/tmp/vuln-poc-test.out 2>/tmp/vuln-poc-test.err
 [ "$?" -eq 0 ] && jq -e '.verdict=="verified" and .verifier=="local-command"' "$RESULTS/case-1.json" >/dev/null \
   && pass "local verifier runs with secrets scrubbed" || bad "local verifier failed"
