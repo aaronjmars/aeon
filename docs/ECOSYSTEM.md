@@ -60,7 +60,6 @@ These are the projects we know of that run Aeon, extend it, or integrate with th
 | <img src="https://pbs.twimg.com/profile_images/2030743130421751808/w4Yi3fC7_400x400.jpg" width="36" height="36" alt="Mei logo"> | Mei | [@MeiMighty1](https://x.com/MeiMighty1) |
 | <img src="https://pbs.twimg.com/profile_images/2060426975718592517/Jdj2fOzg_400x400.jpg" width="36" height="36" alt="MiroShark logo"> | MiroShark | [@miroshark_](https://x.com/miroshark_) |
 | <img src="https://pbs.twimg.com/profile_images/2089264506991976448/9Ki_nVAN_400x400.jpg" width="36" height="36" alt="Mneme logo"> | Mneme | [@mnemeDB](https://x.com/mnemeDB) · [mnemedb.dev](https://mnemedb.dev) |
-| <img src="https://pbs.twimg.com/profile_images/2022853922847887363/7hiICjWl_400x400.jpg" width="36" height="36" alt="MythosForge logo"> | MythosForge | [@mythosforgebot](https://x.com/mythosforgebot) |
 | <img src="https://pbs.twimg.com/profile_images/2059382579107659778/pkh1HmwK_400x400.jpg" width="36" height="36" alt="Noctel logo"> | Noctel | [@noctelxbt](https://x.com/noctelxbt) · [noctel.xyz](https://www.noctel.xyz) |
 | <img src="https://pbs.twimg.com/profile_images/2067718393411579904/PzuiIBSz_400x400.jpg" width="36" height="36" alt="NÜMETAL logo"> | NÜMETAL | [@numetalxyz](https://x.com/numetalxyz) |
 | <img src="https://pbs.twimg.com/profile_images/2004910939959967744/wr7-zpVh_400x400.jpg" width="36" height="36" alt="PancakeSwap logo"> | PancakeSwap | [@PancakeSwap](https://x.com/PancakeSwap) |
