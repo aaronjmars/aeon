@@ -50,6 +50,11 @@ updates:
     ignore:
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
+      # eslint 10 crashes eslint-config-next's bundled eslint-plugin-react at
+      # runtime (peer allows >=9 but the plugin throws). Hold on 9.x until
+      # eslint-config-next supports eslint 10.
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
 
   # MCP server — exposes Aeon skills as Claude tools.
   - package-ecosystem: "npm"
@@ -98,3 +103,12 @@ updates:
       webhook:
         patterns:
           - "*"
+    # eslint 10 and globals 17 are breaking majors that fail the webhook lint/bundle
+    # step (ESM resolution error under the flat-config migration). Hold both on their
+    # current majors so the grouped PR stays green; revisit when the worker's eslint
+    # setup supports 10.
+    ignore:
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "globals"
+        update-types: ["version-update:semver-major"]
