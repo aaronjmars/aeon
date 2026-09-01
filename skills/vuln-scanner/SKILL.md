@@ -622,7 +622,7 @@ Then log per the **Log** section below with `Mode: scan`.
 
 ## Arm D — PoC GATE SMOKE
 
-This is the safe end-to-end verification path for the Week 2 infrastructure. It does
+This is the safe end-to-end verification path for the PoC gate. It does
 **not** select or audit a third-party repository, create a vulnerability claim, file a
 report, or notify anyone. It proves that the real Aeon runner installed Foundry and
 that the gate can read live Base state, pin a block, execute a temp-only test, and
