@@ -12,6 +12,7 @@ from or pin to; the template keeps serving the latest `main` to new forks.
 ### Changed
 
 - **GLM Coding Plan is a Claude AI Gateway hop, not a harness.** `GLM_API_KEY` (alias `ZAI_API_KEY`) now routes `claude -p` at `api.z.ai/api/anthropic` through `scripts/llm-gateway.sh`, last in the auto cascade (override with `gateway.provider: glm` or `GLM_MODEL`). `harness: glm` is a dead name and falls back to `claude`. The `glm` adapter is gone.
+- **GLM gateway pins reasoning effort to `high`.** Override with the repo variable `GLM_REASONING_EFFORT` (`low` / `high` / `max`). Claude Code only sends effort for recognized Claude ids, so the glm arm also sets `CLAUDE_CODE_ALWAYS_ENABLE_EFFORT=1`. (#999)
 
 ### Added
 

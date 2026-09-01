@@ -533,6 +533,7 @@ jobs:
           VENICE_CLEANCACHE: ${{ vars.VENICE_CLEANCACHE }}
           SURPLUS_MODEL: ${{ vars.SURPLUS_MODEL }}
           GLM_MODEL: ${{ vars.GLM_MODEL }}
+          GLM_REASONING_EFFORT: ${{ vars.GLM_REASONING_EFFORT }}
           CCR_LOG: ${{ vars.CCR_LOG }}
           # Optional Langfuse observability — traces the conversational-reply run
           # (scripts/langfuse-otel.sh; no-op unless both LANGFUSE_* keys are set).

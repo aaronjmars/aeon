@@ -115,6 +115,7 @@ Set with `gh variable set NAME "value"`.
 | `GATEWAY_ORDER` | Space-separated provider names — override the failover priority |
 | `GROK_MODEL` | Model for the Grok gateway path |
 | `GLM_MODEL` | Model for the GLM (Z.AI) gateway path (default `glm-5.2`) |
+| `GLM_REASONING_EFFORT` | GLM gateway reasoning depth: `low` / `high` / `max` (default `high`) |
 | `STATE_BACKEND` | `file` (default) · `dual` · `issues` — where run state lives |
 | `HEALTH_ISSUES` | `0` disables the votable per-skill health Issues |
 | `NOTIFY_MIN_SEVERITY` | Suppress notifications below this level |

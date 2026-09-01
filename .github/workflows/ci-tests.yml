@@ -89,6 +89,8 @@ jobs:
         run: bash scripts/tests/test_mcp_oauth_refresh.sh
       - name: langfuse-otel tests
         run: bash scripts/tests/test_langfuse_otel.sh
+      - name: llm-gateway glm effort tests
+        run: bash scripts/tests/test_llm_gateway.sh
       - name: otel harness-span tests
         run: bash scripts/tests/test_otel_span.sh
       - name: state reducer tests
