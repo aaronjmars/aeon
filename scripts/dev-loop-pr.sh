@@ -26,7 +26,7 @@ case "${1:-}" in
   snapshot)
     [ "$#" -eq 2 ] || usage
     repo=$(target_repo "$2") || exit $?
-    gh pr list -R "$repo" --state open --limit 100 --json number --jq '.[].number' | cut -f1 | sort -n
+    gh pr list -R "$repo" --state open --limit 100 --json number --jq '.[].number' | sort -n
     ;;
   verify-new-pr)
     [ "$#" -eq 4 ] || usage

@@ -267,6 +267,13 @@ jobs:
             VAR_TEMPLATE="$VAR"
 
             if [ "$VAR_TEMPLATE" = '$chain_target' ]; then
+              # Validation is tied to the var, not the chain name: any chain that
+              # resolves $chain_target gets the external-target check, so a future
+              # chain reusing this var can't fall back to feature's broad selector.
+              if ! bash scripts/dev-loop-pr.sh validate-target "$CHAIN_TARGET" >/dev/null; then
+                echo "::error::\$chain_target requires target=external:owner/repo or external:owner/repo#issue"
+                exit 1
+              fi
               VAR="$CHAIN_TARGET"
             elif [ "$VAR_TEMPLATE" = '$feature_pr' ]; then
               if [ -z "$FEATURE_PR" ]; then
