@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "generatedAt": "2026-09-01T09:41:49.641291Z",
-  "generator": "eyebrow/0.4.1",
+  "generatedAt": "2026-09-01T18:42:28.321251Z",
+  "generator": "eyebrow/0.4.2",
   "artifacts": [
     {
       "id": "019b953b97c439b3",
@@ -117,7 +117,7 @@
       "files": [
         {
           "path": "SKILL.md",
-          "hash": "2bdab0b06cddbc3c874d871fe806f924f3a783256ccf4b82d67fde31a6d20d75"
+          "hash": "b17491de609e1fa3b241a55012e60f21d63eaaac6ad9251c43509f40ec635872"
         }
       ],
       "findings": [
@@ -153,12 +153,12 @@
           "severity": "critical",
           "owasp": "ASK-01",
           "file": "SKILL.md",
-          "line": 1005,
+          "line": 1013,
           "snippet": "1. **Install** — the binaries (`semgrep`, `trufflehog`, `osv-scanner`, `slither`) are **not pre-installed**. Stage the…",
           "explanation": "downloads and executes remote code via a pipe to a shell"
         }
       ],
-      "contentHash": "sha256-cffd72d615d675c68fc9240912884412fb0996f48eca09110f712f882722d3d0",
+      "contentHash": "sha256-a81f0757d7b3bafe3baaa0c3d2c0e735eb284a7ebc9768264bdfe4e747b4aa9a",
       "discoveredFrom": "skills/vuln-scanner/SKILL.md"
     },
     {
