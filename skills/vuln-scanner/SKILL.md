@@ -360,7 +360,10 @@ Two evidence classes do not need a new PoC:
   Critical.
 
 Every other provisional HIGH/CRITICAL code finding must use
-`./scripts/vuln-poc-gate.sh`. The gate supports:
+`./scripts/vuln-poc-gate.sh` from the Aeon checkout (the directory that
+contains that script), not from inside the A2 clone. The write-tier
+allowlist is `Bash(./scripts/vuln-poc-gate.sh:*)`. Pass the clone path as
+`--repo`. The gate supports:
 
 - **`foundry`** — mandatory for Solidity/on-chain findings that depend on live state.
   It resolves a public RPC from deploy-uni-hook's reviewed `chains.tsv`, reads the real
@@ -404,9 +407,12 @@ authorization, invariant loss, or other concrete impact — not merely “the ca
 not revert.” Then run:
 
 ```bash
+# A2 left cwd inside the clone. The gate script lives in the Aeon repo.
+CLONE="$PWD"
+cd "${GITHUB_WORKSPACE}"
 ./scripts/vuln-poc-gate.sh foundry \
   --finding /tmp/vuln-scan/poc/finding-1.json \
-  --repo "$PWD" \
+  --repo "$CLONE" \
   --test-file /tmp/vuln-scan/poc/finding-1.t.sol \
   --chain base \
   --match-contract AeonPoC \
@@ -424,9 +430,11 @@ real production entrypoint, checks the concrete prohibited outcome, and exits no
 when the claim is not reproduced. Then run:
 
 ```bash
+CLONE="$PWD"
+cd "${GITHUB_WORKSPACE}"
 ./scripts/vuln-poc-gate.sh command \
   --finding /tmp/vuln-scan/poc/finding-1.json \
-  --repo "$PWD" \
+  --repo "$CLONE" \
   --script /tmp/vuln-scan/poc/finding-1.sh
 ```
 

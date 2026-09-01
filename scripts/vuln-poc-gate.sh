@@ -85,6 +85,17 @@ FINDING_SHA="$(hash_file "$FINDING")"
 # Aeon/harness credential. Foundry uses only the public RPC passed on argv.
 ISOLATED_ENV=(env -i "PATH=$PATH" "HOME=${HOME:-/tmp}" "TMPDIR=${TMPDIR:-/tmp}" CI=1)
 
+# Forge exit 0 is not a reproduction if no test matched. Require a suite
+# summary with N>=1 passed and reject "No tests found".
+foundry_matched_pass() {
+  local log="$1" n
+  if grep -Eqi 'No tests (found|to run)' "$log"; then
+    return 1
+  fi
+  n=$(grep -Eo '[0-9]+ passed' "$log" | tail -1 | awk '{print $1}')
+  [ -n "$n" ] && [ "$n" -gt 0 ]
+}
+
 write_result() {
   local verdict="$1" verifier="$2" chain_name="${3:-}" chain_id="${4:-}" block="${5:-}"
   jq -n \
@@ -139,12 +150,16 @@ case "$MODE" in
       write_result failed foundry-fork "$CHAIN" "$CHAIN_ID" "$BLOCK"
       echo "VULN_POC_FAILED id=$ID verifier=foundry-fork reason=target-mutated result=$RESULT" >&2
       exit 21
-    elif [ "$VERIFY_RC" -eq 0 ]; then
+    elif [ "$VERIFY_RC" -eq 0 ] && foundry_matched_pass "$LOG"; then
       write_result verified foundry-fork "$CHAIN" "$CHAIN_ID" "$BLOCK"
       echo "VULN_POC_VERIFIED id=$ID verifier=foundry-fork chain=$CHAIN block=$BLOCK result=$RESULT"
     else
       write_result failed foundry-fork "$CHAIN" "$CHAIN_ID" "$BLOCK"
-      echo "VULN_POC_FAILED id=$ID verifier=foundry-fork reason=reproduction-did-not-pass result=$RESULT" >&2
+      if [ "$VERIFY_RC" -eq 0 ]; then
+        echo "VULN_POC_FAILED id=$ID verifier=foundry-fork reason=no-matching-test result=$RESULT" >&2
+      else
+        echo "VULN_POC_FAILED id=$ID verifier=foundry-fork reason=reproduction-did-not-pass result=$RESULT" >&2
+      fi
       exit 20
     fi
     ;;

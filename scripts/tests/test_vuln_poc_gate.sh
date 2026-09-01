@@ -31,10 +31,12 @@ cat > "$BIN/forge" <<EOF
 [ -z "\${RESEND_API_KEY:-}" ] || exit 91
 [ -z "\${OPENAI_API_KEY:-}" ] || exit 92
 printf '%s\n' "\$*" > "$TMP/forge.args"
+if [ -f "$TMP/forge.out" ]; then cat "$TMP/forge.out"; fi
 exit "\$(cat "$TMP/forge.rc")"
 EOF
 chmod +x "$BIN/cast" "$BIN/forge"
 echo 0 > "$TMP/forge.rc"
+printf 'Suite result: ok. 1 passed; 0 failed; 0 skipped\n' > "$TMP/forge.out"
 
 export PATH="$BIN:$PATH" VULN_POC_DIR="$POC" VULN_POC_RESULTS_DIR="$RESULTS"
 export VULN_POC_EXEC_LOG="$TMP/poc-executions.log"
@@ -66,6 +68,22 @@ bash scripts/vuln-poc-gate.sh foundry --finding "$POC/finding.json" --repo "$REP
   --test-file "$POC/case.t.sol" --chain base >/tmp/vuln-poc-test.out 2>/tmp/vuln-poc-test.err
 [ "$?" -eq 20 ] && jq -e '.verdict=="failed"' "$RESULTS/case-1.json" >/dev/null \
   && pass "failed reproduction blocks verification" || bad "failed reproduction should block"
+
+echo 0 > "$TMP/forge.rc"
+printf 'No tests found\n' > "$TMP/forge.out"
+bash scripts/vuln-poc-gate.sh foundry --finding "$POC/finding.json" --repo "$REPO" \
+  --test-file "$POC/case.t.sol" --chain base >/tmp/vuln-poc-test.out 2>/tmp/vuln-poc-test.err
+[ "$?" -eq 20 ] && jq -e '.verdict=="failed"' "$RESULTS/case-1.json" >/dev/null \
+  && grep -q 'reason=no-matching-test' /tmp/vuln-poc-test.err \
+  && pass "forge exit 0 with no matching tests is rejected" || bad "no-matching-test should block"
+
+printf 'Suite result: ok. 0 passed; 0 failed; 1 skipped\n' > "$TMP/forge.out"
+bash scripts/vuln-poc-gate.sh foundry --finding "$POC/finding.json" --repo "$REPO" \
+  --test-file "$POC/case.t.sol" --chain base >/tmp/vuln-poc-test.out 2>/tmp/vuln-poc-test.err
+[ "$?" -eq 20 ] && jq -e '.verdict=="failed"' "$RESULTS/case-1.json" >/dev/null \
+  && pass "forge 0 passed is rejected" || bad "0 passed should block"
+
+printf 'Suite result: ok. 1 passed; 0 failed; 0 skipped\n' > "$TMP/forge.out"
 
 jq '.attacker_achieves="short"' "$POC/finding.json" > "$POC/invalid.json"
 bash scripts/vuln-poc-gate.sh foundry --finding "$POC/invalid.json" --repo "$REPO" \
