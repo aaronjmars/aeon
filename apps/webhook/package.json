@@ -30,9 +30,9 @@
     }
   },
   "devDependencies": {
-    "eslint": "^9.39.5",
-    "globals": "^15.15.0",
-    "wrangler": "4.115.0"
+    "eslint": "^10.9.1",
+    "globals": "^17.11.0",
+    "wrangler": "4.127.1"
   },
   "dependencies": {
     "@microlabs/otel-cf-workers": "^1.0.0-rc.52",
