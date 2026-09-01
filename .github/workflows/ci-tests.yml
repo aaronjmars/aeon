@@ -119,6 +119,8 @@ jobs:
         run: bash scripts/tests/test_chain_when.sh
       - name: chain-runner dispatch correlation tests
         run: bash scripts/tests/test_chain_runner.sh
+      - name: dev-loop deterministic handoff tests
+        run: bash scripts/tests/test_dev_loop_handoff.sh
       - name: skill-scan calibration (fires on sinks, not benign syntax)
         run: bash scripts/tests/test_skill_scan_calibration.sh
       - name: audit-log redaction tests

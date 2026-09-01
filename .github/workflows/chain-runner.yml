@@ -8,6 +8,10 @@ on:
         description: 'Chain name from aeon.yml chains section'
         required: true
         type: string
+      target:
+        description: 'Explicit target for chains that declare var: "$chain_target"'
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -40,6 +44,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_GLOBAL || secrets.GITHUB_TOKEN }}
           _INPUT_CHAIN: ${{ inputs.chain }}
+          _INPUT_TARGET: ${{ inputs.target }}
         run: |
           set -euo pipefail
           # env-bound (passed via env:, not expanded into this run: block) +
@@ -48,12 +53,22 @@ jobs:
           # it into the shell source let a crafted value break out and run
           # arbitrary commands on the runner. (GHSA-h9v2-7m42-33m3)
           CHAIN="$_INPUT_CHAIN"
+          CHAIN_TARGET="$_INPUT_TARGET"
           if ! printf '%s' "$CHAIN" | grep -qE '^[a-zA-Z0-9_-]+$'; then
             echo "::error::Invalid chain name: must match ^[a-zA-Z0-9_-]+$"
             exit 1
           fi
           NOW_ISO=$(date -u +%FT%TZ)
           echo "Running chain: $CHAIN"
+
+          # dev-loop must never let feature fall back to its broad `watched`
+          # selector. Require one explicit external repository (and optional issue).
+          if [ "$CHAIN" = "dev-loop" ]; then
+            if ! bash scripts/dev-loop-pr.sh validate-target "$CHAIN_TARGET" >/dev/null; then
+              echo "::error::dev-loop requires target=external:owner/repo or external:owner/repo#issue"
+              exit 1
+            fi
+          fi
 
           # --- Helper: dispatch a skill and return its uniquely correlated run ID ---
           dispatch_skill() {
@@ -97,6 +112,7 @@ jobs:
               return 1
             fi
             echo "  Run ID: $run_id"
+            echo "dispatch_id=$dispatch_id"
             echo "$run_id"
           }
 
@@ -237,6 +253,10 @@ jobs:
           TOTAL_STEPS=$STEP_INDEX
           echo "Chain has $TOTAL_STEPS step(s)"
           CHAIN_FAILED=false
+          CHAIN_NO_ACTION=false
+          FEATURE_PR=""
+          FEATURE_OPEN_BEFORE=""
+          FEATURE_DISPATCH_ID=""
 
           # --- Execute steps sequentially ---
           for ((i=0; i<TOTAL_STEPS; i++)); do
@@ -244,6 +264,17 @@ jobs:
             SKILLS="${STEP_SKILLS[$i]}"
             VAR="${STEP_VAR[$i]:-}"
             CONSUME="${STEP_CONSUME[$i]:-}"
+            VAR_TEMPLATE="$VAR"
+
+            if [ "$VAR_TEMPLATE" = '$chain_target' ]; then
+              VAR="$CHAIN_TARGET"
+            elif [ "$VAR_TEMPLATE" = '$feature_pr' ]; then
+              if [ -z "$FEATURE_PR" ]; then
+                echo "  Skip: feature produced no verified open PR to review"
+                continue
+              fi
+              VAR="$FEATURE_PR"
+            fi
 
             echo ""
             echo "=== Step $((i+1))/$TOTAL_STEPS: $TYPE [$SKILLS] ==="
@@ -293,6 +324,15 @@ jobs:
             RUN_IDS=()
 
             for skill in "${SKILL_LIST[@]}"; do
+              if [ "$CHAIN" = "dev-loop" ] && [ "$skill" = "feature" ]; then
+                FEATURE_OPEN_BEFORE=$(mktemp)
+                if ! bash scripts/dev-loop-pr.sh snapshot "$CHAIN_TARGET" > "$FEATURE_OPEN_BEFORE"; then
+                  echo "::error::dev-loop could not snapshot open PRs before feature"
+                  CHAIN_FAILED=true
+                  break
+                fi
+              fi
+
               # Build context file if this step consumes outputs
               CTX_FILE=""
               if [ -n "$CONSUME" ]; then
@@ -319,16 +359,23 @@ jobs:
                 break 2
               fi
 
-              RUN_ID=$(dispatch_skill "$skill" "$VAR" "$CTX_FILE")
+              RUN_OUTPUT=$(dispatch_skill "$skill" "$VAR" "$CTX_FILE")
               DISPATCH_EXIT=$?
+              RUN_ID=$(echo "$RUN_OUTPUT" | tail -1)
               if [ $DISPATCH_EXIT -ne 0 ] || [ -z "$RUN_ID" ]; then
                 echo "::error::Failed to dispatch skill: $skill"
                 CHAIN_FAILED=true
                 [ "$ON_ERROR" = "fail-fast" ] && break
                 continue
               fi
-              # run_id is the last line of dispatch_skill output
-              RUN_ID=$(echo "$RUN_ID" | tail -1)
+              if [ "$CHAIN" = "dev-loop" ] && [ "$skill" = "feature" ]; then
+                FEATURE_DISPATCH_ID=$(echo "$RUN_OUTPUT" | sed -n 's/^dispatch_id=//p' | tail -1)
+                if [ -z "$FEATURE_DISPATCH_ID" ]; then
+                  echo "::error::dev-loop feature dispatch has no correlation ID"
+                  CHAIN_FAILED=true
+                  break
+                fi
+              fi
               RUN_IDS+=("$RUN_ID")
               sleep 2  # Stagger dispatches
             done
@@ -347,6 +394,18 @@ jobs:
               # Pull latest to get committed outputs from completed skills
               git pull --rebase origin main 2>/dev/null || true
               echo "  Pulled latest outputs"
+
+              # A successful feature run proves only that its harness exited.
+              # Verify one newly opened PR from GitHub state before reviewing it.
+              if [ "$CHAIN" = "dev-loop" ] && [ "$SKILLS" = "feature" ]; then
+                VERIFY_RC=0
+                FEATURE_PR=$(bash scripts/dev-loop-pr.sh verify-new-pr "$CHAIN_TARGET" "$FEATURE_OPEN_BEFORE" "$FEATURE_DISPATCH_ID") || VERIFY_RC=$?
+                case "$VERIFY_RC" in
+                  0) echo "  Verified feature PR: $FEATURE_PR" ;;
+                  3) FEATURE_PR=""; CHAIN_NO_ACTION=true; echo "::notice::dev-loop feature completed without a verified PR; reviewer will not run" ;;
+                  *) echo "::error::dev-loop could not verify feature's claimed PR"; CHAIN_FAILED=true; break ;;
+                esac
+              fi
             fi
           done
 
@@ -355,6 +414,9 @@ jobs:
           if [ "$CHAIN_FAILED" = "true" ]; then
             echo "::error::Chain '$CHAIN' completed with failures"
             echo "CHAIN_STATUS=failed" >> "$GITHUB_ENV"
+          elif [ "$CHAIN_NO_ACTION" = "true" ]; then
+            echo "Chain '$CHAIN' completed without a review: feature produced no verified PR"
+            echo "CHAIN_STATUS=success" >> "$GITHUB_ENV"
           else
             echo "Chain '$CHAIN' completed successfully"
             echo "CHAIN_STATUS=success" >> "$GITHUB_ENV"

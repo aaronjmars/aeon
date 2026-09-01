@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-28T06:04:26.259698526Z",
+  "generatedAt": "2026-09-01T16:12:27.737743Z",
   "generator": "eyebrow/0.4.1",
   "artifacts": [
     {
@@ -315,10 +315,10 @@
       "files": [
         {
           "path": "SKILL.md",
-          "hash": "e8684cee3a8d87a5c192bd2eeca38ad4b64c39714513e8ace57471ae962281da"
+          "hash": "bf3a11650596bd34818ff8df5a8e6da7c3153f2a41388c867fd4b4861472860d"
         }
       ],
-      "contentHash": "sha256-eed99c7e18a9bcaad45109a53323096bbce76cf15c32b3b2b6663465ba1329a1",
+      "contentHash": "sha256-7a3f62acc00ed607838decee306822cf7791ef3471b5df3a8d5387f940c3482b",
       "discoveredFrom": "skills/pr-review/SKILL.md"
     },
     {
@@ -556,10 +556,10 @@
       "files": [
         {
           "path": "SKILL.md",
-          "hash": "1b7a7503ca8a5fb3093853fb9ccfbccd206f5893b94ffb3ea8605d0d9f6f53a3"
+          "hash": "dfd812e4832da6958646746980e56d48f28a8a33bd2878cc0450ee84ebab69d4"
         }
       ],
-      "contentHash": "sha256-f1b469d77f153c0a5eec34db24314d660c710d615df37dcf033c1127397b90f0",
+      "contentHash": "sha256-439f8e6953ca04fcf91b4d877bb66c5c09ec3ca20002adfe7b638f3374b43a42",
       "discoveredFrom": "skills/skill-health/SKILL.md"
     },
     {
@@ -794,10 +794,10 @@
       "files": [
         {
           "path": "SKILL.md",
-          "hash": "e5b436589402192933985c99e9f8fb2777df90147e879f2dc122d8ca88f6442b"
+          "hash": "35046f50614be666d0dd1a24d1540c24385f9c2d457b7bb35bb74abb2847595c"
         }
       ],
-      "contentHash": "sha256-d5fc3ca382e466c15ae2645ea5ac219b66768d3cf5766148e0bac4396015a78a",
+      "contentHash": "sha256-41491fa777d21f338ea9bd2231e9fe389b5fc2c81616dbc832a41043bc1d187e",
       "discoveredFrom": "skills/cortx-reliability/SKILL.md"
     },
     {
@@ -842,10 +842,10 @@
       "files": [
         {
           "path": "SKILL.md",
-          "hash": "2a02d778f165018741ce467b242334de6e8213f6c962ed33307984b0b401e8c9"
+          "hash": "b9a7d47326648ec745a35419c2e0b67521d58020fb1eef4959f58df4be09f5f3"
         }
       ],
-      "contentHash": "sha256-b5d7317728abc7bc8c4bc0ffcef5967af295cbb33cab91b2eb3617a1f7c39c00",
+      "contentHash": "sha256-3ffc12f919716a0035c0594849f176a844ba4b56ba0f71d6bf1152a2f1aaaaea",
       "discoveredFrom": "skills/feature/SKILL.md"
     },
     {
@@ -968,10 +968,10 @@
       "files": [
         {
           "path": "SKILL.md",
-          "hash": "48ae451ff50ce7a5159526a0a92fb6654140bf977dcfb07f461b0ec0d6451eda"
+          "hash": "963c9d733523db9f0d66f6db28f75f437a1a1d95ee5b1efdd9ab7cdab8f738ef"
         }
       ],
-      "contentHash": "sha256-63b2ce8d21137ebfb591b9bec26624ef27304ba73259bcd4373e1408044bd846",
+      "contentHash": "sha256-d3433068bf4a4a282db862cf93c2bc99b9d574c57fa406d4039a09699c8a4dda",
       "discoveredFrom": "skills/changelog/SKILL.md"
     },
     {
@@ -1048,10 +1048,10 @@
       "files": [
         {
           "path": "SKILL.md",
-          "hash": "dbc6ff98f4b697057fb4f5ca9b54cca784fe7072405c9fd47b4c35003bc629e8"
+          "hash": "25d7ec4b7c050449d30e56690b97bd456fe66b0c760e885c02832510b1339d62"
         }
       ],
-      "contentHash": "sha256-3dafe59f0899927f2a3388ef397864d09cff2acdbd7b1ffbe763808d1a286939",
+      "contentHash": "sha256-36f7e1683c471664fc7e4a890bfb71e62cc6c0ee602a05318191dd1b004a9c51",
       "discoveredFrom": "skills/skill-repair/SKILL.md"
     },
     {
@@ -1489,23 +1489,23 @@
       "files": [
         {
           "path": "SKILL.md",
-          "hash": "e232a3a30edfd6b50f5a30b093eb67211df1db01febbc09c75a4106da06539c1"
+          "hash": "605b296d976df6631c7d9d5310442a9f933794ba32188136b7e342bb635b4dfc"
         },
         {
           "path": "hook-deploy.sh",
-          "hash": "5517faced14159c24097dc5f083b3b0589c96cd4f1412075c76745c800a5f973"
+          "hash": "923ac9765f435569d322c24cf4de4ccafb1ecd190901ecc75a5538900cc072b5"
         },
         {
           "path": "templates/DeployHook.s.sol",
-          "hash": "bb8f34ae0cad023d6c1cc1c7d2932e7faa40abef37f3fcfeac86e3eb2d5ce4c9"
+          "hash": "c97173a47b3bf4aeddb75e901033ed2d01a6903987d47cbdff94544dbd9e2f95"
         },
         {
           "path": "templates/DynamicFeeHook.sol",
-          "hash": "54a05fed29a08a944501e97bc5c755351f6cf1babb71223b13037a1eb69836d2"
+          "hash": "e7a5e1a5b91e2e7db4e0cc3c793a2063ead9b9183f986c0892e2fa4bf95df8b8"
         },
         {
           "path": "templates/Hook.sol",
-          "hash": "d233189f839a0ea113e1db02afd087f83b5a2608ca21a3639ad3299f6d45ebd3"
+          "hash": "7e63be28d67741a2b27a6db74553032d08e5555b7e1e2ef7e9c2c2d4cde82242"
         },
         {
           "path": "templates/Hook.t.sol",
@@ -1513,7 +1513,7 @@
         },
         {
           "path": "templates/HookFeeHook.sol",
-          "hash": "7997835d61aa796c361f849bf6b7eb4667a21a8646a9b48aa08fc6497815c3f9"
+          "hash": "bb0e7a7bf69ea6c1cee61cee8080ba190e2085f0e1aac26aaadaaa73b9a4f511"
         },
         {
           "path": "templates/MockERC20.sol",
@@ -1521,7 +1521,7 @@
         },
         {
           "path": "templates/NoOpHook.sol",
-          "hash": "0a5eecbd92a4115fd6a1436a21563bef003d08b4bcf071f3540e20f2b166d43f"
+          "hash": "a902c6d2ba1914c36da3f475b24e5b5f300f74386d207247e398eed8651fcc29"
         },
         {
           "path": "templates/chains.tsv",
@@ -1551,7 +1551,7 @@
           "severity": "high",
           "owasp": "ASK-06",
           "file": "SKILL.md",
-          "line": 70,
+          "line": 116,
           "snippet": "- **Freeform mode** (anything else): write the whole hook into `$HOOKBUILD_DIR/src/Hook.sol` — replace the `// --- AEO…",
           "explanation": "references sensitive credential or secret paths"
         },
@@ -1578,7 +1578,7 @@
           "severity": "high",
           "owasp": "ASK-06",
           "file": "hook-deploy.sh",
-          "line": 175,
+          "line": 200,
           "snippet": "[ -f hook.env ] \u0026\u0026 . ./hook.env",
           "explanation": "references sensitive credential or secret paths"
         },
@@ -1610,7 +1610,7 @@
           "explanation": "references sensitive credential or secret paths"
         }
       ],
-      "contentHash": "sha256-7f4d0f86055e92ebef05c8fab531bd678081d005a426f8dec475a019f68070b5",
+      "contentHash": "sha256-aa6b3cb711be49025443c10a749f3a4f11a5c7468f8cc9125f09009f9033c2b6",
       "discoveredFrom": "skills/deploy-uni-hook/SKILL.md"
     },
     {
@@ -2071,7 +2071,7 @@
       "files": [
         {
           "path": "SKILL.md",
-          "hash": "3886dade499b296f43f31ec5ecb2ee48d8c6c597cc4b88fd84d14984289eddf1"
+          "hash": "ee643687f351dbd256b18477706860852689592786aeef358b74f04fca2310c8"
         },
         {
           "path": "references/ci.md",
@@ -2083,26 +2083,26 @@
         },
         {
           "path": "references/layout.md",
-          "hash": "97900b5b0acdad8299e7382df3349198dbe5f1da828233692195649a2c6b53b0"
+          "hash": "087f9a34009dfa38dd8745c36c1d0e2e79a293f2f156fea0a9d343531d4e3373"
         },
         {
           "path": "references/mcp.md",
-          "hash": "8808fcb6390d1bd8d6cdd2d0db6e312c81f91ad161392d166e64645dc528c66e"
+          "hash": "58c74b3a95abaaf1328568b873892a014a8f802f2d0e732acaa1ca3935d72875"
         },
         {
           "path": "references/secrets.md",
-          "hash": "f81782fbe44734e7887a749ce1aac5d48bcfab497920c5e34c68c12bac8b2535"
+          "hash": "41aa375c84cea1b0190bd7291176651d335dc1c41e2b8067900f164d4c4df670"
         },
         {
           "path": "references/skill-anatomy.md",
-          "hash": "679e818a8cc607d1e82cc7f896e982a0123cf073ed9c624a9f8c2fd0da845c67"
+          "hash": "009f52527d7407ad8b388209c573fac29cd07190d99a2ea52b0bbc4512f60d3d"
         },
         {
           "path": "scripts/mine-history.mjs",
           "hash": "0edc7445542a21cb5518e813a6ae462a1d469636601a799efc1bec86b4058c5a"
         }
       ],
-      "contentHash": "sha256-8bd79c2aae5f6479bd74dc5b327f31da06add2bc9be78d5b62fecc742697c843",
+      "contentHash": "sha256-4e9c576b6d6c7cad1e17df815ac9519e4af1dd7a827e3b06a5314675ca1478ce",
       "discoveredFrom": ".claude/skills/aeon/SKILL.md"
     },
     {

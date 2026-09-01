@@ -17,6 +17,8 @@ metadata:
     - build
     - growth
 ---
+When the run prompt supplies a `Workflow correlation ID`, include the exact marker `<!-- aeon-dispatch:<ID> -->` in every PR body you create. This is a machine-checked chain receipt: do not alter, omit, or place it only in the final response.
+
 > **${var}** — Selector `target[:arg] [--fix-issues]`, `target ∈ {watched, external, dormant}`. Empty or `watched` = build a feature on every watched repo (one PR each); `external:<owner/repo>` = one best enhancement on that external repo; `dormant` = revive the highest-scoring dormant repo. A leading `build:<owner/repo | issue-url | free-text instruction>` — the shape the Telegram "ship which opportunity?" force-reply sends via `repo-scanner`'s offer — is intercepted **first** and routed into the **external** branch on that target/instruction. `--fix-issues` biases the chosen branch toward fixing an open GitHub issue. Full grammar below.
 
 This skill merges three repo-work modes behind one selector so no capability is lost:
@@ -169,6 +171,8 @@ gh pr create -R owner/repo \
 ## Changes
 - file1: what changed
 - file2: what changed
+
+${AEON_DISPATCH_ID:+<!-- aeon-dispatch:$AEON_DISPATCH_ID -->}
 
 ---
 *Built autonomously by Aeon*"
@@ -330,6 +334,8 @@ gh pr create --repo "$REPO" \
 ## Context
 [What prompted this — issue, TODO, code review finding, etc.]
 
+${AEON_DISPATCH_ID:+<!-- aeon-dispatch:$AEON_DISPATCH_ID -->}
+
 ---
 Built by [Aeon](https://github.com/aeon)"
 ```
@@ -439,7 +445,9 @@ git commit -m "chore: <what you changed>
 
 Periodic maintenance pass — repo is at ${STARS}★ and worth keeping fresh."
 git push -u origin "chore/revive-${today}"
-gh pr create --title "chore: <what you changed>" --body "<concise body>"
+gh pr create --title "chore: <what you changed>" --body "<concise body>
+
+${AEON_DISPATCH_ID:+<!-- aeon-dispatch:$AEON_DISPATCH_ID -->}"
 ```
 
 If the repo doesn't accept outside PRs or the clone fails, fall back to updating description + topics via API (requires you to be the owner — skip if not):

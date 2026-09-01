@@ -12,10 +12,10 @@ metadata:
 <!-- autoresearch: variation B — sharper output: severity-tagged & capped findings, inline comments on exact lines, one-line verdict; folds in skip rules (A) and SHA dedup + large-diff fallback (C). Absorbs pr-merge as the `--survey` risk-tiered triage-digest branch (no capability lost). -->
 
 > **${var}** — Selects the branch and scopes it.
-> - **Default (no `--survey`)** → per-PR deep review. `${var}` empty reviews every repo in `memory/watched-repos.md`; `${var}=owner/repo` scopes the review to a single repo.
+> - **Default (no `--survey`)** → per-PR deep review. `${var}` empty reviews every repo in `memory/watched-repos.md`; `${var}=owner/repo` scopes to one repo; `${var}=owner/repo#N` scopes to that exact PR.
 > - **`--survey`** (alias `survey`) → risk-tiered triage digest (the former `pr-merge`). In this branch the remaining tokens follow pr-merge's grammar: pass `dry-run` to skip notify (article + state still write), pass `owner/repo` to override the target repo, combine with a space (`--survey dry-run owner/repo`). Empty target = `aeonfun/aeon`.
 >
-> Examples: `` (review every watched repo) · `owner/repo` (review one repo) · `--survey` (triage digest of aeonfun/aeon) · `--survey dry-run` (refresh digest, no notify) · `--survey owner/repo` (triage a specific repo).
+> Examples: `` (review every watched repo) · `owner/repo` (review one repo) · `owner/repo#42` (review exactly PR 42) · `--survey` (triage digest of aeonfun/aeon) · `--survey dry-run` (refresh digest, no notify) · `--survey owner/repo` (triage a specific repo).
 
 ## Shared preamble (every run)
 
@@ -23,7 +23,7 @@ Read `memory/MEMORY.md` for high-level context. Scan the last ~3 days of `memory
 
 **Parse `${var}` → branch:** split `${var}` on whitespace.
 - If a `--survey` or `survey` token is present → **SURVEY branch** (jump to "Survey branch"). Remove that token; the remaining tokens are parsed by the survey branch (`dry-run`, `owner/repo` override, unknown → BAD_VAR).
-- Otherwise → **REVIEW branch** (default; continue below). The remaining `${var}` is an optional `owner/repo` scope (empty = every watched repo).
+- Otherwise → **REVIEW branch** (default; continue below). The remaining `${var}` is an optional `owner/repo` or `owner/repo#N` scope (empty = every watched repo).
 
 The two branches never share mutation logic: the REVIEW branch posts PR comments/reviews via `gh`; the SURVEY branch writes the digest article + state file and (gated) notifies — neither performs an actual `gh pr merge`. Dispatch to exactly one branch per run.
 
@@ -34,7 +34,7 @@ The two branches never share mutation logic: the REVIEW branch posts PR comments
 Read `memory/MEMORY.md` and `memory/watched-repos.md`.
 Read the last 2 days of `memory/logs/` to pull the `headRefOid` of any PR reviewed recently — used for dedup.
 
-If `${var}` names an `owner/repo`, review only that repo. Otherwise review every repo listed in `memory/watched-repos.md`.
+If `${var}` names `owner/repo#N`, fetch and review only that exact open PR; do not list or comment on any other PR. If `${var}` names `owner/repo`, review that repo's open PRs. Otherwise review every repo listed in `memory/watched-repos.md`.
 
 If `memory/watched-repos.md` is empty or missing (and no `owner/repo` was passed), log `PR_REVIEW_NO_REPOS` and end.
 

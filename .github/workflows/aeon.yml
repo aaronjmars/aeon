@@ -710,6 +710,7 @@ jobs:
           RH_MODEL_ARG: ${{ steps.harness.outputs.MODEL_ARG }}
           RH_HARNESS_MODEL: ${{ steps.harness.outputs.HARNESS_MODEL }}
           INPUT_CHAIN_CTX: ${{ inputs.chain_context_file }}
+          AEON_DISPATCH_ID: ${{ inputs.dispatch_id }}
         run: |
           TODAY=$(date -u +%Y-%m-%d)
           export SKILL_NAME
@@ -926,6 +927,14 @@ jobs:
 
           Use this variable (override the default in the skill file):
           var=$VAR"
+          fi
+          if [[ "$AEON_DISPATCH_ID" =~ ^chain-[0-9a-f]{32}$ ]]; then
+            PROMPT="$PROMPT
+
+          Workflow correlation ID: $AEON_DISPATCH_ID
+          Follow the selected skill's instructions for recording this ID in any artifact it creates."
+          elif [ -n "$AEON_DISPATCH_ID" ]; then
+            echo "::warning::ignoring malformed dispatch correlation ID"
           fi
           # Unified execution: EVERY harness runs through the harness-adapter
           # (harness-adapter/run-harness), which speaks one Claude-Code-shaped

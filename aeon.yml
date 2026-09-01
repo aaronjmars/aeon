@@ -190,6 +190,18 @@ reactive:
 #         - { skill: polish,  consume: [skill-c], when: "score > 3" }
 #         - { skill: rewrite, consume: [skill-c], when: "score <= 3" }
 chains:
+  # Provider-neutral, operator-dispatched coding loop: the feature and review
+  # skills use whichever harnesses the operator configured for those skills.
+  # A human still decides whether to merge. An explicit external target is
+  # required so feature can never fall back to every watched repository.
+  dev-loop:
+    schedule: "workflow_dispatch"
+    on_error: fail-fast
+    max_dispatches: 2
+    steps:
+      - { skill: feature, var: "$chain_target" }
+      - { skill: pr-review, var: "$feature_pr", consume: [feature] }
+
   # routine:
   #   schedule: "0 7 * * *"
   #   on_error: fail-fast
