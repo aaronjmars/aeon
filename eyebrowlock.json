@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "generatedAt": "2026-09-01T16:12:27.737743Z",
-  "generator": "eyebrow/0.4.1",
+  "generatedAt": "2026-09-01T18:42:28.321251Z",
+  "generator": "eyebrow/0.4.2",
   "artifacts": [
     {
       "id": "019b953b97c439b3",
@@ -117,7 +117,7 @@
       "files": [
         {
           "path": "SKILL.md",
-          "hash": "a48fb63798be19f958820e880efc6f1f5cf0d242d6937eb26c4c02b79bb32bd5"
+          "hash": "b17491de609e1fa3b241a55012e60f21d63eaaac6ad9251c43509f40ec635872"
         }
       ],
       "findings": [
@@ -126,7 +126,7 @@
           "severity": "critical",
           "owasp": "ASK-01",
           "file": "SKILL.md",
-          "line": 105,
+          "line": 108,
           "snippet": "network is open, but `pip install` / `curl | sh` / `tar` are **not** on the in-run",
           "explanation": "downloads and executes remote code via a pipe to a shell"
         },
@@ -135,7 +135,7 @@
           "severity": "critical",
           "owasp": "ASK-01",
           "file": "SKILL.md",
-          "line": 119,
+          "line": 122,
           "snippet": "# open, but `pip install` / `curl | sh` / `tar` are NOT allow-listed — `python3 -m pip`,",
           "explanation": "downloads and executes remote code via a pipe to a shell"
         },
@@ -144,7 +144,7 @@
           "severity": "medium",
           "owasp": "ASK-03",
           "file": "SKILL.md",
-          "line": 301,
+          "line": 304,
           "snippet": "- `exec` / `spawn` / `system` / `eval` sinks + subprocess with string interpolation (RCE)",
           "explanation": "uses a process-execution primitive"
         },
@@ -153,12 +153,12 @@
           "severity": "critical",
           "owasp": "ASK-01",
           "file": "SKILL.md",
-          "line": 872,
+          "line": 1013,
           "snippet": "1. **Install** — the binaries (`semgrep`, `trufflehog`, `osv-scanner`, `slither`) are **not pre-installed**. Stage the…",
           "explanation": "downloads and executes remote code via a pipe to a shell"
         }
       ],
-      "contentHash": "sha256-a9cdb0547fa559f53196eef12f5459c6d1f8bace3a56fa257f809e4f309cb1c5",
+      "contentHash": "sha256-a81f0757d7b3bafe3baaa0c3d2c0e735eb284a7ebc9768264bdfe4e747b4aa9a",
       "discoveredFrom": "skills/vuln-scanner/SKILL.md"
     },
     {
@@ -2091,7 +2091,7 @@
         },
         {
           "path": "references/secrets.md",
-          "hash": "41aa375c84cea1b0190bd7291176651d335dc1c41e2b8067900f164d4c4df670"
+          "hash": "76b8105069a91632daba058cfdd7afec0e3b6ee9542b083b99b4601a73fbcd96"
         },
         {
           "path": "references/skill-anatomy.md",
@@ -2102,7 +2102,7 @@
           "hash": "0edc7445542a21cb5518e813a6ae462a1d469636601a799efc1bec86b4058c5a"
         }
       ],
-      "contentHash": "sha256-4e9c576b6d6c7cad1e17df815ac9519e4af1dd7a827e3b06a5314675ca1478ce",
+      "contentHash": "sha256-c43ac760993f8c41c7aa85b20ce6b53b948607d61d767f21d321f3b9853aa5e5",
       "discoveredFrom": ".claude/skills/aeon/SKILL.md"
     },
     {

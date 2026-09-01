@@ -50,6 +50,9 @@ echo "$RT" | grep -q "Read" && echo "$RT" | grep -q "WebFetch" \
 echo "$WT" | grep -q "Bash(cd:\*)" && pass "write tier includes cd" || bad "write tier includes cd"
 echo "$RT" | grep -q "Bash(cd:\*)" && pass "read-only tier includes cd" || bad "read-only tier includes cd"
 
+echo "$WT" | grep -q "Bash(./scripts/vuln-poc-gate.sh:\*)" \
+  && pass "write tier includes the vuln PoC verifier" || bad "write tier missing vuln PoC verifier"
+
 # grok-args is DELETED and must stay deleted. It emitted grok `--allow` rules that
 # never gated anything (adapters/grok.sh runs --permission-mode bypassPermissions,
 # because a denied tool aborts grok's whole turn) plus grok's own

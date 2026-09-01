@@ -45,6 +45,8 @@ record() { echo "$1=$2" >> "$MANIFEST"; }   # tool=installed|fail|skipped
 # post-run workflow check reads this file; model prose is not execution evidence.
 EXEC_LOG=/tmp/vuln-scan/executions.log
 : > "$EXEC_LOG"
+POC_EXEC_LOG=/tmp/vuln-scan/poc-executions.log
+: > "$POC_EXEC_LOG"
 
 instrument() { # command name, real executable
   local name="$1" real="$2" wrapper="$BIN/$1"
@@ -55,6 +57,17 @@ instrument() { # command name, real executable
 #!/usr/bin/env bash
 printf '%s %s\\n' '$name' "\$*" >> '$EXEC_LOG'
 exec '$BIN/.${name}.real' "\$@"
+EOF
+  chmod +x "$wrapper"
+}
+
+instrument_redacted() { # command name, real executable, fixed evidence label
+  local name="$1" real="$2" label="$3" wrapper="$BIN/$1"
+  [ -x "$real" ] || return 0
+  cat > "$wrapper" <<EOF
+#!/usr/bin/env bash
+printf '%s %s\n' '$name' '$label' >> '$EXEC_LOG'
+exec '$real' "\$@"
 EOF
   chmod +x "$wrapper"
 }
@@ -141,6 +154,14 @@ instrument trufflehog "$BIN/trufflehog"
 instrument osv-scanner "$BIN/osv-scanner"
 instrument slither "$(command -v slither 2>/dev/null || true)"
 instrument cargo-fuzz "$(command -v cargo-fuzz 2>/dev/null || true)"
+# Keep private finding paths, test names, and fork arguments out of the public
+# workflow evidence log. The gate's redacted result proves whether the PoC ran.
+if command -v forge >/dev/null 2>&1; then
+  instrument_redacted forge "$(command -v forge)" '[redacted]'
+  record forge installed
+else
+  record forge fail
+fi
 
 log "manifest (/tmp/vuln-scan/prefetch.txt):"
 cat "$MANIFEST"
