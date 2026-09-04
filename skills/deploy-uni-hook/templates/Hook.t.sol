@@ -137,7 +137,9 @@ contract HookBehaviorTest is Test {
     // --- AEON:ASSERT START (freeform: replace with behavioral tests for the prompt) ---
     // Default scaffold matches the default Hook body (an afterSwap swap counter).
     // The generator MUST replace this with assertions specific to the generated hook:
-    //   - a swap the hook is meant to REJECT -> vm.expectRevert(...) then _swap(...)
+    //   - a swap the hook is meant to REJECT -> _expectSwapRevert(zeroForOne, amount, Hook.SomeError.selector)
+    //     (use the helper above, NOT bare vm.expectRevert: v4 wraps a hook revert in
+    //      CustomRevert.WrappedError, so vm.expectRevert(selector) never matches)
     //   - a swap the hook is meant to ALLOW  -> _swap(...) with no revert
     //   - any getter / accounting -> assertEq(hook.someGetter(...), expected)
     function test_defaultCounterIncrements() public {
