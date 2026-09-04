@@ -725,8 +725,20 @@ jobs:
           TODAY=$(date -u +%Y-%m-%d)
           export SKILL_NAME
           CONFIG_MODEL=$(grep -E '^model:' aeon.yml | sed 's/^model: *//' | tr -d ' ')
-          # Check for per-skill model override in aeon.yml (extract quoted value, ignore comments)
-          SKILL_MODEL=$(grep "^  ${SKILL_NAME}:" aeon.yml | sed -n 's/.*model: *"\([^"]*\)".*/\1/p')
+          # Per-skill model override in aeon.yml. Must handle BOTH entry shapes:
+          #   single-line   name: { enabled: true, model: "x", ... }
+          #   block         name:
+          #                   { enabled: true,
+          #                     model: "x", ... }
+          # The old single-line grep only read the "  name:" header, so a block
+          # entry's model: (on a later line) was missed and the skill silently fell
+          # back to the top-level model. Capture the whole entry (header line to the
+          # block's closing brace), strip comments, then read the quoted model value.
+          SKILL_MODEL=$(awk -v s="$SKILL_NAME" '
+            $0 ~ "^  " s ":" {f=1}
+            f {print}
+            f && /}/ {exit}
+          ' aeon.yml | sed 's/#.*//' | sed -n 's/.*model:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
           if [ -n "$INPUT_MODEL" ] && [ "$INPUT_MODEL" != "(config default)" ]; then
             MODEL="$INPUT_MODEL"
           elif [ -n "$SKILL_MODEL" ]; then
