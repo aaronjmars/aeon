@@ -58,6 +58,22 @@ contract DeployHook is Script {
         revert("no canonical salt");
     }
 
+    // Deploy via a raw call to the canonical CREATE2 deployer factory instead of
+    // `new X{salt: salt}()`. Forge only special-cases salted `new` through this
+    // factory when a script is ACTUALLY broadcasting (--broadcast); under a plain
+    // `forge script` dry-run, `new X{salt}()` uses the calling script contract's
+    // own address as CREATE2 deployer, which never matches `_mine()`'s address
+    // (mined assuming deployer = CREATE2_DEPLOYER) and reverts "hook addr
+    // mismatch" on every simulate call. A direct call to the factory (which is a
+    // universally-deployed singleton, incl. every testnet) runs the same CREATE2
+    // opcode from the factory's own bytecode either way, so simulate and
+    // broadcast always agree with `_mine()`.
+    function _deployCreate2(bytes memory initCode, bytes32 salt) internal returns (address deployed) {
+        (bool ok, bytes memory ret) = CREATE2_DEPLOYER.call(abi.encodePacked(salt, initCode));
+        require(ok, "create2 deploy failed");
+        deployed = address(bytes20(ret));
+    }
+
     function run() external {
         IPoolManager pm = IPoolManager(vm.envAddress("POOL_MANAGER"));
         string memory kind = vm.envOr("HOOK_KIND", string("dynamic"));
@@ -114,17 +130,9 @@ contract DeployHook is Script {
             ? (Currency.wrap(address(tA)), Currency.wrap(address(tB)))
             : (Currency.wrap(address(tB)), Currency.wrap(address(tA)));
 
-        // deploy the hook at the mined address
-        address hookAddr;
-        if (k == keccak256("dynamic")) {
-            hookAddr = address(new DynamicFeeHook{salt: salt}(pm));
-        } else if (k == keccak256("noop")) {
-            hookAddr = address(new NoOpHook{salt: salt}(pm));
-        } else if (k == keccak256("skim")) {
-            hookAddr = address(new HookFeeHook{salt: salt}(pm));
-        } else {
-            hookAddr = address(new Hook{salt: salt}(pm));
-        }
+        // deploy the hook at the mined address, via the CREATE2 factory directly
+        // (see _deployCreate2) so simulate and broadcast produce the same address
+        address hookAddr = _deployCreate2(abi.encodePacked(initCode, abi.encode(pm)), salt);
         require(hookAddr == expected, "hook addr mismatch");
         require(uint160(hookAddr) & Hooks.ALL_HOOK_MASK == flags, "flag bits wrong");
 
@@ -150,8 +158,19 @@ contract DeployHook is Script {
             ""
         );
 
+        vm.stopBroadcast();
+
         // one test swap - proves the callback path does not revert on a vanilla
-        // exact-in. Game/gate hooks may reject -1e15; skip rather than fail the deploy.
+        // exact-in. Game/gate hooks may reject -1e15 (e.g. a time-of-day gate
+        // closed right now); probe OUTSIDE the broadcast window first and roll
+        // state back, so a rejected probe never enters the broadcast set. Forge
+        // replays every call recorded while broadcasting independently at the end
+        // ("## Setting up 1 EVM.") to estimate gas - a reverting recorded call
+        // fails there as "Simulated execution failed" even when a Solidity
+        // try/catch already handled its revert during the original run, so a
+        // doomed swap must never be recorded as broadcast in the first place.
+        uint256 snap = vm.snapshotState();
+        bool seedSwapOk;
         try swapRouter.swap(
             key,
             IPoolManager.SwapParams({
@@ -161,11 +180,27 @@ contract DeployHook is Script {
             }),
             PoolSwapTest.TestSettings({takeClaims: false, settleUsingBurn: false}),
             ""
-        ) {} catch {
+        ) {
+            seedSwapOk = true;
+        } catch {}
+        vm.revertToState(snap);
+
+        if (seedSwapOk) {
+            vm.startBroadcast();
+            swapRouter.swap(
+                key,
+                IPoolManager.SwapParams({
+                    zeroForOne: true,
+                    amountSpecified: -1e15,
+                    sqrtPriceLimitX96: TickMath.MIN_SQRT_PRICE + 1
+                }),
+                PoolSwapTest.TestSettings({takeClaims: false, settleUsingBurn: false}),
+                ""
+            );
+            vm.stopBroadcast();
+        } else {
             console2.log("SEED_SWAP_SKIPPED");
         }
-
-        vm.stopBroadcast();
 
         console2.log("kind        ", kind);
         console2.log("hook        ", hookAddr);
