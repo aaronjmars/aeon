@@ -140,11 +140,23 @@ fi
 
 # --- Secrets: TruffleHog (only-verified = actually authenticates) ---
 if command -v trufflehog >/dev/null 2>&1; then
+  TRUFFLEHOG_RC=0
   trufflehog filesystem . --only-verified --json \
-    > /tmp/vuln-scan/trufflehog.json 2>/dev/null || true
-  # Also scan full git history for secrets
-  trufflehog git file://. --only-verified --json \
-    > /tmp/vuln-scan/trufflehog-git.json 2>/dev/null || true
+    > /tmp/vuln-scan/trufflehog.json 2>/dev/null || TRUFFLEHOG_RC=$?
+  # Also scan full git history for secrets — BOUNDED. An unbounded `trufflehog git`
+  # walks every commit's every tree, and a large packed history (measured: 200
+  # commits / ~369MB on one real run) can eat the whole turn budget by itself,
+  # with nothing to show it happened until the run reports "success" anyway
+  # having produced no report at all. `timeout` turns that silent budget-burn
+  # into an ordinary, honestly-recorded `fail` — same as an install failure,
+  # never a reason to write a "still running, will resume" placeholder as the
+  # final output. There is no resume: a workflow_dispatch run is one shot, and
+  # a note promising to pick back up later is not truthful about what a single
+  # run can actually do.
+  TRUFFLEHOG_GIT_RC=0
+  timeout 300 trufflehog git file://. --only-verified --json \
+    > /tmp/vuln-scan/trufflehog-git.json 2>/dev/null || TRUFFLEHOG_GIT_RC=$?
+  [ "$TRUFFLEHOG_GIT_RC" = 124 ] && echo "VULN_SCANNER_TIMEOUT: trufflehog git history scan exceeded 300s on a large packed history — recorded as fail, not retried, not left unfinished"
 else
   echo "VULN_SCANNER_SKIPPED: trufflehog not available"
 fi
@@ -180,7 +192,19 @@ fi
 
 # Record what succeeded (empty output ≠ clean, could be tool failure)
 echo "semgrep=$([ -s /tmp/vuln-scan/semgrep.json ] && echo ok || echo fail)" >  /tmp/vuln-scan/sources.txt
-echo "trufflehog=$([ -s /tmp/vuln-scan/trufflehog.json ] && echo ok || echo fail)" >> /tmp/vuln-scan/sources.txt
+# TruffleHog JSON is finding-only: an exit-0 empty stream is a clean scan.
+echo "trufflehog=$([ "${TRUFFLEHOG_RC:-1}" = 0 ] && echo ok || echo fail)" >> /tmp/vuln-scan/sources.txt
+# Recorded separately from the filesystem pass above: they can genuinely diverge
+# (filesystem scan clean and fast, git-history scan timed out on a large packed
+# repo, or vice versa) and collapsing both into one trufflehog= line hides
+# whichever one actually failed.
+if [ "${TRUFFLEHOG_GIT_RC:-1}" = 124 ]; then
+  echo "trufflehog-git=timeout"                                                  >> /tmp/vuln-scan/sources.txt
+elif [ "${TRUFFLEHOG_GIT_RC:-1}" = 0 ]; then
+  echo "trufflehog-git=ok"                                                       >> /tmp/vuln-scan/sources.txt
+else
+  echo "trufflehog-git=fail"                                                     >> /tmp/vuln-scan/sources.txt
+fi
 echo "osv=${OSV_STATUS:-fail}"                                                    >> /tmp/vuln-scan/sources.txt
 ```
 
@@ -605,7 +629,25 @@ Append to `memory/vuln-scanned.json` (create if missing) so future runs skip thi
 
 ### A7. Write local report
 
-Save to `output/articles/vuln-scan-${today}.md` with sections for: repo metadata, scanner sources (ok/fail per tool), candidate count, confirmed findings with severity and channel, PoC gate status (`verified` with verifier/chain/block, `not-required` with reason, or `needs-verification`), and dedup note. Do **not** include exploit details for findings disclosed via PVR — redact file/line and link to the advisory ID instead.
+**There is no resume.** The git-history pass has a timeout; this does not bound
+every other scanner or installation step. If you are running low on turns, finish
+the report with whatever scanners actually completed, record the rest `fail` in
+`sources.txt` (§A3's rule: unfinished is `fail`, not a pending state), and write
+A7/A8 now. A single `workflow_dispatch` run is one shot with no continuation —
+writing "still running, will pick this up automatically" as the final output is
+not true of this run path (it was live-observed: a run reported workflow
+`success` having written that sentence instead of a report, with no ledger entry
+at all — the operator had to notice and re-dispatch by hand). A shorter, honest
+report with some scanners marked `fail` is a completed task; a promise to
+resume is not.
+
+Save to `output/articles/vuln-scan-${today}.md` with sections for: repo metadata, scanner sources (ok/fail per tool — `trufflehog` and `trufflehog-git` are two separate rows, not one; folding a timed-out history scan into a clean filesystem-scan's `ok` is exactly the silent-masking this split exists to prevent), candidate count, confirmed findings with severity and channel, PoC gate status (`verified` with verifier/chain/block, `not-required` with reason, or `needs-verification`), and dedup note. Do **not** include exploit details for findings disclosed via PVR — redact file/line and link to the advisory ID instead.
+
+Copy each scanner status from `sources.txt` into the report, notification and log.
+Keep `trufflehog` (filesystem) and `trufflehog-git` (history) separate, preserving
+`timeout` exactly. Missing status is `fail`, never inferred `ok`. If any pass failed
+or timed out, say "limited audit" and name the incomplete coverage, even when zero
+findings were confirmed. Do not describe incomplete coverage as a clean audit.
 
 ### A8. Notify
 
@@ -615,13 +657,15 @@ Use `./notify`. One paragraph. Lead with the verdict.
 *Vuln Scanner — <repo>*
 <N> confirmed findings (<severity-summary>).
 Disclosed via: <PVR: advisory #123 | public PR #45 | skipped (no channel)>
-Scanners: semgrep=<ok|fail>, trufflehog=<ok|fail>, osv=<ok|fail>, fuzz=<ok|fail|skip>. PoC gate: <verified|not-required|needs-verification>.
+Scanners: semgrep=<ok|fail>, trufflehog=<ok|fail>, trufflehog-git=<ok|fail|timeout>, osv=<ok|fail>, fuzz=<ok|fail|skip>. PoC gate: <verified|not-required|needs-verification>.
 ```
 
-If the audit was clean:
+`trufflehog-git=timeout` must always be spelled out here, never folded into a plain `trufflehog=ok` — a clean filesystem pass and a timed-out history pass are different facts, and this is the durable line an operator actually reads. Silently dropping the git-history state here reproduces the exact masking this field exists to prevent.
+
+If no findings were confirmed (choose clean or limited according to actual coverage):
 ```
 *Vuln Scanner — <repo>*
-Clean audit. <M> candidates reviewed, 0 confirmed. Scanners: semgrep=ok, trufflehog=ok, osv=ok, fuzz=skip, agentic=ok.
+<Clean audit | Limited audit — name incomplete passes>. <M> candidates reviewed, 0 confirmed. Scanners: semgrep=<ok|fail>, trufflehog=<ok|fail>, trufflehog-git=<ok|fail|timeout>, osv=<ok|fail|none|skipped>, fuzz=<ok|fail|skip>, agentic=<ok|skipped>.
 ```
 
 Then log per the **Log** section below with `Mode: scan`.
@@ -983,7 +1027,7 @@ specific bullets.
 - Candidates: N | Confirmed: M
 - Channels used: PVR (x), public PR (y), skipped (z)
 - Prior-art check: N candidates checked, 0 matches | matched #123 → skipped/commented
-- Scanner status: semgrep=ok trufflehog=ok osv=ok fuzz=ok|fail|skip agentic=ok|skip poc=verified|not-required|needs-verification
+- Scanner status: semgrep=ok|fail trufflehog=ok|fail trufflehog-git=ok|fail|timeout osv=ok|fail|none|skipped fuzz=ok|fail|skip agentic=ok|skip poc=verified|not-required|needs-verification
 - Advisory/PR links: [...]
 ```
 

@@ -34,6 +34,17 @@ echo "$WT" | grep -q "Write" && echo "$WT" | grep -q "Edit" \
 
 # allowed-tools: read-only tier drops mutation tools but keeps read+notify+curl
 RT=$(bash "$M" allowed-tools read-only)
+# Timeout wrappers are command heads, not covered by Bash(trufflehog:*).
+# Keep these general command runners out of the read-only tier.
+for timer in timeout gtimeout; do
+  echo "$WT" | tr ',' '\n' | grep -qxF "Bash($timer:*)" \
+    && pass "write tier includes $timer wrapper" || bad "write tier missing $timer wrapper"
+  if echo "$RT" | tr ',' '\n' | grep -qxF "Bash($timer:*)"; then
+    bad "read-only tier exposes $timer wrapper"
+  else
+    pass "read-only tier excludes $timer wrapper"
+  fi
+done
 if echo "$RT" | grep -q "Write" || echo "$RT" | grep -q "Edit" \
    || echo "$RT" | grep -q "Bash(git:\*)" || echo "$RT" | grep -q "Bash(gh:\*)"; then
   bad "read-only tier drops Write/Edit/git/gh"

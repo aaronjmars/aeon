@@ -75,6 +75,9 @@ WRITE_TOOLS="Write,Edit,Bash(gh:*),Bash(git:*),Bash(python3:*),Bash(python:*)"
 # a live-test showed the run logging that denial as "Blocked by sandbox". These are
 # read-only static-analysis tools (no repo/network mutation of their own).
 WRITE_TOOLS="$WRITE_TOOLS,Bash(semgrep:*),Bash(osv-scanner:*),Bash(trufflehog:*),Bash(slither:*)"
+# Bounded scanner calls start with the wrapper, not the scanner's bare name.
+# These can execute arbitrary commands, so grant them only in the write tier.
+WRITE_TOOLS="$WRITE_TOOLS,Bash(timeout:*),Bash(gtimeout:*)"
 # cargo (vuln-scanner Arm A, step A3.5 — dynamic testing). Staged by
 # scripts/stage-vuln-scanner.sh (nightly toolchain + cargo-fuzz, workflow step,
 # same reason as Foundry below — the sandbox denies toolchain installs in-run).

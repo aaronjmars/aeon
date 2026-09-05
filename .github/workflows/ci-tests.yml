@@ -50,6 +50,8 @@ jobs:
         run: bash scripts/tests/test_telegram_route.sh
       - name: capability mode tests
         run: bash scripts/tests/test_skill_mode.sh
+      - name: vuln-scanner status contract tests
+        run: python3 scripts/tests/test_vuln_scanner_status.py
       - name: per-skill requires parse tests
         run: bash scripts/tests/test_skill_requires.sh
       - name: run actions summary tests
