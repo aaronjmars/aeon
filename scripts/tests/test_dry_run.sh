@@ -13,6 +13,8 @@ ok() { pass=$((pass+1)); }
 no() { fail=$((fail+1)); printf 'FAIL: %s\n' "$1"; }
 
 # ---- synth-env: synthetic, well-formed, never real ----
+if EMPTY="$(bash "$SCRIPT" synth-env '')" && [ -z "$EMPTY" ]; then ok; else no "empty requires must work on bash 3.2"; fi
+if MODEL_ENV="$(bash "$SCRIPT" synth-env 'OPENAI_API_KEY,CODEX_AUTH')" && [ -z "$MODEL_ENV" ]; then ok; else no "codex model auth must not be synthesized"; fi
 ENVOUT="$(bash "$SCRIPT" synth-env 'SLACK_WEBHOOK_URL, XAI_API_KEY, TELEGRAM_CHAT_ID, HOOK_DEPLOYER_PRIVATE_KEY, ANTHROPIC_API_KEY')"
 echo "$ENVOUT" > "$TMP/env"
 
@@ -56,4 +58,5 @@ ev() { bash "$SCRIPT" evaluate <(printf '%s' "$1") >/dev/null 2>&1; echo $?; }
 [ "$(ev '{"exit":0,"output_len":10,"mode":"write","writes":[],"requires":[],"secrets_seen":["ANTHROPIC_API_KEY"]}')" = 0 ] && ok || no "model key should be exempt"
 
 printf '\ndry-run: %d passed, %d failed\n' "$pass" "$fail"
-[ "$fail" -eq 0 ]
+[ "$fail" -eq 0 ] || exit 1
+bash "$(dirname "$SCRIPT")/tests/test_dry_run_dispatch.sh" || exit 1
