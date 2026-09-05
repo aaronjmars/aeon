@@ -11,8 +11,12 @@ pragma solidity 0.8.26;
 // prompt asked, not just that it does not revert.
 //
 // setUp() below is fixed scaffolding: it forks the target chain, mines + deploys the
-// generated Hook with its auto-derived flags, opens a fresh pool, and adds deep
+// generated Hook with its auto-derived flags, opens a fresh pool AT 1:1, and adds deep
 // liquidity. The generator MUST NOT edit setUp() or the helpers — only AEON:ASSERT.
+// For any gate whose decision depends on price or reserve balance, DO NOT rely on the
+// 1:1 pool alone: call _freshPoolAt(<non-1:1 sqrtPriceX96>) inside a test to repoint
+// the pool off parity, then assert both legs. A price/balance/skew gate looks correct
+// at 1:1 no matter how it is written, so testing only there proves nothing.
 
 import {Test} from "forge-std/Test.sol";
 
@@ -43,12 +47,13 @@ contract HookBehaviorTest is Test {
     PoolSwapTest internal swapRouter;
     MockERC20 internal tA;
     MockERC20 internal tB;
+    uint24 internal poolFee;
 
     function setUp() public {
         pm = IPoolManager(vm.envAddress("POOL_MANAGER"));
         uint160 flags = uint160(vm.envUint("HOOK_FLAGS"));
         string memory pf = vm.envOr("HOOK_POOL_FEE", string("3000"));
-        uint24 poolFee =
+        poolFee =
             keccak256(bytes(pf)) == keccak256("dynamic") ? LPFeeLibrary.DYNAMIC_FEE_FLAG : uint24(vm.parseUint(pf));
 
         // tokens
@@ -134,6 +139,44 @@ contract HookBehaviorTest is Test {
         return false;
     }
 
+    /// @dev Repoint the test pool to a SECOND pool on the same hook, started at an
+    /// arbitrary price, so `_swap` / `_expectSwapRevert` and any reserve/skew getter
+    /// run OFF parity. Fresh tokens give it a distinct pool id (reusing the same
+    /// tokens+fee+hook would collide with setUp's 1:1 pool). Initializing the new pool
+    /// also fires the hook's afterInitialize on it, so a correctly price-anchored gate
+    /// snapshots THIS pool's price as its reference. Any gate whose decision depends on
+    /// price or reserve balance MUST be asserted through this helper, not only at 1:1.
+    /// Pick a MODERATE off-parity price (e.g. 4.0) — the bug surfaces at any price
+    /// outside the band, and extreme prices can exceed the minted token headroom.
+    /// price 2.0  -> 112045541949572279837463876096
+    /// price 4.0  -> 158456325028528675187087900672
+    /// price 0.25 ->  39614081257132168796771975168
+    function _freshPoolAt(uint160 sqrtPriceX96) internal {
+        tA = new MockERC20("Hook Test A2", "HTA2");
+        tB = new MockERC20("Hook Test B2", "HTB2");
+        tA.mint(address(this), 1e33);
+        tB.mint(address(this), 1e33);
+        (Currency c0, Currency c1) = address(tA) < address(tB)
+            ? (Currency.wrap(address(tA)), Currency.wrap(address(tB)))
+            : (Currency.wrap(address(tB)), Currency.wrap(address(tA)));
+        key = PoolKey({currency0: c0, currency1: c1, fee: poolFee, tickSpacing: 60, hooks: IHooks(address(hook))});
+        pm.initialize(key, sqrtPriceX96);
+        tA.approve(address(lpRouter), type(uint256).max);
+        tB.approve(address(lpRouter), type(uint256).max);
+        tA.approve(address(swapRouter), type(uint256).max);
+        tB.approve(address(swapRouter), type(uint256).max);
+        lpRouter.modifyLiquidity(
+            key,
+            IPoolManager.ModifyLiquidityParams({
+                tickLower: TickMath.minUsableTick(60),
+                tickUpper: TickMath.maxUsableTick(60),
+                liquidityDelta: 1e23,
+                salt: bytes32(0)
+            }),
+            ""
+        );
+    }
+
     // --- AEON:ASSERT START (freeform: replace with behavioral tests for the prompt) ---
     // Default scaffold matches the default Hook body (an afterSwap swap counter).
     // The generator MUST replace this with assertions specific to the generated hook:
@@ -142,6 +185,9 @@ contract HookBehaviorTest is Test {
     //      CustomRevert.WrappedError, so vm.expectRevert(selector) never matches)
     //   - a swap the hook is meant to ALLOW  -> _swap(...) with no revert
     //   - any getter / accounting -> assertEq(hook.someGetter(...), expected)
+    //   - a PRICE / BALANCE / SKEW gate -> also assert it through _freshPoolAt(<non-1:1>):
+    //     the leg that must stay open is NOT rejected and the leg that must close reverts,
+    //     at a price away from parity. Only-at-1:1 is a false pass (see the header note).
     function test_defaultCounterIncrements() public {
         _swap(true, -1e15);
         assertEq(hook.swapCount(key.toId()), 1, "counter did not increment");
