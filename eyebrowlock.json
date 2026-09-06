@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-09-04T16:37:07.361139Z",
+  "generatedAt": "2026-09-06T16:38:59.492182Z",
   "generator": "eyebrow/0.4.2",
   "artifacts": [
     {
@@ -397,7 +397,7 @@
         },
         {
           "path": "project/package-lock.json",
-          "hash": "a0de158bc359e26fcc320dc850358b26313d254eabb0e0100ab535c15dcc6561"
+          "hash": "c491727498df4bfb43cf230d10070fa84a339c881258b1cfb074555a3ad60685"
         },
         {
           "path": "project/package.json",
@@ -451,7 +451,7 @@
           "explanation": "contains consent-bypass or prompt-injection language"
         }
       ],
-      "contentHash": "sha256-dbaef1867bc84f9117c2e84c5bcb897f8737bc9aa5c82d89688ecf605f381c46",
+      "contentHash": "sha256-951f973d8b89f0fcf8b5ca0022e189451f3a2a68f38e59df7767f1ce8110c7f2",
       "discoveredFrom": "skills/remotion/SKILL.md"
     },
     {
@@ -556,10 +556,10 @@
       "files": [
         {
           "path": "SKILL.md",
-          "hash": "dfd812e4832da6958646746980e56d48f28a8a33bd2878cc0450ee84ebab69d4"
+          "hash": "86c10bfc5c4066d9bcbdd004459c4c957508f7ba2cbe2166074ed7e163b7f67b"
         }
       ],
-      "contentHash": "sha256-439f8e6953ca04fcf91b4d877bb66c5c09ec3ca20002adfe7b638f3374b43a42",
+      "contentHash": "sha256-02c5b0552fb2bfa8c70854abc72092db6f08bc00809491f8680581baf70db755",
       "discoveredFrom": "skills/skill-health/SKILL.md"
     },
     {
@@ -1489,7 +1489,7 @@
       "files": [
         {
           "path": "SKILL.md",
-          "hash": "605b296d976df6631c7d9d5310442a9f933794ba32188136b7e342bb635b4dfc"
+          "hash": "8e88807e17f976c18caddc876a66b010b35288508e424827501e5acfb46362d1"
         },
         {
           "path": "hook-deploy.sh",
@@ -1497,7 +1497,7 @@
         },
         {
           "path": "templates/DeployHook.s.sol",
-          "hash": "c97173a47b3bf4aeddb75e901033ed2d01a6903987d47cbdff94544dbd9e2f95"
+          "hash": "e72397dbc455abde1687451dc368cd1417dd6021075ca1134932d198a3ec6785"
         },
         {
           "path": "templates/DynamicFeeHook.sol",
@@ -1509,7 +1509,7 @@
         },
         {
           "path": "templates/Hook.t.sol",
-          "hash": "f563b5261e35565939b9ad10e9ebd1eb3838cf3fd85beb3872de58a704e1656b"
+          "hash": "fb7c84d1c76ac4cb850a3652f7404b8865d34e914db10bd124d6832773955756"
         },
         {
           "path": "templates/HookFeeHook.sol",
@@ -1551,7 +1551,7 @@
           "severity": "high",
           "owasp": "ASK-06",
           "file": "SKILL.md",
-          "line": 116,
+          "line": 118,
           "snippet": "- **Freeform mode** (anything else): write the whole hook into `$HOOKBUILD_DIR/src/Hook.sol` — replace the `// --- AEO…",
           "explanation": "references sensitive credential or secret paths"
         },
@@ -1610,7 +1610,7 @@
           "explanation": "references sensitive credential or secret paths"
         }
       ],
-      "contentHash": "sha256-aa6b3cb711be49025443c10a749f3a4f11a5c7468f8cc9125f09009f9033c2b6",
+      "contentHash": "sha256-e749b80ea9b00de2689e829fdd5fe37e6e3e6e53c484c25b534150e648c0c4f6",
       "discoveredFrom": "skills/deploy-uni-hook/SKILL.md"
     },
     {
@@ -2091,7 +2091,7 @@
         },
         {
           "path": "references/secrets.md",
-          "hash": "76b8105069a91632daba058cfdd7afec0e3b6ee9542b083b99b4601a73fbcd96"
+          "hash": "41aa375c84cea1b0190bd7291176651d335dc1c41e2b8067900f164d4c4df670"
         },
         {
           "path": "references/skill-anatomy.md",
@@ -2102,7 +2102,7 @@
           "hash": "0edc7445542a21cb5518e813a6ae462a1d469636601a799efc1bec86b4058c5a"
         }
       ],
-      "contentHash": "sha256-c43ac760993f8c41c7aa85b20ce6b53b948607d61d767f21d321f3b9853aa5e5",
+      "contentHash": "sha256-4e9c576b6d6c7cad1e17df815ac9519e4af1dd7a827e3b06a5314675ca1478ce",
       "discoveredFrom": ".claude/skills/aeon/SKILL.md"
     },
     {
@@ -2147,10 +2147,10 @@
       "files": [
         {
           "path": "SKILL.md",
-          "hash": "67d4c34d7fcd2f87f70fa8462289898f05499575444f34587dabb73f307a7f4f"
+          "hash": "da2ac8b88d22076c227bee9fcd7b2ea1c7be407a866f35a8a64e316599bfd110"
         }
       ],
-      "contentHash": "sha256-fde5b3b54f16d08354f3d8df0e30f44b68180bce3470257e90405d376e032dd4",
+      "contentHash": "sha256-9666675528c0e0c8913c8fd4499eece477e9a8108e571ae16eedbb79d5138a67",
       "discoveredFrom": "skills/send-email/SKILL.md"
     },
     {
