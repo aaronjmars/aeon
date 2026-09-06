@@ -389,6 +389,7 @@ jobs:
           COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
           ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
           REPLICATE_API_TOKEN: ${{ secrets.REPLICATE_API_TOKEN }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         run: |
           SKILL_FILE="skills/${{ steps.skill.outputs.name }}/SKILL.md"
           [ ! -f "$SKILL_FILE" ] && exit 0
