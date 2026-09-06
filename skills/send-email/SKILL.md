@@ -50,6 +50,8 @@ This is **not** a bulk or cold-outreach tool. One deliberate recipient per run, 
 
 Otherwise (no `revise:` prefix), run the normal flow:
 
+0. **Delivery preflight (bounce check on prior sends).** Before composing, reconcile earlier Resend sends - a `200` from the send API only means "accepted", so a bounce is invisible until checked. Run `python3 scripts/check_email_bounces.py`: it polls Resend `GET /emails/{id}` (using `RESEND_API_KEY` from the env) for every `memory/email-log.json` row without a terminal `delivery_status`, writes the outcome back (`delivery_status`, `last_event`, `bounce`, `delivery_checked_at`), and on a hard bounce flags the source draft `status: contact-unverified`. It is advisory (an unset key or poll error just no-ops - never blocks this send). If its first line is `BOUNCE_ALERT`, `./notify` the operator the listed bounces so a human can fix the contact, then continue. Commit the updated `memory/email-log.json` with this run.
+
 1. **Parse the request** from `${var}`: `to` (required — one valid email address), optional `cc`, optional `subject`, and the `about` (the goal / what to say). If `to` or the purpose is missing, check `memory/outreach.md` for a queued request; if still nothing, log `SEND_EMAIL_SKIP: no recipient/purpose` and stop.
 
 2. **Sanity-check the recipient.** A single, plausible, individual address with a real reason to be contacted. Refuse scraped addresses, list blasts, or anything spam-shaped → `SEND_EMAIL_REFUSED`.
